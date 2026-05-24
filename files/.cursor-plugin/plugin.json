@@ -1,0 +1,23 @@
+{
+  "name": "qwen-book-pipeline",
+  "description": "MCP server for Qwen3.6-35B-A3B end-to-end book pipeline. Provides tools to start vLLM servers, run 6-stage book generation pipelines, manage checkpoints, and render bilingual EN-VN PDFs. Use when generating technical books, managing LLM pipelines with vLLM, or running STORM-style research workflows.",
+  "version": "1.0.0",
+  "author": {
+    "name": "vudang"
+  },
+  "homepage": "https://github.com/QwenLM/Qwen3.6",
+  "repository": "",
+  "license": "Apache-2.0",
+  "keywords": [
+    "qwen",
+    "book-pipeline",
+    "vllm",
+    "llm",
+    "bilingual",
+    "pdf",
+    "storm",
+    "research",
+    "technical-writing"
+  ],
+  "mcpServers": ".mcp.json"
+}
