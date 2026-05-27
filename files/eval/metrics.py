@@ -19,19 +19,28 @@ from urllib.parse import urlparse
 # Source-level helpers
 # ----------------------------------------------------------------------------
 
+_ARXIV_URL_RE = re.compile(
+    # /abs/, /pdf/, /html/ (new format), with optional v\d+ suffix
+    r"arxiv\.org/(?:abs|pdf|html)/([0-9]{4}\.[0-9]{4,5})(?:v\d+)?",
+    re.IGNORECASE,
+)
+
+
 def arxiv_ids_in_sources(sources: list[dict]) -> set[str]:
-    """Return the set of arxiv IDs (without version suffix) in `sources`."""
+    """Return the set of arxiv IDs (without version suffix) in `sources`.
+
+    Recognizes BOTH:
+      - native arxiv provider ids ("arxiv:1706.03762v2" -> "1706.03762")
+      - Tavily/Brave/etc. URLs pointing at arxiv.org (/abs/, /pdf/, /html/)
+    """
     out: set[str] = set()
     for s in sources or []:
         sid = (s.get("id") or "").lower()
         if sid.startswith("arxiv:"):
-            # strip version suffix (v1/v2/v3...) so "1706.03762v2" matches gold "1706.03762"
             raw = sid.split(":", 1)[1].strip()
             out.add(re.sub(r"v\d+$", "", raw))
-        # Sometimes the URL carries the arxiv id even if provider tagged it
-        # differently (e.g. a Tavily hit on arxiv.org).
         url = (s.get("url") or "").lower()
-        m = re.search(r"arxiv\.org/(?:abs|pdf)/([0-9]{4}\.[0-9]{4,5})", url)
+        m = _ARXIV_URL_RE.search(url)
         if m:
             out.add(m.group(1))
     return out
@@ -54,22 +63,31 @@ def gold_aliases(gold_item: dict) -> list[str]:
 
 def gold_paper_hits(sources: list[dict], gold_papers: list[dict]) -> dict:
     """Return {arxiv_id: hit_kind} where hit_kind is "arxiv" (direct PDF) or
-    "wiki" (Wikipedia article about the paper). Wiki credit is given when the
-    wiki source title contains any alias of the gold paper.
+    "wiki" (Wikipedia article about the paper). Wiki credit is given when a
+    source's title contains any alias of the gold paper AND the source's URL
+    points at en.wikipedia.org (covers both wiki: native id AND Tavily/etc.
+    sources whose URL is a wikipedia page).
 
-    Why count wiki: a hit on `wiki:Attention_Is_All_You_Need` IS retrieving
-    Vaswani 2017 content, just via the Wikipedia surface instead of the PDF.
-    The writer can ground claims with [N] -> Wikipedia source, which is
-    a real citation. Refusing this credit understates retrieval quality.
+    Why count wiki: a hit on `Attention_Is_All_You_Need` Wikipedia article IS
+    retrieving Vaswani 2017 content, just via the Wikipedia surface instead
+    of the PDF. The writer can ground claims with [N] -> Wikipedia source,
+    which is a real citation. Refusing this credit understates retrieval
+    quality.
     """
     found_arxiv = arxiv_ids_in_sources(sources)
     hits: dict[str, str] = {}
-    wiki_titles_norm = [
-        _norm_title((s.get("id", "") or "").replace("wiki:", "").replace("_", " "))
-        + " " + _norm_title(s.get("title", "") or "")
-        for s in (sources or [])
-        if (s.get("id") or "").startswith("wiki:")
-    ]
+    # Wiki sources: either native "wiki:" id OR any source whose url is on en.wikipedia.org
+    wiki_titles_norm: list[str] = []
+    for s in sources or []:
+        sid = (s.get("id") or "")
+        url = (s.get("url") or "").lower()
+        is_wiki = sid.startswith("wiki:") or "en.wikipedia.org/wiki/" in url
+        if not is_wiki:
+            continue
+        # Build a normalized blob from id-tail + title for alias matching.
+        tail = sid.replace("wiki:", "").replace("_", " ") if sid.startswith("wiki:") else ""
+        blob = _norm_title(tail) + " " + _norm_title(s.get("title") or "") + " " + _norm_title(url)
+        wiki_titles_norm.append(blob)
     for gp in gold_papers:
         arx = gp.get("arxiv")
         if arx and arx in found_arxiv:

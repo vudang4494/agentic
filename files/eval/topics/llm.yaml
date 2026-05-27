@@ -58,6 +58,9 @@ should_cite:                # strongly expected; partial credit
   - arxiv: "1907.11692"
     title: "RoBERTa: A Robustly Optimized BERT Pretraining Approach"
     aliases: ["RoBERTa", "Liu"]
+  - arxiv: "2002.04745"
+    title: "On Layer Normalization in the Transformer Architecture"
+    aliases: ["Pre-LN", "Post-LN", "layer normalization transformer"]
 
 # === DOMAIN HYGIENE =========================================================
 forbidden_domains:
