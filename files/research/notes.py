@@ -40,12 +40,14 @@ def _is_noisy_domain(url: str) -> bool:
 
 
 def prefilter(sources: List[Source], section_prompt: str,
-              min_relevance: float = 0.30,
-              noisy_min_relevance: float = 0.55,
+              min_relevance: float = 0.45,
+              noisy_min_relevance: float = 0.60,
               embed_model: str = "bge-m3:latest") -> List[Source]:
     """Drop obviously off-topic sources BEFORE the main rank().
 
-    Two thresholds:
+    Two thresholds (tightened 2026-05-27 after eval found off-topic papers
+    like "Hyper Loop Algebras" and "HEVC Encoding Energy" sneaking past at
+    0.30/0.55):
       - any source below `min_relevance` cosine to the section prompt is dropped
       - sources from `_NOISY_DOMAINS` (YouTube, social, etc.) must clear the
         higher `noisy_min_relevance` -- otherwise they're dropped

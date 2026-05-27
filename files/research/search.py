@@ -40,7 +40,7 @@ _TAVILY_FAILURE_THRESHOLD = 3
 
 # Be polite -- arxiv ToS asks for >= 3s between requests.
 _LAST_ARXIV_CALL = 0.0
-ARXIV_MIN_INTERVAL = 3.0
+ARXIV_MIN_INTERVAL = 4.0  # bumped from 3.0 since arxiv_search now makes 2 calls/query
 
 
 def _excerpt(text: str, max_words: int = 80) -> str:
@@ -61,8 +61,41 @@ _ATOM_NS = {
 }
 
 
-def arxiv_search(query: str, k: int = 3) -> List[Source]:
-    """Query arxiv's Atom API. Returns up to k Sources with abstract excerpts."""
+# Two-phase arxiv search:
+#   Phase A: ti: (title-field) match -- biases toward canonical/foundational
+#            papers, whose titles tend to carry the technique name verbatim
+#            ("Attention Is All You Need", "Layer Normalization", "BERT: ...").
+#   Phase B: all: (relevance) match -- existing behavior, surfaces topically
+#            relevant papers including recent derivative work.
+# Phase-A hits are prepended so the prefilter/ranker sees them first; dedup
+# is by arxiv id. Eval (2026-05-27, transformer topic) confirmed phase A is
+# necessary -- without it, must_cite_recall was 0.0 on canonical papers
+# because relevance-ranking favored 2024 derivative papers over Vaswani 2017.
+
+_ARXIV_TITLE_STOPWORDS = {
+    "the", "a", "an", "of", "for", "in", "on", "and", "or", "with", "to",
+    "from", "using", "based", "into", "via", "by", "is", "are", "as",
+    "section", "write", "include", "cover",  # query-gen artifacts
+}
+
+
+def _arxiv_title_query(q: str) -> str:
+    """Reduce a free-text query to a tight title-field arxiv query.
+
+    arxiv's ti: field needs short keyword runs to be useful -- long natural
+    sentences match almost nothing. We strip stopwords and cap at 4 terms.
+    Returns "" if too few signal terms survive (caller should skip phase A).
+    """
+    import re as _re
+    tokens = [w for w in _re.findall(r"[A-Za-z][A-Za-z0-9-]+", q.lower())
+              if w not in _ARXIV_TITLE_STOPWORDS and len(w) > 2]
+    if len(tokens) < 2:
+        return ""
+    return " ".join(tokens[:4])
+
+
+def _arxiv_raw_query(search_query: str, k: int) -> List[Source]:
+    """Single arxiv API call with the given search_query string."""
     global _LAST_ARXIV_CALL
     elapsed = time.time() - _LAST_ARXIV_CALL
     if elapsed < ARXIV_MIN_INTERVAL:
@@ -70,7 +103,7 @@ def arxiv_search(query: str, k: int = 3) -> List[Source]:
     _LAST_ARXIV_CALL = time.time()
 
     params = urllib.parse.urlencode({
-        "search_query": f"all:{query}",
+        "search_query": search_query,
         "start": 0,
         "max_results": k,
         "sortBy": "relevance",
@@ -80,7 +113,6 @@ def arxiv_search(query: str, k: int = 3) -> List[Source]:
     rec = fetch(url, accept="application/atom+xml")
     if not rec or rec.get("status", 0) >= 400 or not rec.get("content"):
         return []
-
     try:
         root = ET.fromstring(rec["content"])
     except ET.ParseError:
@@ -119,6 +151,25 @@ def arxiv_search(query: str, k: int = 3) -> List[Source]:
             year=year,
         ))
     return out
+
+
+def arxiv_search(query: str, k: int = 3) -> List[Source]:
+    """Two-phase arxiv search: title-field (canonical bias) then all-field."""
+    # Phase A: title-field match -- canonical-paper bias.
+    title_q = _arxiv_title_query(query)
+    title_hits = _arxiv_raw_query(f"ti:{title_q}", k=max(2, k)) if title_q else []
+    # Phase B: original all-field relevance search.
+    all_hits = _arxiv_raw_query(f"all:{query}", k=k)
+    # Merge: title-hits first so canonical papers are seen by the ranker
+    # before recent derivatives. Dedup by arxiv id.
+    seen: set[str] = set()
+    merged: List[Source] = []
+    for s in title_hits + all_hits:
+        if s.id in seen:
+            continue
+        seen.add(s.id)
+        merged.append(s)
+    return merged
 
 
 # ---------------------------------------------------------------------------

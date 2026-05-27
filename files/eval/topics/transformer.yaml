@@ -4,8 +4,8 @@
 
 topic: "Transformer Architecture and Attention Mechanism"
 difficulty: easy            # easy | medium | hard | niche
-n_chapters: 3               # small outline -> faster eval (~15-20 min)
-n_passes: 4                 # 12 sections total
+n_chapters: 2               # smaller outline -> faster eval (~15-25 min)
+n_passes: 3                 # 6 sections total -- enough to test retrieval; halves arxiv call count vs 12-section run
 
 # === GOLD SOURCES ===========================================================
 # Papers that the retrieval layer SHOULD surface for this topic. Match by
@@ -22,15 +22,20 @@ must_cite:                  # canonical -- failure to retrieve = retrieval bug
 
 should_cite:                # strongly expected; partial credit
   - arxiv: "1810.04805"
-    title: "BERT (Devlin et al., 2018)"
+    title: "BERT: Pre-training of Deep Bidirectional Transformers"
+    aliases: ["BERT", "Devlin"]
   - arxiv: "2005.14165"
-    title: "GPT-3 (Brown et al., 2020)"
+    title: "Language Models are Few-Shot Learners (GPT-3)"
+    aliases: ["GPT-3", "few-shot learners"]
   - arxiv: "2104.09864"
-    title: "RoFormer / RoPE (Su et al., 2021)"
+    title: "RoFormer: Enhanced Transformer with Rotary Position Embedding"
+    aliases: ["RoFormer", "rotary position embedding", "RoPE"]
   - arxiv: "1910.10683"
-    title: "T5 (Raffel et al., 2019)"
+    title: "Exploring the Limits of Transfer Learning (T5)"
+    aliases: ["T5", "text-to-text transfer transformer"]
   - arxiv: "2002.04745"
-    title: "Pre-LN vs Post-LN (Xiong et al., 2020)"
+    title: "On Layer Normalization in the Transformer Architecture"
+    aliases: ["Pre-LN", "Post-LN", "layer normalization transformer"]
 
 # === DOMAIN HYGIENE =========================================================
 # These should be filtered out by the bge-m3 noisy-domain prefilter.

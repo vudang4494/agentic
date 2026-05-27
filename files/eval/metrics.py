@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import re
 from collections import Counter
-from typing import Any
 from urllib.parse import urlparse
 
 
@@ -21,16 +20,14 @@ from urllib.parse import urlparse
 # ----------------------------------------------------------------------------
 
 def arxiv_ids_in_sources(sources: list[dict]) -> set[str]:
-    """Return the set of arxiv IDs present in a section's `sources` list.
-
-    Pipeline stores sources with `id` like "arxiv:1706.03762" or
-    "wiki:Transformer_(deep_learning)" or "url:<sha1>".
-    """
+    """Return the set of arxiv IDs (without version suffix) in `sources`."""
     out: set[str] = set()
     for s in sources or []:
         sid = (s.get("id") or "").lower()
         if sid.startswith("arxiv:"):
-            out.add(sid.split(":", 1)[1].strip())
+            # strip version suffix (v1/v2/v3...) so "1706.03762v2" matches gold "1706.03762"
+            raw = sid.split(":", 1)[1].strip()
+            out.add(re.sub(r"v\d+$", "", raw))
         # Sometimes the URL carries the arxiv id even if provider tagged it
         # differently (e.g. a Tavily hit on arxiv.org).
         url = (s.get("url") or "").lower()
@@ -38,6 +35,53 @@ def arxiv_ids_in_sources(sources: list[dict]) -> set[str]:
         if m:
             out.add(m.group(1))
     return out
+
+
+def _norm_title(s: str) -> str:
+    return re.sub(r"[^a-z0-9 ]+", " ", (s or "").lower())
+
+
+def gold_aliases(gold_item: dict) -> list[str]:
+    """Pull all match strings for a gold paper: arxiv id, title, aliases."""
+    out: list[str] = []
+    if gold_item.get("arxiv"):
+        out.append(gold_item["arxiv"])
+    if gold_item.get("title"):
+        out.append(gold_item["title"])
+    out.extend(gold_item.get("aliases", []) or [])
+    return out
+
+
+def gold_paper_hits(sources: list[dict], gold_papers: list[dict]) -> dict:
+    """Return {arxiv_id: hit_kind} where hit_kind is "arxiv" (direct PDF) or
+    "wiki" (Wikipedia article about the paper). Wiki credit is given when the
+    wiki source title contains any alias of the gold paper.
+
+    Why count wiki: a hit on `wiki:Attention_Is_All_You_Need` IS retrieving
+    Vaswani 2017 content, just via the Wikipedia surface instead of the PDF.
+    The writer can ground claims with [N] -> Wikipedia source, which is
+    a real citation. Refusing this credit understates retrieval quality.
+    """
+    found_arxiv = arxiv_ids_in_sources(sources)
+    hits: dict[str, str] = {}
+    wiki_titles_norm = [
+        _norm_title((s.get("id", "") or "").replace("wiki:", "").replace("_", " "))
+        + " " + _norm_title(s.get("title", "") or "")
+        for s in (sources or [])
+        if (s.get("id") or "").startswith("wiki:")
+    ]
+    for gp in gold_papers:
+        arx = gp.get("arxiv")
+        if arx and arx in found_arxiv:
+            hits[arx] = "arxiv"
+            continue
+        aliases_norm = [_norm_title(a) for a in gold_aliases(gp) if a and not re.fullmatch(r"\d{4}\.\d{4,5}", a)]
+        for wt in wiki_titles_norm:
+            if any(a and a in wt for a in aliases_norm):
+                if arx:
+                    hits[arx] = "wiki"
+                break
+    return hits
 
 
 def domains_in_sources(sources: list[dict]) -> Counter:
@@ -113,11 +157,13 @@ def section_metrics(key: str, section: dict, gold: dict) -> dict:
     rounds = section.get("research_rounds") or []
     review = section.get("review") or {}
 
-    must_ids = {item["arxiv"] for item in gold.get("must_cite", []) if item.get("arxiv")}
-    should_ids = {item["arxiv"] for item in gold.get("should_cite", []) if item.get("arxiv")}
+    must_papers = [it for it in gold.get("must_cite", []) if it.get("arxiv")]
+    should_papers = [it for it in gold.get("should_cite", []) if it.get("arxiv")]
+    must_ids = {p["arxiv"] for p in must_papers}
     forbidden = {d.lower() for d in gold.get("forbidden_domains", [])}
 
-    found_ids = arxiv_ids_in_sources(sources)
+    must_hits = gold_paper_hits(sources, must_papers)
+    should_hits = gold_paper_hits(sources, should_papers)
     domain_hits = domains_in_sources(sources)
     forbidden_hits = {d: c for d, c in domain_hits.items() if any(f in d for f in forbidden)}
 
@@ -137,9 +183,11 @@ def section_metrics(key: str, section: dict, gold: dict) -> dict:
         "title": section.get("title") or section.get("pp_t") or "?",
         "retrieval": {
             "n_sources": n_sources,
-            "must_cite_hits": sorted(must_ids & found_ids),
-            "must_cite_misses": sorted(must_ids - found_ids),
-            "should_cite_hits": sorted(should_ids & found_ids),
+            "must_cite_hits": sorted(must_hits.keys()),
+            "must_cite_hit_kinds": dict(must_hits),   # {arxiv_id: "arxiv"|"wiki"}
+            "must_cite_misses": sorted(must_ids - set(must_hits)),
+            "should_cite_hits": sorted(should_hits.keys()),
+            "should_cite_hit_kinds": dict(should_hits),
             "forbidden_domain_hits": forbidden_hits,
             "n_queries": len(section.get("queries") or []),
             "research_rounds": len(rounds),
@@ -192,13 +240,22 @@ def aggregate(per_section: list[dict], gold: dict, book_text: str) -> dict:
     must_ids = {item["arxiv"] for item in gold.get("must_cite", []) if item.get("arxiv")}
     should_ids = {item["arxiv"] for item in gold.get("should_cite", []) if item.get("arxiv")}
 
-    pooled_found: set[str] = set()
+    # Pool hits across all sections; track the strongest kind per paper
+    # (arxiv direct beats wiki credit if both surfaced anywhere).
+    pooled_kinds: dict[str, str] = {}
     for s in per_section:
-        pooled_found.update(s["retrieval"]["must_cite_hits"])
-        pooled_found.update(s["retrieval"]["should_cite_hits"])
+        for aid, kind in s["retrieval"].get("must_cite_hit_kinds", {}).items():
+            if pooled_kinds.get(aid) != "arxiv":
+                pooled_kinds[aid] = kind
+        for aid, kind in s["retrieval"].get("should_cite_hit_kinds", {}).items():
+            if pooled_kinds.get(aid) != "arxiv":
+                pooled_kinds[aid] = kind
+    pooled_found = set(pooled_kinds.keys())
 
     must_recall = (len(must_ids & pooled_found) / len(must_ids)) if must_ids else 1.0
     should_recall = (len(should_ids & pooled_found) / len(should_ids)) if should_ids else 1.0
+    must_arxiv_direct = sum(1 for aid in (must_ids & pooled_found) if pooled_kinds[aid] == "arxiv")
+    must_via_wiki = sum(1 for aid in (must_ids & pooled_found) if pooled_kinds[aid] == "wiki")
 
     groundings = [s["grounding"]["score"] for s in per_section]
     grounding_mean = _mean([g for g in groundings if g is not None])
@@ -223,6 +280,8 @@ def aggregate(per_section: list[dict], gold: dict, book_text: str) -> dict:
         "n_sections": n_sections,
         "must_cite_recall": round(must_recall, 3),
         "must_cite_missed": sorted(must_ids - pooled_found),
+        "must_cite_arxiv_direct": must_arxiv_direct,   # PDF retrieved
+        "must_cite_via_wiki": must_via_wiki,           # only wiki page about it
         "should_cite_recall": round(should_recall, 3),
         "grounding_mean": round(grounding_mean, 3),
         "zero_cite_section_count": n_zero,
