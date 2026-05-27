@@ -103,7 +103,10 @@ In `files/deep_research.py`:
 | Knob | Default | Effect |
 |------|---------|--------|
 | `MODEL` | `gemma3:4b` (env `DEEP_RESEARCH_WRITER_MODEL`) | Writer LLM |
-| `WORD_BUDGET` | 4200 | Per-section target (4B writer averages ~1,300 actual) |
+| `WORD_BUDGET` | 1500 | Ceiling on the dynamic per-section target (was 4200, the source of citation-gaming pressure — see W1 in [WORKPLAN.md](WORKPLAN.md)) |
+| `WORD_TARGET_PER_SOURCE` | 220 | Per-section target = `n_evidence_sources * 220`, floored / capped |
+| `WORD_TARGET_FLOOR` | 400 | Floor when research returns 0 sources |
+| `WORD_TARGET_NO_EVIDENCE` | 900 | Fallback when `--no-research` |
 | `MIN_REVIEW_SCORE` | 6 | Prose-review threshold (1-10 scale) |
 | `CONTINUATION_WORDS` | 120 | Prior-section tail forwarded as context |
 

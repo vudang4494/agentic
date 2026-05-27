@@ -104,7 +104,16 @@ def migrate_legacy_outputs():
         print("[MIGRATE] renamed legacy outputs: " + ", ".join(moved))
 
 
-WORD_BUDGET = 4200  # default words-per-section budget
+# W1: target length emerges from evidence count, not a static budget. The old
+# `WORD_BUDGET = 4200` + "Target: 1800-2500 words" prompt pressure caused 4B
+# writers to loop, hallucinate, and drop citations to game the verifier.
+# `WORD_BUDGET` is now a *ceiling* (the upper cap on the dynamic target), not
+# a target. The dict `"w"` field on each section is kept for backward compat
+# but is ignored at runtime in favor of compute_target_words().
+WORD_BUDGET = 1500              # ceiling -- never ask the writer for more
+WORD_TARGET_PER_SOURCE = 220    # per retained evidence source
+WORD_TARGET_FLOOR = 400         # minimum target so empty results still produce a stub
+WORD_TARGET_NO_EVIDENCE = 900   # fallback when research layer is off
 
 
 # === CHAPTERS: 12 chapters × 6 passes = 72 sections ===
@@ -878,11 +887,64 @@ def _release_pipeline_lock(pid_path: Path) -> None:
 # Generation
 # ============================================================================
 
-def gen(client, ch_n, ch_t, pp_n, pp_t, prompt, budget, context_block="", evidence_block=""):
-    num_predict = min(int(budget * 2.5), 12000)
+# W1: regex strips the legacy "Target: 1800-2500 words." trailer that every
+# hardcoded prompt in CHAPTERS carries. We replace it with a dynamic target
+# derived from the actual evidence count so the writer is not asked to pad.
+_LEGACY_TARGET_RE = re.compile(
+    r"\s*Target:\s*\d{2,5}\s*[-–—]\s*\d{2,5}\s*words?[^.]*\.?\s*$",
+    re.IGNORECASE,
+)
+
+
+def compute_target_words(n_evidence: int, has_research: bool) -> int:
+    """Derive a per-section target from the number of retained evidence sources.
+
+    Why: forcing 1800-2500 words from a 4B writer was the root cause of looping
+    and citation gaming -- the model has nothing to say once the topic is
+    actually covered, so it pads and drops citations to scrape a verifier score.
+    Let length follow content.
+    """
+    if not has_research:
+        return WORD_TARGET_NO_EVIDENCE
+    if n_evidence <= 0:
+        return WORD_TARGET_FLOOR
+    return max(WORD_TARGET_FLOOR, min(WORD_BUDGET, n_evidence * WORD_TARGET_PER_SOURCE))
+
+
+def _prepare_prompt(prompt: str, target_words: int, has_evidence: bool) -> str:
+    """Strip the hardcoded 'Target: NNNN-NNNN words.' trailer and append a
+    dynamic, honest length directive that tells the writer to stop when the
+    topic is covered."""
+    cleaned = _LEGACY_TARGET_RE.sub("", prompt).rstrip()
+    if has_evidence:
+        suffix = (
+            f"\n\nLength: aim for approximately {target_words} words. "
+            "If you run out of grounded material from the EVIDENCE block, "
+            "stop -- do not pad. A shorter section with accurate citations "
+            "is preferred over a long section that drops citations or repeats."
+        )
+    else:
+        suffix = (
+            f"\n\nLength: aim for approximately {target_words} words. "
+            "Stop when the topic is fully covered -- do not pad."
+        )
+    return cleaned + suffix
+
+
+def gen(client, ch_n, ch_t, pp_n, pp_t, prompt, target_words, context_block="", evidence_block=""):
+    # W1: num_predict tightly capped to the dynamic target so the writer
+    # physically cannot ramble past it. 2.0x is the empirical ratio between
+    # tokens and words for gemma3/qwen3.5 English output.
+    num_predict = max(800, min(int(target_words * 2.0), 4000))
+    has_evidence = bool(evidence_block.strip())
+    prepared_prompt = _prepare_prompt(prompt, target_words, has_evidence)
     user_prompt = "%s%sChapter %d: %s -- Section %d: %s\n\n%s" % (
-        context_block, evidence_block, ch_n, ch_t, pp_n, pp_t, prompt,
+        context_block, evidence_block, ch_n, ch_t, pp_n, pp_t, prepared_prompt,
     )
+    # W1: acceptance threshold is now 40% of target (was 25% of 4200 == 1050w
+    # regardless of context). 40% gives the writer permission to stop early
+    # without making us accept a one-paragraph stub.
+    min_accept = max(200, int(target_words * 0.4))
     for attempt in range(3):
         try:
             content, stats = client.generate(
@@ -893,7 +955,7 @@ def gen(client, ch_n, ch_t, pp_n, pp_t, prompt, budget, context_block="", eviden
             )
             content = sanitize(content)
             w = wc(content)
-            if w >= budget * 0.25 or attempt == 2:
+            if w >= min_accept or attempt == 2:
                 return content, stats, w
         except Exception as e:
             log(f"  Attempt {attempt+1} failed: {e}")
@@ -1224,7 +1286,9 @@ def run(batch=2, start_ch=1, start_pp=1, end_ch=None, render=True, review=False,
     print()
 
     t0 = time.time()
-    for i, (ch_n, ch_t, pp_n, pp_t, prompt, budget) in enumerate(all_tasks):
+    for i, (ch_n, ch_t, pp_n, pp_t, prompt, _legacy_budget) in enumerate(all_tasks):
+        # W1: ignore _legacy_budget (the hardcoded 4200 from CHAPTERS). The
+        # real target is computed below from evidence count per section.
         key = "%d.%d" % (ch_n, pp_n)
         if key in state.get("passes", {}):
             print("[SKIP %d/%d] Ch%d.%d: %s -- DONE" % (i + 1, total, ch_n, pp_n, pp_t))
@@ -1273,8 +1337,12 @@ def run(batch=2, start_ch=1, start_pp=1, end_ch=None, render=True, review=False,
                       f"({wc(evidence_block)}w incl. {min(_research.FULL_TEXT_TOP_N, len(ranked))} full-text) "
                       f"in {time.time()-t_r:.1f}s")
 
+                # W1: target follows evidence -- N sources * 220w, capped at WORD_BUDGET.
+                target_words = compute_target_words(len(ranked), has_research=True)
+                print(f"  [W1] target={target_words}w (from {len(ranked)} evidence sources)")
+
                 content, stats, w = gen(
-                    client, ch_n, ch_t, pp_n, pp_t, prompt, budget,
+                    client, ch_n, ch_t, pp_n, pp_t, prompt, target_words,
                     context_block=context_block, evidence_block=evidence_block,
                 )
                 if not content:
@@ -1310,8 +1378,10 @@ def run(batch=2, start_ch=1, start_pp=1, end_ch=None, render=True, review=False,
                 )
         else:
             # No research layer -- straight gen as in legacy mode.
+            target_words = compute_target_words(0, has_research=False)
+            print(f"  [W1] target={target_words}w (no research)")
             content, stats, w = gen(
-                client, ch_n, ch_t, pp_n, pp_t, prompt, budget,
+                client, ch_n, ch_t, pp_n, pp_t, prompt, target_words,
                 context_block=context_block, evidence_block="",
             )
 
@@ -1346,10 +1416,10 @@ def run(batch=2, start_ch=1, start_pp=1, end_ch=None, render=True, review=False,
                 regen_prompt = fix_hint + prompt
                 print(f"  [REVIEW] score {worst} < {MIN_REVIEW_SCORE} -- regenerating once")
                 content2, stats2, w2 = gen(
-                    client, ch_n, ch_t, pp_n, pp_t, regen_prompt, budget,
+                    client, ch_n, ch_t, pp_n, pp_t, regen_prompt, target_words,
                     context_block=context_block, evidence_block=evidence_block,
                 )
-                if content2 and w2 >= budget * 0.25:
+                if content2 and w2 >= max(200, int(target_words * 0.4)):
                     content, w = content2, w2
                     tokens = stats2.get("tokens", tokens)
                     tps = stats2.get("tps", tps)
