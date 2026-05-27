@@ -25,7 +25,7 @@ from . import search, query_gen, notes, embeddings, fetch, verify, planner  # no
 # without TAVILY_API_KEY, or once tavily auto-disabled on HTTP 432 rate-limit).
 # Brave is added if BRAVE_API_KEY is set (2000/mo free at https://brave.com/search/api/).
 # DDG is HTML-scraped, no key required -- best free web fallback after Tavily exhaustion.
-PROVIDERS_DEFAULT = ("arxiv", "wikipedia", "brave", "ddg", "tavily")
+PROVIDERS_DEFAULT = ("arxiv", "wikipedia", "ddg", "tavily")  # brave dropped 2026-05-25 (free tier 402s)
 TOP_K_DEFAULT = 8
 FULL_TEXT_TOP_N = 2          # fetch full body for the top-N ranked sources
 FULL_TEXT_MAX_WORDS = 350    # cap per source so the prompt doesn't blow up

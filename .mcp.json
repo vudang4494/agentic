@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "deep-research-pipeline": {
+    "agentic-deep-research": {
       "command": "python3",
       "args": [
         "files/mcp_server.py"

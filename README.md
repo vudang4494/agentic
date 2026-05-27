@@ -1,16 +1,42 @@
 # agentic
 
-> Local-first **Agentic Deep Research** platform. Researches a topic and produces a
-> book-length technical reference grounded in retrieved sources, with self-critique,
-> citation verification, and iterative re-search loops. Runs entirely locally on
-> Apple Silicon / CPU via [Ollama](https://ollama.com).
+> **Local-first Agentic Deep Research platform.** Hand it a topic; it plans a
+> 12-chapter outline, runs ~100 atomic *research → write → verify* rounds, and
+> assembles a 300-400+ page, LaTeX-typeset technical book with a single
+> deduplicated References page — all on your laptop, no API key required.
 
-The pipeline takes a topic, plans a 12-chapter outline, runs ~100 atomic research
-+ write + verify rounds (one per section), and assembles a 300-400+ page
-LaTeX-typeset technical book with a single References page sourced from arxiv,
-Wikipedia, Tavily, Brave, and/or DuckDuckGo.
+<p align="left">
+  <img alt="license" src="https://img.shields.io/badge/license-MIT-blue.svg">
+  <img alt="python"  src="https://img.shields.io/badge/python-3.10%2B-blue.svg">
+  <img alt="runtime" src="https://img.shields.io/badge/runtime-Ollama-black.svg">
+  <img alt="render"  src="https://img.shields.io/badge/render-tectonic%20%2F%20WeasyPrint-orange.svg">
+  <img alt="status"  src="https://img.shields.io/badge/status-stage%203%2B%20shipped-success.svg">
+</p>
 
-![pipeline](pipeline.jpg)
+Default stack is Ollama-served `gemma3:4b` (writer) + `qwen3.5:4b` (query gen
++ judge) + `bge-m3` (embedder), with arXiv, Wikipedia, Tavily, Brave, and
+DuckDuckGo as research providers. Provider-agnostic — swap in any
+OpenAI-compatible endpoint.
+
+<p align="center">
+  <img src="pipeline.jpg" alt="Agentic Deep Research pipeline" width="640">
+  <br>
+  <em>End-to-end pipeline: planner → per-section research / write / verify loop → assemble & render.</em>
+</p>
+
+---
+
+## Table of contents
+
+- [Highlights](#highlights)
+- [Quick start](#quick-start)
+- [Pipeline](#pipeline)
+- [CLI reference](#cli-reference)
+- [Environment variables](#environment-variables)
+- [File layout](#file-layout)
+- [How it stays grounded](#how-it-stays-grounded)
+- [Roadmap](#roadmap)
+- [License](#license)
 
 ---
 
@@ -18,22 +44,22 @@ Wikipedia, Tavily, Brave, and/or DuckDuckGo.
 
 | Capability | What ships today |
 |---|---|
-| Local-first | Ollama-served LLMs only (default `gemma3:4b`, override via env) |
-| Multi-provider retrieval | arxiv + Wikipedia + Tavily + Brave + DDG, all gated by env |
-| Full-text grounding | top-2 sources per section get 350-word body extract, not 80-word search snippet |
-| Self-critique | LLM-as-judge scores citation grounding per `[N]` marker, triggers re-search |
-| Iterative loop | low-grounding sections re-query with reviewer hint, capped at 2 rounds |
-| Concept memory | tracks every concept introduced; later sections see "ALREADY DEFINED" prohibition |
-| Outline planning | `--topic "..."` triggers a research-grounded outline generator |
-| Citation hygiene | strips `[N>max]` orphans, denies zero-citation gaming, prefilters noisy domains |
-| LaTeX-quality PDF | renders via `tectonic` (paper-quality math) with WeasyPrint fallback |
-| Resume-safe | per-section state checkpoint, autonomous watchdog with Ollama health checks |
+| **Local-first** | Ollama-served LLMs only (default `gemma3:4b`, override via env) |
+| **Multi-provider retrieval** | arXiv + Wikipedia + Tavily + Brave + DDG, all gated by env |
+| **Full-text grounding** | top-2 sources per section get a 350-word body extract, not a 80-word snippet |
+| **Self-critique** | LLM-as-judge scores per-`[N]` citation grounding and triggers re-search |
+| **Iterative loop** | low-grounding sections re-query with reviewer hint, capped at 2 rounds |
+| **Concept memory** | every concept introduced is tracked; later sections see an "ALREADY DEFINED" prohibition list |
+| **Outline planning** | `--topic "..."` triggers a research-grounded outline generator |
+| **Citation hygiene** | strips `[N>max]` orphans, denies zero-citation gaming, prefilters noisy domains |
+| **LaTeX-quality PDF** | renders via `tectonic` (paper-quality math) with WeasyPrint fallback |
+| **Resume-safe** | per-section state checkpoint, autonomous watchdog with Ollama health checks |
 
-See [WORKPLAN.md](WORKPLAN.md) for the full roadmap (stages 0 → 5) and architecture.
+See [WORKPLAN.md](WORKPLAN.md) for the full roadmap (stages 0 → 5) and architecture notes.
 
 ---
 
-## Quick Start
+## Quick start
 
 ```bash
 # 1. Install Ollama + pull the default model stack
@@ -47,9 +73,9 @@ ollama pull bge-m3         # embedder for ranking + filtering
 pip install -r files/requirements.txt
 brew install pandoc tectonic    # tectonic for paper-quality LaTeX PDF render
 
-# 3. (Optional) configure web search keys
+# 3. (optional) configure web-search keys
 cp .env.example .env
-# fill in TAVILY_API_KEY and/or BRAVE_API_KEY -- pipeline degrades gracefully without
+# fill in TAVILY_API_KEY and/or BRAVE_API_KEY — pipeline degrades gracefully without
 
 # 4. Run
 ./run.sh             # autonomous runner (writes book.{md,html,pdf})
@@ -63,7 +89,7 @@ python3 files/deep_research.py --topic "Diffusion Models for Image Generation" \
 ```
 
 Outputs land in `files/output/` as `book.{md,html,pdf}` (plus `state.json`,
-`report.json`, logs).
+`report.json`, and timestamped logs).
 
 ---
 
@@ -91,7 +117,7 @@ Outputs land in `files/output/` as `book.{md,html,pdf}` (plus `state.json`,
                  |     + context block (continuity + concepts already   |
                  |       defined cross-chapter, "DO NOT redefine")      |
                  |     -> section markdown with [N] citations           |
-                 | (7) Sanitize + math normalize + clean_citations       |
+                 | (7) Sanitize + math normalize + clean_citations      |
                  |     (strip H1/H2 / refs / orphan [N>max])            |
                  | (8) LLM-as-judge per-citation verify (qwen3.5:4b)    |
                  |     supports / partial / unrelated / contradicts     |
@@ -111,7 +137,7 @@ Outputs land in `files/output/` as `book.{md,html,pdf}` (plus `state.json`,
 
 ---
 
-## CLI Reference
+## CLI reference
 
 ```bash
 python3 files/deep_research.py [OPTIONS]
@@ -122,16 +148,18 @@ python3 files/deep_research.py [OPTIONS]
 | `--batch N` | 2 | Reserved for parallel section generation (future) |
 | `--start-ch N` | 1 | Resume from chapter N |
 | `--start-pp N` | 1 | Resume from section N within that chapter |
-| `--end-ch N` | none | Stop after chapter N (use `--start-ch 1 --end-ch 1` for smoke test) |
+| `--end-ch N` | none | Stop after chapter N (use `--start-ch 1 --end-ch 1` for a smoke test) |
 | `--review` | off | LLM-as-judge prose review on top of grounding verification |
 | `--no-render` | render on | Skip PDF rendering at end |
-| `--no-research` | research on | Disable Stage 2 (only use writer's pretrained knowledge) |
+| `--no-research` | research on | Disable Stage 2 (use only the writer's pretrained knowledge) |
 | `--topic "..."` | hardcoded LLMs outline | Stage 3 planner generates a fresh outline |
 | `--n-chapters N` | 12 | Number of chapters (with `--topic`) |
 | `--n-passes N` | 8 | Sections per chapter (use 10-11 to target >400 pages) |
 | `--out-name X` | book | Output basename: produces `X.{md,html,pdf,state.json,...}` |
 
-### Env vars
+---
+
+## Environment variables
 
 | Variable | Effect |
 |---|---|
@@ -146,22 +174,23 @@ python3 files/deep_research.py [OPTIONS]
 
 ---
 
-## File Layout
+## File layout
 
 ```
 agentic/
 ├── run.sh                       # default-config launcher
 ├── watch.sh                     # one-shot progress snapshot
 ├── scripts/
-│   └── launch_book2.sh          # example: full run with review
-├── README.md  CLAUDE.md  WORKPLAN.md  LICENSE
+│   └── launch_book2.sh          # example: Stage 3+ full run with review
+├── README.md  CLAUDE.md  WORKPLAN.md  HANDOFF.md  LICENSE
 ├── .env.example                 # all env vars documented
+├── .mcp.json                    # MCP server config (Claude Code reads at root)
 ├── pipeline.jpg                 # architecture diagram
 └── files/
     ├── deep_research.py         # main pipeline (writer + assemble + render)
     ├── runner.py                # autonomous watchdog
     ├── monitor.py               # progress CLI
-    ├── mcp_server.py            # optional MCP server for IDE integration
+    ├── mcp_server.py            # MCP server (configured at root via .mcp.json for Claude Code)
     ├── requirements.txt
     ├── mcp_requirements.txt
     ├── archive/                 # legacy pipelines kept for historical reference
@@ -185,17 +214,17 @@ agentic/
 
 The fragile parts of "agentic" pipelines are usually:
 
-1. **Citation gaming** -- writer LLMs learn that "no citations = no failed verifications = perfect score"
+1. **Citation gaming** — writer LLMs learn that "no citations = no failed verifications = perfect score"
    and drop all `[N]` markers. We deny zero-citation sections with `grounding = 0.0` when evidence was
    provided, forcing the writer to either cite or hedge.
-2. **Source noise** -- web search APIs occasionally surface tangential domains (YouTube transcripts,
+2. **Source noise** — web search APIs occasionally surface tangential domains (YouTube transcripts,
    social-media histories, vendor marketing). A bge-m3 cosine prefilter drops anything below 0.30
    similarity, with a stricter 0.55 threshold for noisy-domain hits.
-3. **Off-by-one citations** -- writers sometimes emit `[9]` when only 8 sources were provided.
-   `clean_citations()` strips these post-write before they hit the verifier.
-4. **Binary content leakage** -- full-text fetchers can return PDF/zip bytes that look like text.
+3. **Off-by-one citations** — writers sometimes emit `[9]` when only 8 sources were provided.
+   `clean_citations()` strips these post-write before they reach the verifier.
+4. **Binary content leakage** — full-text fetchers can return PDF/zip bytes that look like text.
    `_looks_binary()` checks content-type + magic bytes (`%PDF`, `PK\x03\x04`) + control-char ratio.
-5. **Concept repetition across chapters** -- without a global memory, agents redefine attention in
+5. **Concept repetition across chapters** — without a global memory, agents redefine "attention" in
    every chapter that touches it. We extract every concept introduced (H3/H4 headers + bold terms)
    and emit a chapter-keyed "ALREADY DEFINED" prohibition list into each later section's prompt.
 
@@ -211,7 +240,7 @@ The fragile parts of "agentic" pipelines are usually:
 | 2+ | Tavily + full-text + verifier + iterative loop + zero-cite penalty | shipped |
 | 3 | Planner agent (topic → outline) + self-correction | shipped |
 | 3+ | Cross-section concept tracker + outline dedupe directives | shipped |
-| 4 | Multi-agent orchestration (Researcher / Writer / Reviewer split, parallel sections) | planned |
+| 4 | Multi-agent orchestration (Researcher / Writer / Reviewer split, parallel sections) | in progress |
 | 5 | Citation-graph following + second-hop retrieval | planned |
 
 ---

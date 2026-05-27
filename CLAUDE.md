@@ -23,17 +23,36 @@ serve the agentic-research direction should be refused or redirected.
 | 4 | Multi-agent orchestration (Researcher / Writer / Reviewer split, parallelism) | planned |
 | 5 | Citation-graph following + second-hop retrieval | planned |
 
-Full design notes: `WORKPLAN.md`. User-facing docs: `README.md`.
+Full design notes: `WORKPLAN.md`. User-facing docs: `README.md`. Session handoff: `HANDOFF.md`.
+
+## Claude-native pipeline structure
+
+The four pillars Claude reads at startup:
+
+| Pillar | Where | Purpose |
+|---|---|---|
+| **Plan**   | `WORKPLAN.md` (root) | Roadmap (stages 0-5), design notes per stage, decision log |
+| **Memory** | `~/.claude/projects/<encoded-cwd>/memory/` + `MEMORY.md` index | Cross-session memory: project north star, status snapshots, pipeline critique, user feedback |
+| **Skill / agent context** | `CLAUDE.md` (this file, auto-loaded by Claude Code) | What the agent must know to operate the project |
+| **MCP**    | `.mcp.json` (root) | MCP server config (`agentic-deep-research` server -> `files/mcp_server.py`) |
+
+`HANDOFF.md` at root captures the in-progress state when a session ends -- read it first when resuming work.
 
 ## Top-level layout
 
 ```
 agentic/
 ├── run.sh / watch.sh           # entry points
-├── scripts/                    # example launchers
-├── README.md / CLAUDE.md / WORKPLAN.md / LICENSE
+├── scripts/                    # production launchers
+├── .mcp.json                   # MCP server config (Claude convention)
 ├── .env.example                # all env vars documented
-└── files/
+├── .gitignore
+├── README.md                   # user-facing docs
+├── CLAUDE.md                   # this file -- agent context
+├── WORKPLAN.md                 # roadmap + design notes
+├── HANDOFF.md                  # session handoff snapshot
+├── LICENSE
+└── files/                      # Stage 3+ production pipeline
     ├── deep_research.py        # main pipeline (writer + assemble + render)
     ├── runner.py               # autonomous watchdog
     ├── monitor.py              # progress CLI
