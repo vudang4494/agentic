@@ -1,1 +1,2 @@
 httpx
+pyyaml  # used by files/eval/ research-quality harness

@@ -1,0 +1,267 @@
+"""
+Pure metric functions for the research-quality eval harness.
+
+Input: gold YAML dict + state.json dict from a pipeline run.
+Output: per-section metric dicts + aggregate dict + pass/fail dict.
+
+No I/O, no LLM calls -- so these functions are unit-testable and the eval
+harness can re-run them against an archived state.json without re-running
+the pipeline.
+"""
+from __future__ import annotations
+
+import re
+from collections import Counter
+from typing import Any
+from urllib.parse import urlparse
+
+
+# ----------------------------------------------------------------------------
+# Source-level helpers
+# ----------------------------------------------------------------------------
+
+def arxiv_ids_in_sources(sources: list[dict]) -> set[str]:
+    """Return the set of arxiv IDs present in a section's `sources` list.
+
+    Pipeline stores sources with `id` like "arxiv:1706.03762" or
+    "wiki:Transformer_(deep_learning)" or "url:<sha1>".
+    """
+    out: set[str] = set()
+    for s in sources or []:
+        sid = (s.get("id") or "").lower()
+        if sid.startswith("arxiv:"):
+            out.add(sid.split(":", 1)[1].strip())
+        # Sometimes the URL carries the arxiv id even if provider tagged it
+        # differently (e.g. a Tavily hit on arxiv.org).
+        url = (s.get("url") or "").lower()
+        m = re.search(r"arxiv\.org/(?:abs|pdf)/([0-9]{4}\.[0-9]{4,5})", url)
+        if m:
+            out.add(m.group(1))
+    return out
+
+
+def domains_in_sources(sources: list[dict]) -> Counter:
+    """Count occurrences of each domain in a section's source list."""
+    c: Counter = Counter()
+    for s in sources or []:
+        url = s.get("url") or ""
+        try:
+            host = urlparse(url).hostname or ""
+            host = host.lower().lstrip("www.")
+            if host:
+                c[host] += 1
+        except Exception:
+            pass
+    return c
+
+
+# ----------------------------------------------------------------------------
+# Output-level helpers
+# ----------------------------------------------------------------------------
+
+_CITATION_RE = re.compile(r"\[(\d{1,3})\]")
+_WORD_RE = re.compile(r"\b\w+\b")
+
+
+def word_count(text: str) -> int:
+    return len(_WORD_RE.findall(text or ""))
+
+
+def citations_in(text: str) -> list[int]:
+    return [int(m.group(1)) for m in _CITATION_RE.finditer(text or "")]
+
+
+def detect_looping(text: str, phrase_len: int = 5, min_repeats: int = 4) -> bool:
+    """Heuristic: any `phrase_len`-word window that repeats >= `min_repeats` times.
+
+    Catches degenerate writer behavior where the same phrase recurs (the most
+    common 4B-model failure mode pre-W1).
+    """
+    if not text:
+        return False
+    words = text.split()
+    if len(words) < phrase_len * min_repeats:
+        return False
+    seen: Counter = Counter()
+    for i in range(len(words) - phrase_len + 1):
+        phrase = " ".join(words[i : i + phrase_len])
+        seen[phrase] += 1
+        if seen[phrase] >= min_repeats:
+            return True
+    return False
+
+
+def subtopic_coverage(book_text: str, expected: list[str]) -> tuple[float, list[str]]:
+    """Return (coverage_ratio, missing_list). Case-insensitive substring match."""
+    if not expected:
+        return 1.0, []
+    haystack = (book_text or "").lower()
+    missing = [t for t in expected if t.lower() not in haystack]
+    hit = len(expected) - len(missing)
+    return hit / len(expected), missing
+
+
+# ----------------------------------------------------------------------------
+# Per-section metrics
+# ----------------------------------------------------------------------------
+
+def section_metrics(key: str, section: dict, gold: dict) -> dict:
+    """Compute all per-section metrics for one entry in state['passes'][key]."""
+    content = section.get("content", "") or ""
+    sources = section.get("sources", []) or []
+    verify = section.get("verify") or {}
+    rounds = section.get("research_rounds") or []
+    review = section.get("review") or {}
+
+    must_ids = {item["arxiv"] for item in gold.get("must_cite", []) if item.get("arxiv")}
+    should_ids = {item["arxiv"] for item in gold.get("should_cite", []) if item.get("arxiv")}
+    forbidden = {d.lower() for d in gold.get("forbidden_domains", [])}
+
+    found_ids = arxiv_ids_in_sources(sources)
+    domain_hits = domains_in_sources(sources)
+    forbidden_hits = {d: c for d, c in domain_hits.items() if any(f in d for f in forbidden)}
+
+    cites = citations_in(content)
+    n_cites = len(cites)
+    unique_cited = len(set(cites))
+    n_sources = len(sources)
+    n_unused = max(0, n_sources - unique_cited)
+    wc = section.get("wc") or word_count(content)
+    cites_per_1k = (n_cites * 1000.0 / wc) if wc > 0 else 0.0
+
+    grounding = verify.get("grounding")
+    zero_cite_red_flag = (n_cites == 0 and n_sources > 0)
+
+    return {
+        "key": key,
+        "title": section.get("title") or section.get("pp_t") or "?",
+        "retrieval": {
+            "n_sources": n_sources,
+            "must_cite_hits": sorted(must_ids & found_ids),
+            "must_cite_misses": sorted(must_ids - found_ids),
+            "should_cite_hits": sorted(should_ids & found_ids),
+            "forbidden_domain_hits": forbidden_hits,
+            "n_queries": len(section.get("queries") or []),
+            "research_rounds": len(rounds),
+        },
+        "grounding": {
+            "score": grounding,
+            "n_citations_in_text": n_cites,
+            "unique_cited": unique_cited,
+            "weak_citations": len(verify.get("weak_citations") or []),
+            "zero_cite_red_flag": zero_cite_red_flag,
+        },
+        "output": {
+            "word_count": wc,
+            "citations_per_1000w": round(cites_per_1k, 2),
+            "sources_ranked_but_unused": n_unused,
+            "looping_detected": detect_looping(content),
+        },
+        "review": {
+            "depth": review.get("depth"),
+            "coherence": review.get("coherence"),
+            "format": review.get("format"),
+            "skipped": review.get("_skipped", False),
+        } if review else None,
+        "cost": {
+            "tokens": section.get("tokens", 0),
+            "tps": section.get("tps", 0),
+        },
+    }
+
+
+# ----------------------------------------------------------------------------
+# Aggregate + pass/fail
+# ----------------------------------------------------------------------------
+
+def _mean(xs: list[float]) -> float:
+    xs = [x for x in xs if x is not None]
+    return sum(xs) / len(xs) if xs else 0.0
+
+
+def _median(xs: list[float]) -> float:
+    xs = sorted(x for x in xs if x is not None)
+    if not xs:
+        return 0.0
+    n = len(xs)
+    return xs[n // 2] if n % 2 else (xs[n // 2 - 1] + xs[n // 2]) / 2
+
+
+def aggregate(per_section: list[dict], gold: dict, book_text: str) -> dict:
+    """Reduce per-section metrics into a single aggregate dict."""
+    must_ids = {item["arxiv"] for item in gold.get("must_cite", []) if item.get("arxiv")}
+    should_ids = {item["arxiv"] for item in gold.get("should_cite", []) if item.get("arxiv")}
+
+    pooled_found: set[str] = set()
+    for s in per_section:
+        pooled_found.update(s["retrieval"]["must_cite_hits"])
+        pooled_found.update(s["retrieval"]["should_cite_hits"])
+
+    must_recall = (len(must_ids & pooled_found) / len(must_ids)) if must_ids else 1.0
+    should_recall = (len(should_ids & pooled_found) / len(should_ids)) if should_ids else 1.0
+
+    groundings = [s["grounding"]["score"] for s in per_section]
+    grounding_mean = _mean([g for g in groundings if g is not None])
+
+    n_sections = len(per_section)
+    n_zero = sum(1 for s in per_section if s["grounding"]["zero_cite_red_flag"])
+    n_loop = sum(1 for s in per_section if s["output"]["looping_detected"])
+    n_round2 = sum(1 for s in per_section if s["retrieval"]["research_rounds"] >= 2)
+    forbidden_total = sum(
+        sum(s["retrieval"]["forbidden_domain_hits"].values()) for s in per_section
+    )
+
+    words = [s["output"]["word_count"] for s in per_section]
+    cites_per_k = [s["output"]["citations_per_1000w"] for s in per_section]
+    tokens_total = sum(s["cost"]["tokens"] for s in per_section)
+
+    coverage, missing_subtopics = subtopic_coverage(
+        book_text, gold.get("expected_subtopics", []),
+    )
+
+    return {
+        "n_sections": n_sections,
+        "must_cite_recall": round(must_recall, 3),
+        "must_cite_missed": sorted(must_ids - pooled_found),
+        "should_cite_recall": round(should_recall, 3),
+        "grounding_mean": round(grounding_mean, 3),
+        "zero_cite_section_count": n_zero,
+        "loop_section_count": n_loop,
+        "loop_section_pct": round(n_loop / n_sections, 3) if n_sections else 0.0,
+        "research_round_2_count": n_round2,
+        "research_round_2_rate": round(n_round2 / n_sections, 3) if n_sections else 0.0,
+        "forbidden_domain_hits": forbidden_total,
+        "subtopic_coverage": round(coverage, 3),
+        "subtopic_missing": missing_subtopics,
+        "median_words": _median([float(w) for w in words]),
+        "mean_citations_per_1000w": round(_mean(cites_per_k), 2),
+        "total_tokens": tokens_total,
+    }
+
+
+def pass_fail(agg: dict, thresholds: dict) -> dict:
+    """Apply thresholds from gold.thresholds to the aggregate. Return {check: {target, actual, pass}}."""
+    checks = []
+    def chk(name: str, op: str, target, actual):
+        cmp_ok = {
+            ">=": actual >= target,
+            "<=": actual <= target,
+            "==": actual == target,
+        }[op]
+        checks.append({"check": name, "op": op, "target": target,
+                       "actual": actual, "pass": bool(cmp_ok)})
+
+    chk("must_cite_recall",     ">=", thresholds.get("must_cite_recall_min", 0.0),    agg["must_cite_recall"])
+    chk("should_cite_recall",   ">=", thresholds.get("should_cite_recall_min", 0.0),  agg["should_cite_recall"])
+    chk("grounding_mean",       ">=", thresholds.get("grounding_mean_min", 0.0),      agg["grounding_mean"])
+    chk("zero_cite_sections",   "<=", thresholds.get("zero_cite_section_max", 0),     agg["zero_cite_section_count"])
+    chk("loop_section_pct",     "<=", thresholds.get("loop_section_pct_max", 1.0),    agg["loop_section_pct"])
+    chk("research_round_2_rate","<=", thresholds.get("research_round_2_rate_max", 1.0), agg["research_round_2_rate"])
+    chk("forbidden_domain_hits","<=", thresholds.get("forbidden_domain_hits_max", 0), agg["forbidden_domain_hits"])
+    chk("subtopic_coverage",    ">=", thresholds.get("subtopic_coverage_min", 0.0),   agg["subtopic_coverage"])
+    chk("median_words_min",     ">=", thresholds.get("median_words_min", 0),          agg["median_words"])
+    chk("median_words_max",     "<=", thresholds.get("median_words_max", 10000),      agg["median_words"])
+
+    overall_pass = all(c["pass"] for c in checks)
+    return {"checks": checks, "overall_pass": overall_pass,
+            "n_passed": sum(c["pass"] for c in checks), "n_total": len(checks)}
