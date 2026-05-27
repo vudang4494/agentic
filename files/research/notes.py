@@ -29,6 +29,12 @@ _NOISY_DOMAINS = (
     "facebook.com", "twitter.com", "x.com", "linkedin.com",
     "reddit.com",       # often discussion, low signal-per-token
     "pinterest.com",
+    # Blog/aggregator platforms -- 2026-05-27 bookv3_pilot eval caught
+    # medium.com x5, cameronrwolfe.substack.com x1, vizuara.substack.com x1
+    # leaking past at cosine 0.45-0.55 threshold. They're substring-matched,
+    # so "*.substack.com" / "*.medium.com" subdomains are covered.
+    "medium.com", "substack.com", "techcrunch.com",
+    "towardsdatascience.com",  # also a medium subsite, but bare domain too
 )
 
 

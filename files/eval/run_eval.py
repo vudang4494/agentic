@@ -112,7 +112,7 @@ def _write_md_report(path: Path, payload: dict) -> None:
     lines.append(f"- Difficulty: `{g.get('difficulty', '?')}`")
     lines.append(f"- Outline: {g.get('n_chapters')} chapters x {g.get('n_passes')} passes "
                  f"= {agg['n_sections']} sections actually generated")
-    if "timings" in payload:
+    if payload.get("timings", {}).get("elapsed_sec"):
         lines.append(f"- Elapsed: {payload['timings']['elapsed_sec']/60:.1f} min")
     lines.append("")
     lines.append(f"## Overall: {'PASS' if pf['overall_pass'] else 'FAIL'} "
