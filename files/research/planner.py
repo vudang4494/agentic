@@ -63,7 +63,7 @@ PLANNER_SYS = (
 )
 
 
-def _scope_topic(topic: str, providers=("tavily",)) -> str:
+def _scope_topic(topic: str, providers=("tavily", "arxiv", "wikipedia")) -> str:
     """Run a brief research pass to give the planner real context.
 
     Returns a compact bullet list of titles + 1-line summaries from up to 10
@@ -113,6 +113,17 @@ def _parse_outline(raw: str, n_chapters: int, n_passes: int,
     if not isinstance(chapters_in, list) or not chapters_in:
         return None
 
+    # Sections with these title patterns get replaced -- the pipeline already
+    # auto-builds a References page from the collected sources at assembly time,
+    # so a section that just says "References and Further Reading" leads the
+    # writer to invent another prose page with hallucinated citations
+    # (observed in bookv3 Ch7.10).
+    _META_SECTION_RE = re.compile(
+        r"\b(references|bibliography|further\s+reading|works\s+cited|"
+        r"acknowledg(e?)ments?|appendix|index|glossary)\b",
+        re.IGNORECASE,
+    )
+
     out: List[dict] = []
     for i, ch in enumerate(chapters_in[:n_chapters], start=1):
         if not isinstance(ch, dict):
@@ -128,9 +139,17 @@ def _parse_outline(raw: str, n_chapters: int, n_passes: int,
                 pt, pr = pp[:80], pp
             else:
                 continue
+            # Skip meta sections -- the assembler handles them.
+            if _META_SECTION_RE.search(pt):
+                print(f"[planner] skipping meta section Ch{i}.{j}: {pt!r} "
+                      f"(pipeline assembles refs/index automatically)", flush=True)
+                continue
             passes_out.append({"p": j, "t": pt, "w": word_budget, "pr": pr})
         if not passes_out:
             continue
+        # Re-number passes after meta-skip so the sequence stays 1..N
+        for new_p, pp in enumerate(passes_out, start=1):
+            pp["p"] = new_p
         # Pad to n_passes if model under-produced
         while len(passes_out) < n_passes:
             j = len(passes_out) + 1
@@ -142,15 +161,15 @@ def _parse_outline(raw: str, n_chapters: int, n_passes: int,
 
     if not out:
         return None
-    # Pad chapters if needed
-    while len(out) < n_chapters:
-        i = len(out) + 1
-        out.append({
-            "n": i, "t": f"Additional Chapter {i}",
-            "passes": [{"p": j, "t": f"Aspect {j}", "w": word_budget,
-                        "pr": f"Discuss aspect {j} of the broader topic."}
-                       for j in range(1, n_passes + 1)],
-        })
+    # Chapter shortfall is a hard fail -- we used to pad with "Additional Chapter N" /
+    # "Aspect J" placeholders, but the bookv3 run revealed that the writer takes
+    # those as legitimate prompts and emits ~80 sections of generic filler. Better
+    # to return None and let plan_outline() retry with a different temperature
+    # (and possibly higher num_predict) than to silently truncate the topic.
+    if len(out) < n_chapters:
+        print(f"[planner] chapter shortfall: model emitted {len(out)}/{n_chapters} -- "
+              f"refusing to pad with placeholders (would dilute the book).", flush=True)
+        return None
     return out
 
 
@@ -210,7 +229,10 @@ def plan_outline(topic: str,
                 {"role": "system", "content": PLANNER_SYS},
                 {"role": "user",   "content": user_prompt},
             ],
-            "options": {"temperature": temp, "num_predict": 8000, "top_p": 0.9},
+            # num_predict must hold 15 chapters x 10 sections x ~180 chars/section
+            # JSON serialization ~= 27K chars ~= 8-10K tokens. We give 14000 headroom
+            # so the model isn't cut off mid-section (the bookv3 failure mode).
+            "options": {"temperature": temp, "num_predict": 14000, "top_p": 0.9},
             "think": False,
         }
         try:

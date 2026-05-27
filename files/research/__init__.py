@@ -21,11 +21,11 @@ from .types import Source, Query
 from . import search, query_gen, notes, embeddings, fetch, verify, planner  # noqa: F401
 
 # Provider order matters: cheap+reliable first (arxiv, wikipedia), then web sources.
-# search.gather() filters out providers whose prerequisites aren't met (e.g. tavily
-# without TAVILY_API_KEY, or once tavily auto-disabled on HTTP 432 rate-limit).
-# 2026-05-27 (bookv3 run): user requested Tavily-only -- arxiv/wiki/ddg disabled
-# to test Tavily-pure retrieval quality. CAUTION: no fallback if Tavily fails.
-PROVIDERS_DEFAULT = ("tavily",)
+# 2026-05-27 (bookv3 eval): Tavily-only run had must_cite_recall=0.20 because
+# Tavily ranks recent blogs above 2017-2020 canonical papers. Re-enabling
+# arxiv + wikipedia restores canonical retrieval; ddg stays off as DDG HTML
+# scrape is rate-limit prone and Tavily covers the web surface adequately.
+PROVIDERS_DEFAULT = ("arxiv", "wikipedia", "tavily")
 TOP_K_DEFAULT = 8
 FULL_TEXT_TOP_N = 2          # fetch full body for the top-N ranked sources
 FULL_TEXT_MAX_WORDS = 350    # cap per source so the prompt doesn't blow up

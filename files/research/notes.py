@@ -148,29 +148,52 @@ def enrich_top_sources(sources: List[Source], top_n: int = 2,
 
 
 def clean_citations(content: str, n_sources: int) -> tuple:
-    """Strip `[N]` markers where N is outside [1, n_sources] (writer hallucinations).
+    """Strip writer-side citation pathologies surfaced by the bookv3 audit:
 
-    Returns (cleaned_content, n_dropped). The dropped markers are removed in place
-    (the surrounding prose stays) so the reader doesn't see a dangling reference.
-    This prevents the Ch3.7 / Ch11.6 failure mode where the verifier counts an
-    invalid citation as 'unrelated' and tanks the section's grounding score.
+    1. `[N]` markers where N is outside [1, n_sources] (writer hallucinated index)
+    2. `[N]` LITERAL placeholder -- the writer copied the variable name from the
+       system prompt instead of filling in a real number
+    3. "Tavily (2024)" / "DuckDuckGo (2023)" / "Brave (...)" -- writer treats
+       the search provider name as if it were a research-paper author. Replaced
+       with neutral "(source)" so the prose doesn't read like the search engine
+       authored the paper.
+
+    Returns (cleaned_content, n_dropped). All replacements remove the offending
+    marker / attribution and collapse the surrounding whitespace.
     """
     import re as _re
-    if not content or n_sources < 1:
+    if not content:
         return content, 0
     dropped = 0
-    def _repl(m):
+
+    # 1 + 2: numeric [N] handling (out-of-range AND literal "[N]")
+    def _repl_num(m):
         nonlocal dropped
+        n_text = m.group(1)
+        if n_text.upper() == "N":
+            # literal "[N]" placeholder leaked from SYS prompt
+            dropped += 1
+            return ""
         try:
-            n = int(m.group(1))
+            n = int(n_text)
         except ValueError:
             return m.group(0)
-        if 1 <= n <= n_sources:
+        if 1 <= n <= max(n_sources, 1):
             return m.group(0)
         dropped += 1
-        return ""    # drop the marker, keep surrounding text
-    cleaned = _re.sub(r"\[(\d+)\]", _repl, content)
-    # Collapse double-spaces / orphaned trailing punctuation the removal might leave
+        return ""
+    cleaned = _re.sub(r"\[([Nn]|\d+)\]", _repl_num, content)
+
+    # 3: provider-as-author attributions -- "Tavily (2024)", "DDG (2023)", etc.
+    _PROVIDER_AUTHOR_RE = _re.compile(
+        r"\b(?:Tavily|DuckDuckGo|DDG|Brave(?:\s+Search)?|Google\s+Search|Bing)\s*"
+        r"(?:et\s+al\.?\s*)?\(\s*\d{4}\s*\)",
+        _re.IGNORECASE,
+    )
+    cleaned, n_provider = _PROVIDER_AUTHOR_RE.subn("(source)", cleaned)
+    dropped += n_provider
+
+    # Cleanup: collapse double-spaces / orphan trailing punctuation
     cleaned = _re.sub(r" {2,}", " ", cleaned)
     cleaned = _re.sub(r"\s+([,.;:])", r"\1", cleaned)
     return cleaned, dropped
