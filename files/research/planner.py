@@ -16,7 +16,6 @@ falls back to the hardcoded CHAPTERS list.
 """
 import json
 import re
-from pathlib import Path
 from typing import List, Optional
 
 import httpx
@@ -173,6 +172,121 @@ def _parse_outline(raw: str, n_chapters: int, n_passes: int,
     return out
 
 
+def _chat(messages: list, model: str, timeout: float,
+          num_predict: int = 2000, temperature: float = 0.4) -> str:
+    """One Ollama /api/chat round. Returns content string ('' on failure)."""
+    payload = {
+        "model": model, "stream": False, "messages": messages,
+        "options": {"temperature": temperature, "num_predict": num_predict, "top_p": 0.9},
+        "think": False,
+    }
+    try:
+        with httpx.Client(timeout=timeout) as c:
+            r = c.post(f"{OLLAMA_BASE}/api/chat", json=payload)
+            r.raise_for_status()
+            return (r.json().get("message") or {}).get("content", "")
+    except Exception as e:
+        print(f"[planner] _chat error: {e}", flush=True)
+        return ""
+
+
+_CHAPTERS_SYS = (
+    "You are a research book planner. Given a topic and a short scoping summary, "
+    "propose chapter titles for a technical book. Output ONLY a JSON array of "
+    "strings (no prose, no markdown fences, no objects):\n"
+    '["Chapter 1 title", "Chapter 2 title", ...]\n\n'
+    "Rules:\n"
+    "- Produce EXACTLY the requested number of chapter titles.\n"
+    "- Each chapter covers a distinct, non-overlapping sub-area.\n"
+    "- Order: foundational -> intermediate -> advanced -> applications -> frontiers.\n"
+    "- Titles must be specific to the topic, not generic ('Introduction', 'Conclusion' are too weak)."
+)
+
+_SECTIONS_SYS = (
+    "You are a research book planner detailing ONE chapter. Output ONLY a JSON array "
+    "of section objects (no prose, no markdown fences):\n"
+    '[{"t": "<section title>", "pr": "<1-2 sentence writer directive>"}, ...]\n\n'
+    "Rules:\n"
+    "- Produce EXACTLY the requested number of sections.\n"
+    "- Each `pr` is concrete: name the key sub-topics, formulas, methods, papers, or "
+    "case studies the writer should cover.\n"
+    "- Sections within the chapter must not overlap each other.\n"
+    "- Do NOT create a 'References', 'Summary', or 'Conclusion' section."
+)
+
+
+def _extract_json_array(raw: str):
+    """Pull the first top-level JSON array out of a model response."""
+    raw = _strip_think(raw or "")
+    m = re.search(r"\[[\s\S]*\]", raw)
+    if not m:
+        return None
+    try:
+        return json.loads(m.group(0))
+    except Exception:
+        return None
+
+
+def _plan_chapter_titles(topic, scope, n_chapters, model, timeout) -> List[str]:
+    """Phase 1: just the chapter titles. Small output -> reliable. Retries x3."""
+    user = (f"TOPIC: {topic}\nProduce EXACTLY {n_chapters} chapter titles.\n\n"
+            f"{scope}\n\nReturn the JSON array of {n_chapters} titles now.")
+    for attempt in range(1, 4):
+        raw = _chat(
+            [{"role": "system", "content": _CHAPTERS_SYS},
+             {"role": "user", "content": user}],
+            model=model, timeout=timeout, num_predict=2000,
+            temperature=0.4 + (attempt - 1) * 0.15,
+        )
+        arr = _extract_json_array(raw)
+        titles = [str(t).strip() for t in arr if str(t).strip()] if isinstance(arr, list) else []
+        if len(titles) >= n_chapters:
+            return titles[:n_chapters]
+        print(f"[planner] phase1 attempt {attempt}: got {len(titles)}/{n_chapters} titles, retrying", flush=True)
+    return titles[:n_chapters] if 'titles' in dir() else []
+
+
+def _plan_chapter_sections(topic, chapter_title, n_passes, prior_titles, model, timeout) -> List[dict]:
+    """Phase 2: section titles + prompts for ONE chapter. Small output -> reliable."""
+    avoid = ""
+    if prior_titles:
+        avoid = ("\nAlready-covered chapters (do NOT repeat their material, build on it):\n- "
+                 + "\n- ".join(prior_titles[-8:]) + "\n")
+    user = (f"TOPIC: {topic}\nCHAPTER: {chapter_title}\n{avoid}\n"
+            f"Produce EXACTLY {n_passes} sections for THIS chapter only.\n"
+            f"Return the JSON array of {n_passes} section objects now.")
+    for attempt in range(1, 4):
+        raw = _chat(
+            [{"role": "system", "content": _SECTIONS_SYS},
+             {"role": "user", "content": user}],
+            model=model, timeout=timeout, num_predict=4000,
+            temperature=0.4 + (attempt - 1) * 0.15,
+        )
+        arr = _extract_json_array(raw)
+        if isinstance(arr, list):
+            secs = []
+            for pp in arr:
+                if isinstance(pp, dict) and (pp.get("t") or pp.get("title")):
+                    secs.append({
+                        "t": str(pp.get("t") or pp.get("title")).strip(),
+                        "pr": str(pp.get("pr") or pp.get("prompt") or pp.get("t") or "").strip(),
+                    })
+            if len(secs) >= n_passes:
+                return secs[:n_passes]
+        print(f"[planner] phase2 '{chapter_title[:30]}' attempt {attempt}: "
+              f"got {len(arr) if isinstance(arr, list) else 0}/{n_passes}, retrying", flush=True)
+    # Best-effort pad with chapter-relevant prompts (NOT generic "Aspect N")
+    secs = secs if 'secs' in dir() and secs else []
+    while len(secs) < n_passes:
+        k = len(secs) + 1
+        secs.append({
+            "t": f"{chapter_title}: dimension {k}",
+            "pr": f"Cover an additional important aspect of {chapter_title.lower()} "
+                  f"not addressed in the other sections of this chapter.",
+        })
+    return secs[:n_passes]
+
+
 def plan_outline(topic: str,
                  n_chapters: int = DEFAULT_N_CHAPTERS,
                  n_passes: int = DEFAULT_N_PASSES,
@@ -180,91 +294,44 @@ def plan_outline(topic: str,
                  model: str = DEFAULT_PLANNER_MODEL,
                  timeout: float = DEFAULT_TIMEOUT,
                  max_attempts: int = 3) -> Optional[List[dict]]:
-    """Plan a CHAPTERS outline for the given topic.
+    """Two-phase planner -- the robust replacement for one-shot generation.
 
-    Up to `max_attempts` retries on JSON parse failure -- the 4B planner model
-    occasionally emits structurally broken JSON (closing brace too early,
-    dangling fields) and temperature 0.4 gives enough variance that a retry
-    usually fixes it. Each failure dumps the raw response to
-    `files/output/planner_failed_<attempt>.txt` for debug.
+    Phase 1: ask for the chapter titles only (small output, never truncates).
+    Phase 2: for each chapter, ask for its N section prompts in a separate call.
 
-    Returns a list compatible with deep_research.CHAPTERS, or None if all
-    attempts fail (caller should fall back to the hardcoded outline).
+    The bookv3/bookv4 runs proved that asking ANY local model (4B or 9B) for a
+    full 15x10 = 150-section JSON in one response truncates -- the output is
+    just too long to stay coherent. Decomposing into 1 + N small calls makes
+    each generation reliable regardless of model size. Falls back to None (and
+    thus the hardcoded CHAPTERS) only if Phase 1 itself can't produce enough
+    chapter titles after retries.
     """
     print(f"[planner] scoping research for topic: {topic!r}", flush=True)
     scope = _scope_topic(topic)
     if scope:
         print(f"[planner] scoped {scope.count(chr(10))} sources", flush=True)
-    else:
-        print(f"[planner] WARN: scoping returned no sources -- proceeding without context", flush=True)
 
-    base_user_prompt = (
-        f"TOPIC: {topic}\n"
-        f"REQUIRED OUTLINE SHAPE: {n_chapters} chapters x {n_passes} sections each\n\n"
-        f"{scope}\n\n"
-        "Return the JSON outline now."
-    )
+    # Phase 1: chapter titles
+    titles = _plan_chapter_titles(topic, scope, n_chapters, model, timeout)
+    if len(titles) < n_chapters:
+        print(f"[planner] phase1 failed: only {len(titles)}/{n_chapters} chapter titles -- "
+              f"falling back to hardcoded outline.", flush=True)
+        return None
+    print(f"[planner] phase1 OK: {len(titles)} chapter titles", flush=True)
 
-    raw = ""
-    for attempt in range(1, max_attempts + 1):
-        # Each attempt nudges the prompt slightly stricter + bumps temperature
-        # variance just enough to escape a sticky bad parse.
-        if attempt == 1:
-            user_prompt = base_user_prompt
-            temp = 0.4
-        else:
-            user_prompt = (
-                base_user_prompt
-                + "\n\nIMPORTANT: emit STRICT JSON only. Every section object must have ALL "
-                  "three keys (\"p\", \"t\", \"pr\") inside its braces -- no dangling fields. "
-                  "Close every {{ with }} on the same object. No trailing commas. "
-                  "Do not wrap in markdown fences."
-            )
-            temp = 0.4 + (attempt - 1) * 0.15  # 0.55, 0.70
+    # Phase 2: per-chapter sections
+    out: List[dict] = []
+    for i, ct in enumerate(titles, start=1):
+        secs = _plan_chapter_sections(topic, ct, n_passes, [c["t"] for c in out], model, timeout)
+        passes = [{"p": j, "t": s["t"], "w": word_budget, "pr": s["pr"]}
+                  for j, s in enumerate(secs, start=1)]
+        out.append({"n": i, "t": ct, "passes": passes})
+        print(f"[planner] phase2 {i}/{n_chapters}: {ct[:50]} -> {len(passes)} sections", flush=True)
 
-        payload = {
-            "model": model,
-            "stream": False,
-            "messages": [
-                {"role": "system", "content": PLANNER_SYS},
-                {"role": "user",   "content": user_prompt},
-            ],
-            # num_predict must hold 15 chapters x 10 sections x ~180 chars/section
-            # JSON serialization ~= 27K chars ~= 8-10K tokens. We give 14000 headroom
-            # so the model isn't cut off mid-section (the bookv3 failure mode).
-            "options": {"temperature": temp, "num_predict": 14000, "top_p": 0.9},
-            "think": False,
-        }
-        try:
-            with httpx.Client(timeout=timeout) as c:
-                r = c.post(f"{OLLAMA_BASE}/api/chat", json=payload)
-                r.raise_for_status()
-                raw = (r.json().get("message") or {}).get("content", "")
-        except Exception as e:
-            print(f"[planner] ERROR: model call attempt {attempt} failed: {e}", flush=True)
-            continue
-
-        outline = _parse_outline(raw, n_chapters, n_passes, word_budget)
-        if outline is not None:
-            outline = _self_correct(outline)
-            print(f"[planner] outline OK (attempt {attempt}): "
-                  f"{len(outline)} chapters x {len(outline[0]['passes'])} passes",
-                  flush=True)
-            return outline
-
-        # Parse failed -- dump for debug + retry
-        dump_path = Path(__file__).resolve().parent.parent / "output" / f"planner_failed_attempt{attempt}.txt"
-        try:
-            dump_path.parent.mkdir(parents=True, exist_ok=True)
-            dump_path.write_text(raw)
-        except Exception:
-            pass
-        print(f"[planner] WARN: parse failed on attempt {attempt} "
-              f"(model returned {len(raw)} chars; dumped to {dump_path.name}). "
-              f"{'Retrying...' if attempt < max_attempts else 'Giving up.'}",
-              flush=True)
-
-    return None
+    outline = _self_correct(out)
+    total = sum(len(c["passes"]) for c in outline)
+    print(f"[planner] outline OK (two-phase): {len(outline)} chapters, {total} sections", flush=True)
+    return outline
 
 
 def _self_correct(outline: List[dict]) -> List[dict]:
