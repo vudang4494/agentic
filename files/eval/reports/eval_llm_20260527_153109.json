@@ -1,0 +1,680 @@
+{
+  "run_id": "20260527_153109",
+  "topic_slug": "llm",
+  "gold": {
+    "topic": "Large Language Models",
+    "difficulty": "medium",
+    "n_chapters": 15,
+    "n_passes": 10,
+    "must_cite": [
+      {
+        "arxiv": "1706.03762",
+        "title": "Attention Is All You Need",
+        "aliases": [
+          "Attention Is All You Need",
+          "Vaswani",
+          "Transformer paper"
+        ]
+      },
+      {
+        "arxiv": "1810.04805",
+        "title": "BERT: Pre-training of Deep Bidirectional Transformers",
+        "aliases": [
+          "BERT",
+          "Devlin",
+          "bidirectional encoder"
+        ]
+      },
+      {
+        "arxiv": "2005.14165",
+        "title": "Language Models are Few-Shot Learners (GPT-3)",
+        "aliases": [
+          "GPT-3",
+          "few-shot learners",
+          "Brown"
+        ]
+      },
+      {
+        "arxiv": "2203.02155",
+        "title": "InstructGPT: Training language models to follow instructions with human feedback",
+        "aliases": [
+          "InstructGPT",
+          "RLHF",
+          "human feedback Ouyang"
+        ]
+      },
+      {
+        "arxiv": "2302.13971",
+        "title": "LLaMA: Open and Efficient Foundation Language Models",
+        "aliases": [
+          "LLaMA",
+          "Touvron"
+        ]
+      }
+    ],
+    "should_cite": [
+      {
+        "arxiv": "2203.15556",
+        "title": "Training Compute-Optimal Large Language Models (Chinchilla)",
+        "aliases": [
+          "Chinchilla",
+          "compute-optimal",
+          "Hoffmann"
+        ]
+      },
+      {
+        "arxiv": "2001.08361",
+        "title": "Scaling Laws for Neural Language Models (Kaplan)",
+        "aliases": [
+          "scaling laws",
+          "Kaplan"
+        ]
+      },
+      {
+        "arxiv": "2106.09685",
+        "title": "LoRA: Low-Rank Adaptation of Large Language Models",
+        "aliases": [
+          "LoRA",
+          "low-rank adaptation",
+          "Hu"
+        ]
+      },
+      {
+        "arxiv": "2201.11903",
+        "title": "Chain-of-Thought Prompting Elicits Reasoning in LLMs",
+        "aliases": [
+          "chain-of-thought",
+          "CoT prompting",
+          "Wei"
+        ]
+      },
+      {
+        "arxiv": "2005.11401",
+        "title": "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks (RAG)",
+        "aliases": [
+          "retrieval-augmented generation",
+          "RAG",
+          "Lewis"
+        ]
+      },
+      {
+        "arxiv": "2204.02311",
+        "title": "PaLM: Scaling Language Modeling with Pathways",
+        "aliases": [
+          "PaLM",
+          "Pathways",
+          "Chowdhery"
+        ]
+      },
+      {
+        "arxiv": "2210.11416",
+        "title": "Scaling Instruction-Finetuned Language Models (Flan)",
+        "aliases": [
+          "Flan-T5",
+          "Flan",
+          "instruction-finetuned",
+          "Chung"
+        ]
+      },
+      {
+        "arxiv": "2305.18290",
+        "title": "Direct Preference Optimization (DPO)",
+        "aliases": [
+          "DPO",
+          "direct preference optimization",
+          "Rafailov"
+        ]
+      },
+      {
+        "arxiv": "2104.09864",
+        "title": "RoFormer: Enhanced Transformer with Rotary Position Embedding",
+        "aliases": [
+          "RoFormer",
+          "rotary position embedding",
+          "RoPE",
+          "Su"
+        ]
+      },
+      {
+        "arxiv": "1907.11692",
+        "title": "RoBERTa: A Robustly Optimized BERT Pretraining Approach",
+        "aliases": [
+          "RoBERTa",
+          "Liu"
+        ]
+      }
+    ],
+    "forbidden_domains": [
+      "techcrunch.com",
+      "medium.com",
+      "youtube.com",
+      "reddit.com",
+      "twitter.com",
+      "linkedin.com",
+      "x.com",
+      "substack.com"
+    ],
+    "expected_subtopics": [
+      "transformer",
+      "self-attention",
+      "multi-head attention",
+      "positional encoding",
+      "tokenization",
+      "byte pair encoding",
+      "pre-training",
+      "fine-tuning",
+      "scaling laws",
+      "chain-of-thought",
+      "RLHF",
+      "instruction tuning",
+      "low-rank adaptation",
+      "retrieval-augmented",
+      "in-context learning",
+      "emergent abilities",
+      "perplexity",
+      "decoding",
+      "beam search",
+      "temperature"
+    ],
+    "forbidden_redefines": [
+      "self-attention",
+      "softmax",
+      "transformer",
+      "tokenization"
+    ],
+    "thresholds": {
+      "must_cite_recall_min": 0.8,
+      "should_cite_recall_min": 0.5,
+      "grounding_mean_min": 0.6,
+      "zero_cite_section_max": 3,
+      "loop_section_pct_max": 0.05,
+      "research_round_2_rate_max": 0.45,
+      "forbidden_domain_hits_max": 5,
+      "subtopic_coverage_min": 0.8,
+      "median_words_min": 700,
+      "median_words_max": 1500
+    }
+  },
+  "timings": {},
+  "scores": {
+    "per_section": [
+      {
+        "key": "1.1",
+        "title": "The History of Language Models: From N-grams to Transformers",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "youtube.com": 1,
+            "medium.com": 2
+          },
+          "n_queries": 4,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.467,
+          "n_citations_in_text": 12,
+          "unique_cited": 7,
+          "weak_citations": 4,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 812,
+          "citations_per_1000w": 14.78,
+          "sources_ranked_but_unused": 1,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1097,
+          "tps": 34.3
+        }
+      },
+      {
+        "key": "1.2",
+        "title": "The Mathematics of Tokenization and Embeddings",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 4,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.938,
+          "n_citations_in_text": 8,
+          "unique_cited": 6,
+          "weak_citations": 0,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 887,
+          "citations_per_1000w": 9.02,
+          "sources_ranked_but_unused": 2,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 8,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1115,
+          "tps": 33.7
+        }
+      },
+      {
+        "key": "1.3",
+        "title": "The Transformer Decoder-Only Architecture",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "cameronrwolfe.substack.com": 1,
+            "medium.com": 1
+          },
+          "n_queries": 4,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.675,
+          "n_citations_in_text": 8,
+          "unique_cited": 5,
+          "weak_citations": 0,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 700,
+          "citations_per_1000w": 11.43,
+          "sources_ranked_but_unused": 3,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 891,
+          "tps": 34.0
+        }
+      },
+      {
+        "key": "1.4",
+        "title": "Pre-training Paradigms: Masked vs. Predictive Language Modeling",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "medium.com": 1
+          },
+          "n_queries": 4,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.557,
+          "n_citations_in_text": 7,
+          "unique_cited": 5,
+          "weak_citations": 1,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 656,
+          "citations_per_1000w": 10.67,
+          "sources_ranked_but_unused": 3,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 832,
+          "tps": 34.2
+        }
+      },
+      {
+        "key": "1.5",
+        "title": "Scaling Laws and the Emergence of Intelligence",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 4,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.64,
+          "n_citations_in_text": 10,
+          "unique_cited": 7,
+          "weak_citations": 1,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 673,
+          "citations_per_1000w": 14.86,
+          "sources_ranked_but_unused": 1,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 9,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 874,
+          "tps": 34.0
+        }
+      },
+      {
+        "key": "1.6",
+        "title": "Context Window Management and Memory",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 4,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.682,
+          "n_citations_in_text": 11,
+          "unique_cited": 5,
+          "weak_citations": 3,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 729,
+          "citations_per_1000w": 15.09,
+          "sources_ranked_but_unused": 3,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 9,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 951,
+          "tps": 34.2
+        }
+      },
+      {
+        "key": "1.7",
+        "title": "The Rise of Open-Source Families (LLaMA, Mistral)",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 4,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.75,
+          "n_citations_in_text": 12,
+          "unique_cited": 7,
+          "weak_citations": 2,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 709,
+          "citations_per_1000w": 16.93,
+          "sources_ranked_but_unused": 1,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 946,
+          "tps": 34.0
+        }
+      },
+      {
+        "key": "1.8",
+        "title": "The Multimodal Revolution: Vision and Audio",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "vizuara.substack.com": 1,
+            "medium.com": 1
+          },
+          "n_queries": 4,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.638,
+          "n_citations_in_text": 13,
+          "unique_cited": 7,
+          "weak_citations": 4,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 1088,
+          "citations_per_1000w": 11.95,
+          "sources_ranked_but_unused": 1,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1405,
+          "tps": 33.8
+        }
+      }
+    ],
+    "aggregate": {
+      "n_sections": 8,
+      "must_cite_recall": 0.0,
+      "must_cite_missed": [
+        "1706.03762",
+        "1810.04805",
+        "2005.14165",
+        "2203.02155",
+        "2302.13971"
+      ],
+      "must_cite_arxiv_direct": 0,
+      "must_cite_via_wiki": 0,
+      "should_cite_recall": 0.0,
+      "grounding_mean": 0.668,
+      "zero_cite_section_count": 0,
+      "loop_section_count": 0,
+      "loop_section_pct": 0.0,
+      "research_round_2_count": 1,
+      "research_round_2_rate": 0.125,
+      "forbidden_domain_hits": 8,
+      "subtopic_coverage": 0.5,
+      "subtopic_missing": [
+        "byte pair encoding",
+        "fine-tuning",
+        "RLHF",
+        "instruction tuning",
+        "low-rank adaptation",
+        "retrieval-augmented",
+        "in-context learning",
+        "perplexity",
+        "beam search",
+        "temperature"
+      ],
+      "median_words": 719.0,
+      "mean_citations_per_1000w": 13.09,
+      "total_tokens": 8111
+    },
+    "pass_fail": {
+      "checks": [
+        {
+          "check": "must_cite_recall",
+          "op": ">=",
+          "target": 0.8,
+          "actual": 0.0,
+          "pass": false
+        },
+        {
+          "check": "should_cite_recall",
+          "op": ">=",
+          "target": 0.5,
+          "actual": 0.0,
+          "pass": false
+        },
+        {
+          "check": "grounding_mean",
+          "op": ">=",
+          "target": 0.6,
+          "actual": 0.668,
+          "pass": true
+        },
+        {
+          "check": "zero_cite_sections",
+          "op": "<=",
+          "target": 3,
+          "actual": 0,
+          "pass": true
+        },
+        {
+          "check": "loop_section_pct",
+          "op": "<=",
+          "target": 0.05,
+          "actual": 0.0,
+          "pass": true
+        },
+        {
+          "check": "research_round_2_rate",
+          "op": "<=",
+          "target": 0.45,
+          "actual": 0.125,
+          "pass": true
+        },
+        {
+          "check": "forbidden_domain_hits",
+          "op": "<=",
+          "target": 5,
+          "actual": 8,
+          "pass": false
+        },
+        {
+          "check": "subtopic_coverage",
+          "op": ">=",
+          "target": 0.8,
+          "actual": 0.5,
+          "pass": false
+        },
+        {
+          "check": "median_words_min",
+          "op": ">=",
+          "target": 700,
+          "actual": 719.0,
+          "pass": true
+        },
+        {
+          "check": "median_words_max",
+          "op": "<=",
+          "target": 1500,
+          "actual": 719.0,
+          "pass": true
+        }
+      ],
+      "overall_pass": false,
+      "n_passed": 6,
+      "n_total": 10
+    }
+  }
+}

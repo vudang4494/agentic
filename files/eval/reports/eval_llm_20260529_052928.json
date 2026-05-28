@@ -1,0 +1,7046 @@
+{
+  "run_id": "20260529_052928",
+  "topic_slug": "llm",
+  "gold": {
+    "topic": "Large Language Models",
+    "difficulty": "medium",
+    "n_chapters": 15,
+    "n_passes": 10,
+    "must_cite": [
+      {
+        "arxiv": "1706.03762",
+        "title": "Attention Is All You Need",
+        "aliases": [
+          "Attention Is All You Need",
+          "Vaswani",
+          "Transformer paper"
+        ]
+      },
+      {
+        "arxiv": "1810.04805",
+        "title": "BERT: Pre-training of Deep Bidirectional Transformers",
+        "aliases": [
+          "BERT",
+          "Devlin",
+          "bidirectional encoder"
+        ]
+      },
+      {
+        "arxiv": "2005.14165",
+        "title": "Language Models are Few-Shot Learners (GPT-3)",
+        "aliases": [
+          "GPT-3",
+          "few-shot learners",
+          "Brown"
+        ]
+      },
+      {
+        "arxiv": "2203.02155",
+        "title": "InstructGPT: Training language models to follow instructions with human feedback",
+        "aliases": [
+          "InstructGPT",
+          "RLHF",
+          "human feedback Ouyang"
+        ]
+      },
+      {
+        "arxiv": "2302.13971",
+        "title": "LLaMA: Open and Efficient Foundation Language Models",
+        "aliases": [
+          "LLaMA",
+          "Touvron"
+        ]
+      }
+    ],
+    "should_cite": [
+      {
+        "arxiv": "2203.15556",
+        "title": "Training Compute-Optimal Large Language Models (Chinchilla)",
+        "aliases": [
+          "Chinchilla",
+          "compute-optimal",
+          "Hoffmann"
+        ]
+      },
+      {
+        "arxiv": "2001.08361",
+        "title": "Scaling Laws for Neural Language Models (Kaplan)",
+        "aliases": [
+          "scaling laws",
+          "Kaplan"
+        ]
+      },
+      {
+        "arxiv": "2106.09685",
+        "title": "LoRA: Low-Rank Adaptation of Large Language Models",
+        "aliases": [
+          "LoRA",
+          "low-rank adaptation",
+          "Hu"
+        ]
+      },
+      {
+        "arxiv": "2201.11903",
+        "title": "Chain-of-Thought Prompting Elicits Reasoning in LLMs",
+        "aliases": [
+          "chain-of-thought",
+          "CoT prompting",
+          "Wei"
+        ]
+      },
+      {
+        "arxiv": "2005.11401",
+        "title": "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks (RAG)",
+        "aliases": [
+          "retrieval-augmented generation",
+          "RAG",
+          "Lewis"
+        ]
+      },
+      {
+        "arxiv": "2204.02311",
+        "title": "PaLM: Scaling Language Modeling with Pathways",
+        "aliases": [
+          "PaLM",
+          "Pathways",
+          "Chowdhery"
+        ]
+      },
+      {
+        "arxiv": "2210.11416",
+        "title": "Scaling Instruction-Finetuned Language Models (Flan)",
+        "aliases": [
+          "Flan-T5",
+          "Flan",
+          "instruction-finetuned",
+          "Chung"
+        ]
+      },
+      {
+        "arxiv": "2305.18290",
+        "title": "Direct Preference Optimization (DPO)",
+        "aliases": [
+          "DPO",
+          "direct preference optimization",
+          "Rafailov"
+        ]
+      },
+      {
+        "arxiv": "2104.09864",
+        "title": "RoFormer: Enhanced Transformer with Rotary Position Embedding",
+        "aliases": [
+          "RoFormer",
+          "rotary position embedding",
+          "RoPE",
+          "Su"
+        ]
+      },
+      {
+        "arxiv": "1907.11692",
+        "title": "RoBERTa: A Robustly Optimized BERT Pretraining Approach",
+        "aliases": [
+          "RoBERTa",
+          "Liu"
+        ]
+      },
+      {
+        "arxiv": "2002.04745",
+        "title": "On Layer Normalization in the Transformer Architecture",
+        "aliases": [
+          "Pre-LN",
+          "Post-LN",
+          "layer normalization transformer"
+        ]
+      }
+    ],
+    "forbidden_domains": [
+      "techcrunch.com",
+      "medium.com",
+      "youtube.com",
+      "reddit.com",
+      "twitter.com",
+      "linkedin.com",
+      "x.com",
+      "substack.com"
+    ],
+    "expected_subtopics": [
+      "transformer",
+      "self-attention",
+      "multi-head attention",
+      "positional encoding",
+      "tokenization",
+      "byte pair encoding",
+      "pre-training",
+      "fine-tuning",
+      "scaling laws",
+      "chain-of-thought",
+      "RLHF",
+      "instruction tuning",
+      "low-rank adaptation",
+      "retrieval-augmented",
+      "in-context learning",
+      "emergent abilities",
+      "perplexity",
+      "decoding",
+      "beam search",
+      "temperature"
+    ],
+    "forbidden_redefines": [
+      "self-attention",
+      "softmax",
+      "transformer",
+      "tokenization"
+    ],
+    "thresholds": {
+      "must_cite_recall_min": 0.8,
+      "should_cite_recall_min": 0.5,
+      "grounding_mean_min": 0.6,
+      "zero_cite_section_max": 3,
+      "loop_section_pct_max": 0.05,
+      "research_round_2_rate_max": 0.45,
+      "forbidden_domain_hits_max": 5,
+      "subtopic_coverage_min": 0.8,
+      "median_words_min": 700,
+      "median_words_max": 1500
+    }
+  },
+  "timings": {},
+  "scores": {
+    "per_section": [
+      {
+        "key": "1.1",
+        "title": "The Transformer Revolution: From RNNs to Self-Attention",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [
+            "1706.03762"
+          ],
+          "must_cite_hit_kinds": {
+            "1706.03762": "wiki"
+          },
+          "must_cite_misses": [
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "linkedin.com": 1
+          },
+          "n_queries": 4,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.695,
+          "n_citations_in_text": 21,
+          "unique_cited": 6,
+          "weak_citations": 2,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 722,
+          "citations_per_1000w": 29.09,
+          "sources_ranked_but_unused": 2,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 961,
+          "tps": 33.9
+        }
+      },
+      {
+        "key": "1.2",
+        "title": "Mechanics of the Self-Attention Mechanism",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "pyml.substack.com": 1,
+            "medium.com": 1
+          },
+          "n_queries": 4,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.608,
+          "n_citations_in_text": 12,
+          "unique_cited": 8,
+          "weak_citations": 2,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 803,
+          "citations_per_1000w": 14.94,
+          "sources_ranked_but_unused": 0,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1139,
+          "tps": 33.9
+        }
+      },
+      {
+        "key": "1.3",
+        "title": "Positional Encoding and Sequence Order",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 4,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.64,
+          "n_citations_in_text": 10,
+          "unique_cited": 6,
+          "weak_citations": 1,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 871,
+          "citations_per_1000w": 11.48,
+          "sources_ranked_but_unused": 2,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1297,
+          "tps": 33.8
+        }
+      },
+      {
+        "key": "1.4",
+        "title": "Encoder-Decoder Architecture and Layer Stacking",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "medium.com": 1
+          },
+          "n_queries": 5,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.555,
+          "n_citations_in_text": 11,
+          "unique_cited": 6,
+          "weak_citations": 3,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 768,
+          "citations_per_1000w": 14.32,
+          "sources_ranked_but_unused": 2,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1006,
+          "tps": 33.8
+        }
+      },
+      {
+        "key": "1.5",
+        "title": "Scaling Laws and Model Capacity",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 4,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.644,
+          "n_citations_in_text": 18,
+          "unique_cited": 7,
+          "weak_citations": 5,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 714,
+          "citations_per_1000w": 25.21,
+          "sources_ranked_but_unused": 1,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 9,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 933,
+          "tps": 33.7
+        }
+      },
+      {
+        "key": "1.6",
+        "title": "Pre-training Objectives: Masked Language Modeling",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 4,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.573,
+          "n_citations_in_text": 11,
+          "unique_cited": 8,
+          "weak_citations": 3,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 779,
+          "citations_per_1000w": 14.12,
+          "sources_ranked_but_unused": 0,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1013,
+          "tps": 33.6
+        }
+      },
+      {
+        "key": "1.7",
+        "title": "Bidirectional Context and Bidirectional Transformers",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "medium.com": 1
+          },
+          "n_queries": 4,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.714,
+          "n_citations_in_text": 14,
+          "unique_cited": 6,
+          "weak_citations": 3,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 723,
+          "citations_per_1000w": 19.36,
+          "sources_ranked_but_unused": 2,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 965,
+          "tps": 33.6
+        }
+      },
+      {
+        "key": "1.8",
+        "title": "Tokenization Strategies and Vocabulary Construction",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "medium.com": 1
+          },
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.709,
+          "n_citations_in_text": 11,
+          "unique_cited": 7,
+          "weak_citations": 2,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 730,
+          "citations_per_1000w": 15.07,
+          "sources_ranked_but_unused": 1,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 9,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 955,
+          "tps": 33.6
+        }
+      },
+      {
+        "key": "1.9",
+        "title": "Pre-training Data Curation and Corpora",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 4,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.575,
+          "n_citations_in_text": 12,
+          "unique_cited": 7,
+          "weak_citations": 1,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 814,
+          "citations_per_1000w": 14.74,
+          "sources_ranked_but_unused": 1,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1100,
+          "tps": 33.6
+        }
+      },
+      {
+        "key": "1.10",
+        "title": "Transfer Learning and Fine-Tuning Paradigms",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.717,
+          "n_citations_in_text": 12,
+          "unique_cited": 6,
+          "weak_citations": 1,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 973,
+          "citations_per_1000w": 12.33,
+          "sources_ranked_but_unused": 2,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 9,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1330,
+          "tps": 33.5
+        }
+      },
+      {
+        "key": "2.1",
+        "title": "Autoregressive Decoding Mechanics",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 4,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.75,
+          "n_citations_in_text": 10,
+          "unique_cited": 5,
+          "weak_citations": 2,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 952,
+          "citations_per_1000w": 10.5,
+          "sources_ranked_but_unused": 3,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1249,
+          "tps": 33.5
+        }
+      },
+      {
+        "key": "2.2",
+        "title": "The Emergence of Scaling Laws",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [
+            "2001.08361"
+          ],
+          "should_cite_hit_kinds": {
+            "2001.08361": "arxiv"
+          },
+          "forbidden_domain_hits": {},
+          "n_queries": 4,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 819,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1099,
+          "tps": 33.6
+        }
+      },
+      {
+        "key": "2.3",
+        "title": "Parameter Scaling Dimensions",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 4,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 797,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1153,
+          "tps": 33.5
+        }
+      },
+      {
+        "key": "2.4",
+        "title": "Data Scaling and Quality Dynamics",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "algomox.com": 1
+          },
+          "n_queries": 4,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 752,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 992,
+          "tps": 33.6
+        }
+      },
+      {
+        "key": "2.5",
+        "title": "Compute Efficiency and Hardware Evolution",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "martynassubonis.substack.com": 1,
+            "medium.com": 1
+          },
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 840,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1100,
+          "tps": 33.5
+        }
+      },
+      {
+        "key": "2.6",
+        "title": "The Transformer Architecture in GPT Variants",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 784,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1100,
+          "tps": 33.6
+        }
+      },
+      {
+        "key": "2.7",
+        "title": "Pre-training Objectives and Loss Landscapes",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "youtube.com": 1
+          },
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.589,
+          "n_citations_in_text": 9,
+          "unique_cited": 6,
+          "weak_citations": 2,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 772,
+          "citations_per_1000w": 11.66,
+          "sources_ranked_but_unused": 2,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1013,
+          "tps": 33.7
+        }
+      },
+      {
+        "key": "2.8",
+        "title": "Emergent Abilities and Phase Transitions",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "gregrobison.medium.com": 1
+          },
+          "n_queries": 4,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.631,
+          "n_citations_in_text": 16,
+          "unique_cited": 6,
+          "weak_citations": 4,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 752,
+          "citations_per_1000w": 21.28,
+          "sources_ranked_but_unused": 2,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1001,
+          "tps": 33.5
+        }
+      },
+      {
+        "key": "2.9",
+        "title": "In-Context Learning and Prompt Engineering",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.35,
+          "n_citations_in_text": 12,
+          "unique_cited": 6,
+          "weak_citations": 4,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 920,
+          "citations_per_1000w": 13.04,
+          "sources_ranked_but_unused": 2,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1168,
+          "tps": 33.5
+        }
+      },
+      {
+        "key": "2.10",
+        "title": "Limitations of Pure Scaling",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "cameronrwolfe.substack.com": 1,
+            "jakobnielsenphd.substack.com": 1
+          },
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.392,
+          "n_citations_in_text": 13,
+          "unique_cited": 6,
+          "weak_citations": 5,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 798,
+          "citations_per_1000w": 16.29,
+          "sources_ranked_but_unused": 2,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1020,
+          "tps": 33.6
+        }
+      },
+      {
+        "key": "3.1",
+        "title": "Meta's Release Strategy and Model Lineage",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [
+            "2302.13971"
+          ],
+          "must_cite_hit_kinds": {
+            "2302.13971": "wiki"
+          },
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "linkedin.com": 1
+          },
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.635,
+          "n_citations_in_text": 17,
+          "unique_cited": 6,
+          "weak_citations": 1,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 789,
+          "citations_per_1000w": 21.55,
+          "sources_ranked_but_unused": 2,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1070,
+          "tps": 33.5
+        }
+      },
+      {
+        "key": "3.2",
+        "title": "Architecture Innovations in LLaMA 3",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.611,
+          "n_citations_in_text": 19,
+          "unique_cited": 6,
+          "weak_citations": 2,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 626,
+          "citations_per_1000w": 30.35,
+          "sources_ranked_but_unused": 2,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 865,
+          "tps": 33.5
+        }
+      },
+      {
+        "key": "3.3",
+        "title": "The Open-Source Fine-Tuning Pipeline",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.578,
+          "n_citations_in_text": 18,
+          "unique_cited": 7,
+          "weak_citations": 3,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 787,
+          "citations_per_1000w": 22.87,
+          "sources_ranked_but_unused": 1,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1024,
+          "tps": 33.4
+        }
+      },
+      {
+        "key": "3.4",
+        "title": "Instruction Tuning and Alignment Benchmarks",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.779,
+          "n_citations_in_text": 14,
+          "unique_cited": 6,
+          "weak_citations": 1,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 639,
+          "citations_per_1000w": 21.91,
+          "sources_ranked_but_unused": 2,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 9,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 879,
+          "tps": 33.6
+        }
+      },
+      {
+        "key": "3.5",
+        "title": "Domain-Specific Adaptations: Code and Science",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 1,
+          "unique_cited": 1,
+          "weak_citations": 1,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 655,
+          "citations_per_1000w": 1.53,
+          "sources_ranked_but_unused": 7,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 908,
+          "tps": 33.5
+        }
+      },
+      {
+        "key": "3.6",
+        "title": "Quantization and Efficiency Optimizations",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "medium.com": 1
+          },
+          "n_queries": 4,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 821,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1160,
+          "tps": 33.6
+        }
+      },
+      {
+        "key": "3.7",
+        "title": "The Role of Hugging Face and Model Hub",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 4,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 827,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1067,
+          "tps": 33.5
+        }
+      },
+      {
+        "key": "3.8",
+        "title": "Safety, Jailbreaking, and Adversarial Testing",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 4,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 841,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1065,
+          "tps": 33.5
+        }
+      },
+      {
+        "key": "3.9",
+        "title": "RAG Integration with LLaMA Base Models",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "medium.com": 2,
+            "linkedin.com": 1
+          },
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 837,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1095,
+          "tps": 33.6
+        }
+      },
+      {
+        "key": "3.10",
+        "title": "Future Trajectories: Open Weights vs. Closed Proprietary",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 780,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 8,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1054,
+          "tps": 33.5
+        }
+      },
+      {
+        "key": "4.1",
+        "title": "PaLM Architecture: Sparse Mixture of Experts and Hybrid Attention",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 924,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 7,
+          "coherence": 8,
+          "format": 9,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1205,
+          "tps": 33.6
+        }
+      },
+      {
+        "key": "4.2",
+        "title": "Scaling Laws and Compute Efficiency in Google's Stack",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "sarahconstantin.substack.com": 1,
+            "medium.com": 1
+          },
+          "n_queries": 4,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 644,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 853,
+          "tps": 33.5
+        }
+      },
+      {
+        "key": "4.3",
+        "title": "Multimodal Foundation: PaLM-E and Embodied Intelligence",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.608,
+          "n_citations_in_text": 12,
+          "unique_cited": 7,
+          "weak_citations": 0,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 997,
+          "citations_per_1000w": 12.04,
+          "sources_ranked_but_unused": 1,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 9,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1421,
+          "tps": 33.3
+        }
+      },
+      {
+        "key": "4.4",
+        "title": "Gemini 1.0: Unified Architecture for Text, Code, and Vision",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "youtube.com": 1
+          },
+          "n_queries": 4,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.407,
+          "n_citations_in_text": 14,
+          "unique_cited": 7,
+          "weak_citations": 5,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 651,
+          "citations_per_1000w": 21.51,
+          "sources_ranked_but_unused": 1,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 9,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 862,
+          "tps": 33.6
+        }
+      },
+      {
+        "key": "4.5",
+        "title": "Long-Context Mastery: The 1M Token Window",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 4,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.5,
+          "n_citations_in_text": 14,
+          "unique_cited": 4,
+          "weak_citations": 4,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 752,
+          "citations_per_1000w": 18.62,
+          "sources_ranked_but_unused": 4,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 967,
+          "tps": 33.5
+        }
+      },
+      {
+        "key": "4.6",
+        "title": "Code Generation and Debugging: Beyond Syntax",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 4,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.255,
+          "n_citations_in_text": 11,
+          "unique_cited": 8,
+          "weak_citations": 7,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 647,
+          "citations_per_1000w": 17.0,
+          "sources_ranked_but_unused": 0,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 842,
+          "tps": 33.5
+        }
+      },
+      {
+        "key": "4.7",
+        "title": "Reasoning and Math: The AlphaGeometry and AlphaProof Integration",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "thesequence.substack.com": 1
+          },
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.429,
+          "n_citations_in_text": 14,
+          "unique_cited": 5,
+          "weak_citations": 3,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 939,
+          "citations_per_1000w": 14.91,
+          "sources_ranked_but_unused": 3,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 10,
+          "coherence": 10,
+          "format": 10,
+          "skipped": true
+        },
+        "cost": {
+          "tokens": 1161,
+          "tps": 33.4
+        }
+      },
+      {
+        "key": "4.8",
+        "title": "Safety, Alignment, and Constitutional AI",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 4,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.379,
+          "n_citations_in_text": 14,
+          "unique_cited": 3,
+          "weak_citations": 6,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 948,
+          "citations_per_1000w": 14.77,
+          "sources_ranked_but_unused": 5,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 8,
+          "coherence": 9,
+          "format": 9,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1206,
+          "tps": 33.4
+        }
+      },
+      {
+        "key": "4.9",
+        "title": "The Vertex AI Platform and Model Serving",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "medium.com": 1
+          },
+          "n_queries": 5,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.56,
+          "n_citations_in_text": 15,
+          "unique_cited": 5,
+          "weak_citations": 1,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 830,
+          "citations_per_1000w": 18.07,
+          "sources_ranked_but_unused": 3,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 8,
+          "coherence": 9,
+          "format": 9,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1036,
+          "tps": 33.4
+        }
+      },
+      {
+        "key": "4.10",
+        "title": "Future Trajectories: Gemini 2.0 and Agentic Workflows",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "medium.com": 1
+          },
+          "n_queries": 5,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.64,
+          "n_citations_in_text": 15,
+          "unique_cited": 7,
+          "weak_citations": 3,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 949,
+          "citations_per_1000w": 15.81,
+          "sources_ranked_but_unused": 1,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 8,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1264,
+          "tps": 33.6
+        }
+      },
+      {
+        "key": "5.1",
+        "title": "The Fine-Tuning Bottleneck: Memory and Compute Constraints",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 4,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.614,
+          "n_citations_in_text": 7,
+          "unique_cited": 5,
+          "weak_citations": 1,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 783,
+          "citations_per_1000w": 8.94,
+          "sources_ranked_but_unused": 3,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1006,
+          "tps": 33.5
+        }
+      },
+      {
+        "key": "5.2",
+        "title": "Low-Rank Adaptation (LoRA): Architecture and Mathematical Formulation",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 4,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.612,
+          "n_citations_in_text": 26,
+          "unique_cited": 7,
+          "weak_citations": 1,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 869,
+          "citations_per_1000w": 29.92,
+          "sources_ranked_but_unused": 1,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1154,
+          "tps": 33.4
+        }
+      },
+      {
+        "key": "5.3",
+        "title": "Quantized Low-Rank Adaptation (QLoRA): Loading 16-Bit Models on 4-Bit Memory",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.487,
+          "n_citations_in_text": 15,
+          "unique_cited": 7,
+          "weak_citations": 1,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 774,
+          "citations_per_1000w": 19.38,
+          "sources_ranked_but_unused": 1,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 9,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1129,
+          "tps": 33.3
+        }
+      },
+      {
+        "key": "5.4",
+        "title": "Adapter Layers: The Original Parameter-Efficient Approach",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [
+            "2106.09685"
+          ],
+          "should_cite_hit_kinds": {
+            "2106.09685": "arxiv"
+          },
+          "forbidden_domain_hits": {},
+          "n_queries": 4,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.608,
+          "n_citations_in_text": 12,
+          "unique_cited": 3,
+          "weak_citations": 1,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 616,
+          "citations_per_1000w": 19.48,
+          "sources_ranked_but_unused": 5,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 806,
+          "tps": 33.3
+        }
+      },
+      {
+        "key": "5.5",
+        "title": "Merging and Unmerging: Techniques for Model Composition",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 1.0,
+          "n_citations_in_text": 1,
+          "unique_cited": 1,
+          "weak_citations": 0,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 869,
+          "citations_per_1000w": 1.15,
+          "sources_ranked_but_unused": 7,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1179,
+          "tps": 33.3
+        }
+      },
+      {
+        "key": "5.6",
+        "title": "Hyperparameter Sensitivity: Rank, Alpha, and Dropout Strategies",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 4,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 1.0,
+          "n_citations_in_text": 1,
+          "unique_cited": 1,
+          "weak_citations": 0,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 821,
+          "citations_per_1000w": 1.22,
+          "sources_ranked_but_unused": 7,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1091,
+          "tps": 33.4
+        }
+      },
+      {
+        "key": "5.7",
+        "title": "Task-Specific Applications: NLU, Generation, and Domain Adaptation",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 651,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 930,
+          "tps": 33.1
+        }
+      },
+      {
+        "key": "5.8",
+        "title": "Limitations and Failure Modes of Parameter-Efficient Fine-Tuning",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "medium.com": 1
+          },
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 879,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1161,
+          "tps": 33.5
+        }
+      },
+      {
+        "key": "5.9",
+        "title": "Beyond LoRA: Emerging Variants like DoRA and Prefix Tuning",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.655,
+          "n_citations_in_text": 20,
+          "unique_cited": 5,
+          "weak_citations": 1,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 763,
+          "citations_per_1000w": 26.21,
+          "sources_ranked_but_unused": 3,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1073,
+          "tps": 33.4
+        }
+      },
+      {
+        "key": "5.10",
+        "title": "Practical Implementation: Frameworks and Deployment Considerations",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 922,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 8,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1267,
+          "tps": 33.2
+        }
+      },
+      {
+        "key": "6.1",
+        "title": "Fundamentals of Human Preference Data",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "todatabeyond.substack.com": 1
+          },
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 826,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1117,
+          "tps": 33.4
+        }
+      },
+      {
+        "key": "6.2",
+        "title": "The Bradley-Terry Model for Pairwise Ranking",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 3,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 776,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1111,
+          "tps": 33.6
+        }
+      },
+      {
+        "key": "6.3",
+        "title": "Reward Modeling via Maximum Likelihood Estimation",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "cameronrwolfe.substack.com": 1,
+            "medium.com": 1
+          },
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 801,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1035,
+          "tps": 33.5
+        }
+      },
+      {
+        "key": "6.4",
+        "title": "Proximal Policy Optimization (PPO) for Alignment",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 851,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1298,
+          "tps": 33.3
+        }
+      },
+      {
+        "key": "6.5",
+        "title": "Direct Preference Optimization (DPO) and Loss Formulation",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "cameronrwolfe.substack.com": 1
+          },
+          "n_queries": 4,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 859,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1194,
+          "tps": 33.4
+        }
+      },
+      {
+        "key": "6.6",
+        "title": "Advanced Reward Modeling Techniques",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 665,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 9,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 922,
+          "tps": 33.5
+        }
+      },
+      {
+        "key": "6.7",
+        "title": "Multi-Objective and Multi-Agent Alignment",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "linkedin.com": 1
+          },
+          "n_queries": 4,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 463,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 9,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 586,
+          "tps": 33.7
+        }
+      },
+      {
+        "key": "6.8",
+        "title": "Evaluation Metrics for Aligned Models",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 636,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 9,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 901,
+          "tps": 33.5
+        }
+      },
+      {
+        "key": "6.9",
+        "title": "Failure Modes: Reward Hacking and Over-Alignment",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 731,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 9,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1039,
+          "tps": 33.5
+        }
+      },
+      {
+        "key": "6.10",
+        "title": "Future Directions: Constitutional AI and Self-Alignment",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "youtube.com": 1
+          },
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 684,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 9,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 841,
+          "tps": 33.5
+        }
+      },
+      {
+        "key": "7.1",
+        "title": "The Evolution of Reasoning: From Pattern Matching to Step-by-Step Deduction",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "youtube.com": 1
+          },
+          "n_queries": 4,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 796,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1085,
+          "tps": 33.4
+        }
+      },
+      {
+        "key": "7.2",
+        "title": "Chain-of-Thought (CoT) Prompting: Zero-Shot and Few-Shot Strategies",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 4,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 652,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 885,
+          "tps": 33.6
+        }
+      },
+      {
+        "key": "7.3",
+        "title": "Self-Consistency and Ensemble Reasoning: Mitigating Stochastic Error",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 4,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 1016,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1319,
+          "tps": 33.3
+        }
+      },
+      {
+        "key": "7.4",
+        "title": "Tree of Thoughts (ToT): Navigating the Search Space of Reasoning",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.456,
+          "n_citations_in_text": 9,
+          "unique_cited": 5,
+          "weak_citations": 0,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 1072,
+          "citations_per_1000w": 8.4,
+          "sources_ranked_but_unused": 3,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1400,
+          "tps": 33.2
+        }
+      },
+      {
+        "key": "7.5",
+        "title": "Graph of Thoughts: Flexible Control Flow for Complex Planning",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "youtube.com": 1
+          },
+          "n_queries": 4,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 917,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1212,
+          "tps": 33.3
+        }
+      },
+      {
+        "key": "7.6",
+        "title": "Tree of Thoughts with Reflection: Error Detection and Correction",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 4,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 949,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1224,
+          "tps": 33.2
+        }
+      },
+      {
+        "key": "7.7",
+        "title": "Least-to-Most Prompting: Decomposing Problems via Hierarchical Sub-goals",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 676,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 9,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 920,
+          "tps": 33.3
+        }
+      },
+      {
+        "key": "7.8",
+        "title": "Program-Aided Language Models: Generating and Executing Code",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 893,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 9,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1134,
+          "tps": 33.5
+        }
+      },
+      {
+        "key": "7.9",
+        "title": "Reasoning in Multimodal and Scientific Domains: Case Studies",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 726,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 898,
+          "tps": 33.6
+        }
+      },
+      {
+        "key": "7.10",
+        "title": "Trade-offs, Limitations, and the Cost of Reasoning: Efficiency vs. Accuracy",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "medium.com": 2
+          },
+          "n_queries": 5,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.579,
+          "n_citations_in_text": 14,
+          "unique_cited": 7,
+          "weak_citations": 2,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 831,
+          "citations_per_1000w": 16.85,
+          "sources_ranked_but_unused": 1,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 9,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1120,
+          "tps": 33.4
+        }
+      },
+      {
+        "key": "8.1",
+        "title": "Early Fusion vs. Late Fusion Architectures",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "bhavishyapandit9.substack.com": 1,
+            "youtube.com": 1,
+            "vizuara.substack.com": 1
+          },
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 996,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1236,
+          "tps": 33.4
+        }
+      },
+      {
+        "key": "8.2",
+        "title": "Contrastive Learning for Cross-Modal Alignment",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 894,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1270,
+          "tps": 33.3
+        }
+      },
+      {
+        "key": "8.3",
+        "title": "Encoder-Decoder Frameworks for Image Captioning",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 963,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1309,
+          "tps": 33.5
+        }
+      },
+      {
+        "key": "8.4",
+        "title": "Visual Grounding and Question Answering",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 4,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.65,
+          "n_citations_in_text": 10,
+          "unique_cited": 8,
+          "weak_citations": 3,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 815,
+          "citations_per_1000w": 12.27,
+          "sources_ranked_but_unused": 0,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1053,
+          "tps": 33.7
+        }
+      },
+      {
+        "key": "8.5",
+        "title": "Video Understanding and Temporal Reasoning",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 4,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.6,
+          "n_citations_in_text": 12,
+          "unique_cited": 6,
+          "weak_citations": 1,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 784,
+          "citations_per_1000w": 15.31,
+          "sources_ranked_but_unused": 2,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1096,
+          "tps": 33.6
+        }
+      },
+      {
+        "key": "8.6",
+        "title": "Multimodal Prompt Engineering Strategies",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 4,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.692,
+          "n_citations_in_text": 13,
+          "unique_cited": 5,
+          "weak_citations": 3,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 697,
+          "citations_per_1000w": 18.65,
+          "sources_ranked_but_unused": 3,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 8,
+          "coherence": 7,
+          "format": 9,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 936,
+          "tps": 33.7
+        }
+      },
+      {
+        "key": "8.7",
+        "title": "Hallucination Mitigation in Multimodal Systems",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [
+            "2005.11401"
+          ],
+          "should_cite_hit_kinds": {
+            "2005.11401": "wiki"
+          },
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.736,
+          "n_citations_in_text": 25,
+          "unique_cited": 7,
+          "weak_citations": 4,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 942,
+          "citations_per_1000w": 26.54,
+          "sources_ranked_but_unused": 1,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 8,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1247,
+          "tps": 29.4
+        }
+      },
+      {
+        "key": "8.8",
+        "title": "Efficient Multimodal Inference and Compression",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.88,
+          "n_citations_in_text": 10,
+          "unique_cited": 7,
+          "weak_citations": 0,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 606,
+          "citations_per_1000w": 16.5,
+          "sources_ranked_but_unused": 1,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 9,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 800,
+          "tps": 28.1
+        }
+      },
+      {
+        "key": "8.9",
+        "title": "Emergent Abilities in Multimodal Pre-training",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 4,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.709,
+          "n_citations_in_text": 11,
+          "unique_cited": 6,
+          "weak_citations": 2,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 813,
+          "citations_per_1000w": 13.53,
+          "sources_ranked_but_unused": 2,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 9,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1045,
+          "tps": 31.2
+        }
+      },
+      {
+        "key": "8.10",
+        "title": "Ethical Considerations and Bias in Multimodal Data",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.662,
+          "n_citations_in_text": 13,
+          "unique_cited": 7,
+          "weak_citations": 2,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 617,
+          "citations_per_1000w": 21.07,
+          "sources_ranked_but_unused": 1,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 9,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 829,
+          "tps": 31.4
+        }
+      },
+      {
+        "key": "9.1",
+        "title": "Defining Agentic Workflows: From Chatbots to Autonomous Agents",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "medium.com": 1,
+            "linkedin.com": 1
+          },
+          "n_queries": 4,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.807,
+          "n_citations_in_text": 14,
+          "unique_cited": 7,
+          "weak_citations": 1,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 751,
+          "citations_per_1000w": 18.64,
+          "sources_ranked_but_unused": 1,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 967,
+          "tps": 31.1
+        }
+      },
+      {
+        "key": "9.2",
+        "title": "The Planning Loop: Hierarchical Task Decomposition and Search Strategies",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "cameronrwolfe.substack.com": 1
+          },
+          "n_queries": 4,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.554,
+          "n_citations_in_text": 13,
+          "unique_cited": 5,
+          "weak_citations": 1,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 943,
+          "citations_per_1000w": 13.79,
+          "sources_ranked_but_unused": 3,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 8,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1279,
+          "tps": 35.1
+        }
+      },
+      {
+        "key": "9.3",
+        "title": "Tool Use and Function Calling: Integrating External APIs and Code Interpreters",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 4,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.756,
+          "n_citations_in_text": 9,
+          "unique_cited": 8,
+          "weak_citations": 1,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 1020,
+          "citations_per_1000w": 8.82,
+          "sources_ranked_but_unused": 0,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 8,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1306,
+          "tps": 35.2
+        }
+      },
+      {
+        "key": "9.4",
+        "title": "Memory Architectures: Context Management and Long-Term State Retention",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "linkedin.com": 1,
+            "elvex.com": 1
+          },
+          "n_queries": 5,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.643,
+          "n_citations_in_text": 7,
+          "unique_cited": 5,
+          "weak_citations": 2,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 641,
+          "citations_per_1000w": 10.92,
+          "sources_ranked_but_unused": 3,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 9,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 886,
+          "tps": 35.3
+        }
+      },
+      {
+        "key": "9.5",
+        "title": "Self-Reflection and Critique: Iterative Improvement via Internal Feedback",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "medium.com": 1,
+            "linkedin.com": 1
+          },
+          "n_queries": 4,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.61,
+          "n_citations_in_text": 10,
+          "unique_cited": 7,
+          "weak_citations": 2,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 837,
+          "citations_per_1000w": 11.95,
+          "sources_ranked_but_unused": 1,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1137,
+          "tps": 35.4
+        }
+      },
+      {
+        "key": "9.6",
+        "title": "Multi-Agent Collaboration: Communication Protocols and Role Specialization",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "youtube.com": 1
+          },
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.53,
+          "n_citations_in_text": 10,
+          "unique_cited": 6,
+          "weak_citations": 2,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 608,
+          "citations_per_1000w": 16.45,
+          "sources_ranked_but_unused": 2,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 771,
+          "tps": 35.5
+        }
+      },
+      {
+        "key": "9.7",
+        "title": "ReAct and Plan-and-Solve: Formalizing Reasoning with Action",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "medium.com": 1
+          },
+          "n_queries": 5,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.85,
+          "n_citations_in_text": 8,
+          "unique_cited": 7,
+          "weak_citations": 0,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 688,
+          "citations_per_1000w": 11.63,
+          "sources_ranked_but_unused": 1,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 923,
+          "tps": 35.4
+        }
+      },
+      {
+        "key": "9.8",
+        "title": "Error Handling and Recovery: Robustness in Unstructured Environments",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "manveerc.substack.com": 1,
+            "agussudjianto.substack.com": 1
+          },
+          "n_queries": 5,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.717,
+          "n_citations_in_text": 18,
+          "unique_cited": 6,
+          "weak_citations": 1,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 741,
+          "citations_per_1000w": 24.29,
+          "sources_ranked_but_unused": 2,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 961,
+          "tps": 35.3
+        }
+      },
+      {
+        "key": "9.9",
+        "title": "Evaluation Metrics for Agents: Beyond Perplexity to Task Success",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 4,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.9,
+          "n_citations_in_text": 7,
+          "unique_cited": 4,
+          "weak_citations": 0,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 742,
+          "citations_per_1000w": 9.43,
+          "sources_ranked_but_unused": 4,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 971,
+          "tps": 35.2
+        }
+      },
+      {
+        "key": "9.10",
+        "title": "Safety and Alignment in Autonomous Execution: Preventing Harmful Actions",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "linkedin.com": 1
+          },
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.662,
+          "n_citations_in_text": 8,
+          "unique_cited": 5,
+          "weak_citations": 2,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 834,
+          "citations_per_1000w": 9.59,
+          "sources_ranked_but_unused": 3,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 8,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1020,
+          "tps": 35.3
+        }
+      },
+      {
+        "key": "10.1",
+        "title": "Clinical Decision Support: Retrieval-Augmented Generation for Medical Guidelines",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 4,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.75,
+          "n_citations_in_text": 12,
+          "unique_cited": 6,
+          "weak_citations": 1,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 940,
+          "citations_per_1000w": 12.77,
+          "sources_ranked_but_unused": 2,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 8,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1226,
+          "tps": 35.1
+        }
+      },
+      {
+        "key": "10.2",
+        "title": "Diagnostic Imaging Analysis: Multimodal Fusion of Radiology Reports and X-rays",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 4,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.287,
+          "n_citations_in_text": 8,
+          "unique_cited": 6,
+          "weak_citations": 5,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 792,
+          "citations_per_1000w": 10.1,
+          "sources_ranked_but_unused": 2,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 9,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1008,
+          "tps": 35.3
+        }
+      },
+      {
+        "key": "10.3",
+        "title": "Patient Interaction and Triage: Ethical Constraints and Safety Filters",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 4,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.864,
+          "n_citations_in_text": 11,
+          "unique_cited": 6,
+          "weak_citations": 1,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 839,
+          "citations_per_1000w": 13.11,
+          "sources_ranked_but_unused": 2,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1129,
+          "tps": 35.1
+        }
+      },
+      {
+        "key": "10.4",
+        "title": "Legal Contract Review: Semantic Similarity Metrics and Clause Extraction",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 4,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.591,
+          "n_citations_in_text": 11,
+          "unique_cited": 7,
+          "weak_citations": 4,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 787,
+          "citations_per_1000w": 13.98,
+          "sources_ranked_but_unused": 1,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1090,
+          "tps": 35.2
+        }
+      },
+      {
+        "key": "10.5",
+        "title": "Case Law Reasoning: Chain-of-Thought for Precedent Analysis and Citation",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.6,
+          "n_citations_in_text": 8,
+          "unique_cited": 6,
+          "weak_citations": 2,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 622,
+          "citations_per_1000w": 12.86,
+          "sources_ranked_but_unused": 2,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 9,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 812,
+          "tps": 35.3
+        }
+      },
+      {
+        "key": "10.6",
+        "title": "Regulatory Compliance: Automated Redaction and Privacy-Preserving Fine-Tuning",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.686,
+          "n_citations_in_text": 14,
+          "unique_cited": 7,
+          "weak_citations": 1,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 664,
+          "citations_per_1000w": 21.08,
+          "sources_ranked_but_unused": 1,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 9,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 894,
+          "tps": 35.3
+        }
+      },
+      {
+        "key": "10.7",
+        "title": "Drug Discovery: Generative Models for Molecular Structure and Property Prediction",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "medium.com": 1
+          },
+          "n_queries": 5,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.95,
+          "n_citations_in_text": 10,
+          "unique_cited": 7,
+          "weak_citations": 0,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 754,
+          "citations_per_1000w": 13.26,
+          "sources_ranked_but_unused": 1,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 992,
+          "tps": 35.3
+        }
+      },
+      {
+        "key": "10.8",
+        "title": "Scientific Literature Synthesis: Automated Meta-Analysis and Hypothesis Generation",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "dataengineeringcentral.substack.com": 1
+          },
+          "n_queries": 5,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.78,
+          "n_citations_in_text": 10,
+          "unique_cited": 6,
+          "weak_citations": 1,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 1037,
+          "citations_per_1000w": 9.64,
+          "sources_ranked_but_unused": 2,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1308,
+          "tps": 35.3
+        }
+      },
+      {
+        "key": "10.9",
+        "title": "Code Generation for Biology: Translating Biological Protocols into Executable Scripts",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 4,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.711,
+          "n_citations_in_text": 9,
+          "unique_cited": 7,
+          "weak_citations": 0,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 839,
+          "citations_per_1000w": 10.73,
+          "sources_ranked_but_unused": 1,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1102,
+          "tps": 35.3
+        }
+      },
+      {
+        "key": "10.10",
+        "title": "Evaluation Benchmarks: Domain-Specific Metrics Beyond Perplexity",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "medium.com": 1
+          },
+          "n_queries": 4,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.857,
+          "n_citations_in_text": 7,
+          "unique_cited": 7,
+          "weak_citations": 0,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 712,
+          "citations_per_1000w": 9.83,
+          "sources_ranked_but_unused": 1,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 9,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 984,
+          "tps": 35.3
+        }
+      },
+      {
+        "key": "11.1",
+        "title": "LLM-Driven Log Anomaly Detection and Root Cause Analysis",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 4,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.582,
+          "n_citations_in_text": 11,
+          "unique_cited": 7,
+          "weak_citations": 2,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 606,
+          "citations_per_1000w": 18.15,
+          "sources_ranked_but_unused": 1,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 747,
+          "tps": 35.3
+        }
+      },
+      {
+        "key": "11.2",
+        "title": "Automated Incident Response and Remediation Scripts",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "medium.com": 1
+          },
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 672,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 9,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 877,
+          "tps": 35.4
+        }
+      },
+      {
+        "key": "11.3",
+        "title": "Synthetic Data Generation for Edge Case Testing",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "linkedin.com": 1
+          },
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 777,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 9,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 994,
+          "tps": 35.2
+        }
+      },
+      {
+        "key": "11.4",
+        "title": "Intelligent Dependency Mapping and Architecture Visualization",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 621,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 788,
+          "tps": 35.3
+        }
+      },
+      {
+        "key": "11.5",
+        "title": "Predictive Capacity Planning via Time-Series Reasoning",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 812,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1056,
+          "tps": 35.0
+        }
+      },
+      {
+        "key": "11.6",
+        "title": "Automated Documentation and Knowledge Base Maintenance",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 825,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1072,
+          "tps": 35.1
+        }
+      },
+      {
+        "key": "11.7",
+        "title": "Security Vulnerability Scanning and Patch Prioritization",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 916,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 8,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1214,
+          "tps": 34.9
+        }
+      },
+      {
+        "key": "11.8",
+        "title": "Natural Language Query Interfaces for Monitoring Dashboards",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 774,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1067,
+          "tps": 35.1
+        }
+      },
+      {
+        "key": "11.9",
+        "title": "Cross-Cloud Orchestration and Multi-Tenant Configuration",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 676,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 9,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 904,
+          "tps": 35.2
+        }
+      },
+      {
+        "key": "11.10",
+        "title": "Evaluation Metrics for Operational LLM Agents",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "algomox.com": 2,
+            "reddit.com": 1
+          },
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 738,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 9,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 966,
+          "tps": 34.9
+        }
+      },
+      {
+        "key": "12.1",
+        "title": "The Anatomy of LLM Hallucinations: Cognitive Biases and Training Artifacts",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 4,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.731,
+          "n_citations_in_text": 13,
+          "unique_cited": 7,
+          "weak_citations": 3,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 748,
+          "citations_per_1000w": 17.38,
+          "sources_ranked_but_unused": 1,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1003,
+          "tps": 35.2
+        }
+      },
+      {
+        "key": "12.2",
+        "title": "Prompt Engineering Techniques for Fact-Checking and Constraint Enforcement",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.273,
+          "n_citations_in_text": 15,
+          "unique_cited": 8,
+          "weak_citations": 8,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 902,
+          "citations_per_1000w": 16.63,
+          "sources_ranked_but_unused": 0,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1225,
+          "tps": 35.2
+        }
+      },
+      {
+        "key": "12.3",
+        "title": "Retrieval-Augmented Generation (RAG): Grounding Outputs in External Knowledge",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.817,
+          "n_citations_in_text": 12,
+          "unique_cited": 7,
+          "weak_citations": 1,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 781,
+          "citations_per_1000w": 15.36,
+          "sources_ranked_but_unused": 1,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1000,
+          "tps": 35.3
+        }
+      },
+      {
+        "key": "12.4",
+        "title": "Self-Correction and Iterative Refinement: Internal Model Verification",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.655,
+          "n_citations_in_text": 11,
+          "unique_cited": 7,
+          "weak_citations": 1,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 829,
+          "citations_per_1000w": 13.27,
+          "sources_ranked_but_unused": 1,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 9,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1152,
+          "tps": 35.2
+        }
+      },
+      {
+        "key": "12.5",
+        "title": "External Fact-Checking Pipelines: LLMs as Validators for Other LLMs",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 4,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.436,
+          "n_citations_in_text": 11,
+          "unique_cited": 6,
+          "weak_citations": 3,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 968,
+          "citations_per_1000w": 11.36,
+          "sources_ranked_but_unused": 2,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1257,
+          "tps": 35.2
+        }
+      },
+      {
+        "key": "12.6",
+        "title": "Uncertainty Quantification: Estimating Confidence in Generated Facts",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 4,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.75,
+          "n_citations_in_text": 10,
+          "unique_cited": 6,
+          "weak_citations": 2,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 802,
+          "citations_per_1000w": 12.47,
+          "sources_ranked_but_unused": 2,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1047,
+          "tps": 35.2
+        }
+      },
+      {
+        "key": "12.7",
+        "title": "Adversarial Training and Data Augmentation for Robustness",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.478,
+          "n_citations_in_text": 9,
+          "unique_cited": 7,
+          "weak_citations": 3,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 608,
+          "citations_per_1000w": 14.8,
+          "sources_ranked_but_unused": 1,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 783,
+          "tps": 35.3
+        }
+      },
+      {
+        "key": "12.8",
+        "title": "Graph-Based Knowledge Integration: Structuring Facts for Accuracy",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.787,
+          "n_citations_in_text": 8,
+          "unique_cited": 6,
+          "weak_citations": 1,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 887,
+          "citations_per_1000w": 9.02,
+          "sources_ranked_but_unused": 2,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 9,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1176,
+          "tps": 35.1
+        }
+      },
+      {
+        "key": "12.9",
+        "title": "Evaluation Metrics Beyond Perplexity: Measuring Factual Precision",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.68,
+          "n_citations_in_text": 10,
+          "unique_cited": 6,
+          "weak_citations": 0,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 876,
+          "citations_per_1000w": 11.42,
+          "sources_ranked_but_unused": 2,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1145,
+          "tps": 35.2
+        }
+      },
+      {
+        "key": "12.10",
+        "title": "Human-in-the-Loop Systems: Scaling Manual Verification for Critical Domains",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 4,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.518,
+          "n_citations_in_text": 11,
+          "unique_cited": 6,
+          "weak_citations": 1,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 674,
+          "citations_per_1000w": 16.32,
+          "sources_ranked_but_unused": 2,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 884,
+          "tps": 35.2
+        }
+      },
+      {
+        "key": "13.1",
+        "title": "Fundamentals of Adversarial Attacks on LLMs",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 4,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.789,
+          "n_citations_in_text": 9,
+          "unique_cited": 6,
+          "weak_citations": 0,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 734,
+          "citations_per_1000w": 12.26,
+          "sources_ranked_but_unused": 2,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 919,
+          "tps": 35.1
+        }
+      },
+      {
+        "key": "13.2",
+        "title": "Prompt Injection and Context Contamination",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 4,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.69,
+          "n_citations_in_text": 10,
+          "unique_cited": 6,
+          "weak_citations": 0,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 758,
+          "citations_per_1000w": 13.19,
+          "sources_ranked_but_unused": 2,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 957,
+          "tps": 35.3
+        }
+      },
+      {
+        "key": "13.3",
+        "title": "Jailbreaking Techniques and Model Bypass",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.557,
+          "n_citations_in_text": 14,
+          "unique_cited": 8,
+          "weak_citations": 1,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 875,
+          "citations_per_1000w": 16.0,
+          "sources_ranked_but_unused": 0,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 8,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1146,
+          "tps": 35.1
+        }
+      },
+      {
+        "key": "13.4",
+        "title": "Automated Adversarial Optimization Methods",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 4,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.511,
+          "n_citations_in_text": 9,
+          "unique_cited": 7,
+          "weak_citations": 1,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 811,
+          "citations_per_1000w": 11.1,
+          "sources_ranked_but_unused": 1,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1152,
+          "tps": 35.0
+        }
+      },
+      {
+        "key": "13.5",
+        "title": "Data Poisoning and Model Corruption",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.593,
+          "n_citations_in_text": 14,
+          "unique_cited": 7,
+          "weak_citations": 3,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 739,
+          "citations_per_1000w": 18.94,
+          "sources_ranked_but_unused": 1,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 9,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 950,
+          "tps": 35.2
+        }
+      },
+      {
+        "key": "13.6",
+        "title": "Evaluating Robustness: Benchmarks and Metrics",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 4,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.758,
+          "n_citations_in_text": 12,
+          "unique_cited": 6,
+          "weak_citations": 1,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 664,
+          "citations_per_1000w": 18.07,
+          "sources_ranked_but_unused": 2,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 9,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 884,
+          "tps": 35.3
+        }
+      },
+      {
+        "key": "13.7",
+        "title": "Defensive Strategies: Input Sanitization and Filtering",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 4,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.611,
+          "n_citations_in_text": 9,
+          "unique_cited": 5,
+          "weak_citations": 0,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 808,
+          "citations_per_1000w": 11.14,
+          "sources_ranked_but_unused": 3,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1060,
+          "tps": 35.1
+        }
+      },
+      {
+        "key": "13.8",
+        "title": "Architectural Defenses and Safety Layers",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.24,
+          "n_citations_in_text": 10,
+          "unique_cited": 7,
+          "weak_citations": 5,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 864,
+          "citations_per_1000w": 11.57,
+          "sources_ranked_but_unused": 1,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 8,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1169,
+          "tps": 35.4
+        }
+      },
+      {
+        "key": "13.9",
+        "title": "Adversarial Training and Robust Fine-Tuning",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.367,
+          "n_citations_in_text": 15,
+          "unique_cited": 7,
+          "weak_citations": 5,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 726,
+          "citations_per_1000w": 20.66,
+          "sources_ranked_but_unused": 1,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 942,
+          "tps": 35.3
+        }
+      },
+      {
+        "key": "13.10",
+        "title": "Emerging Threats: Multi-Modal and Agentic Attacks",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.662,
+          "n_citations_in_text": 8,
+          "unique_cited": 7,
+          "weak_citations": 0,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 647,
+          "citations_per_1000w": 12.36,
+          "sources_ranked_but_unused": 1,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 817,
+          "tps": 35.3
+        }
+      },
+      {
+        "key": "14.1",
+        "title": "Principles of Model Quantization: From FP16 to INT4",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "rumn.medium.com": 1
+          },
+          "n_queries": 4,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.622,
+          "n_citations_in_text": 9,
+          "unique_cited": 6,
+          "weak_citations": 1,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 799,
+          "citations_per_1000w": 11.26,
+          "sources_ranked_but_unused": 2,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1112,
+          "tps": 35.1
+        }
+      },
+      {
+        "key": "14.2",
+        "title": "Post-Training Quantization Techniques: PTQ and QAT",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "medium.com": 1
+          },
+          "n_queries": 4,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.546,
+          "n_citations_in_text": 13,
+          "unique_cited": 8,
+          "weak_citations": 3,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 716,
+          "citations_per_1000w": 18.16,
+          "sources_ranked_but_unused": 0,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 960,
+          "tps": 35.2
+        }
+      },
+      {
+        "key": "14.3",
+        "title": "Knowledge Distillation: Teacher-Student Architecture and Loss Functions",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 4,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.6,
+          "n_citations_in_text": 10,
+          "unique_cited": 5,
+          "weak_citations": 3,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 739,
+          "citations_per_1000w": 13.53,
+          "sources_ranked_but_unused": 3,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 987,
+          "tps": 35.3
+        }
+      },
+      {
+        "key": "14.4",
+        "title": "Sparse Mixture-of-Experts (MoE) for Scalable Inference",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.622,
+          "n_citations_in_text": 9,
+          "unique_cited": 7,
+          "weak_citations": 0,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 894,
+          "citations_per_1000w": 10.07,
+          "sources_ranked_but_unused": 1,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1187,
+          "tps": 35.3
+        }
+      },
+      {
+        "key": "14.5",
+        "title": "Speculative Decoding and Parallel Sampling Strategies",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 703,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 986,
+          "tps": 35.2
+        }
+      },
+      {
+        "key": "14.6",
+        "title": "Edge Deployment Constraints: Memory Footprint and Compute Limits",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.5,
+          "n_citations_in_text": 1,
+          "unique_cited": 1,
+          "weak_citations": 0,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 717,
+          "citations_per_1000w": 1.39,
+          "sources_ranked_but_unused": 7,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 945,
+          "tps": 34.9
+        }
+      },
+      {
+        "key": "14.7",
+        "title": "Continuous Quantization and Dynamic Precision Scaling",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "medium.com": 2
+          },
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 655,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 9,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 872,
+          "tps": 35.4
+        }
+      },
+      {
+        "key": "14.8",
+        "title": "Inference Optimization Libraries: vLLM, TensorRT-LLM, and ONNX Runtime",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "medium.com": 1
+          },
+          "n_queries": 5,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.607,
+          "n_citations_in_text": 15,
+          "unique_cited": 4,
+          "weak_citations": 4,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 872,
+          "citations_per_1000w": 17.2,
+          "sources_ranked_but_unused": 4,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 8,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1249,
+          "tps": 35.1
+        }
+      },
+      {
+        "key": "14.9",
+        "title": "Energy Efficiency and Carbon Footprint of LLM Inference",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 802,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1061,
+          "tps": 35.1
+        }
+      },
+      {
+        "key": "14.10",
+        "title": "Real-World Case Studies: Deploying LLMs on Mobile and IoT",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "medium.com": 1
+          },
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 630,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 9,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 863,
+          "tps": 35.3
+        }
+      },
+      {
+        "key": "15.1",
+        "title": "Synthetic Data Generation Paradigms",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "linkedin.com": 1
+          },
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 654,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 9,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 880,
+          "tps": 35.3
+        }
+      },
+      {
+        "key": "15.2",
+        "title": "World Models and Predictive Coding",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 4,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.0,
+          "n_citations_in_text": 0,
+          "unique_cited": 0,
+          "weak_citations": 0,
+          "zero_cite_red_flag": true
+        },
+        "output": {
+          "word_count": 888,
+          "citations_per_1000w": 0.0,
+          "sources_ranked_but_unused": 8,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 8,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1130,
+          "tps": 35.1
+        }
+      },
+      {
+        "key": "15.3",
+        "title": "Emergent Abilities in Scaling Laws",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "gregrobison.medium.com": 1
+          },
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.717,
+          "n_citations_in_text": 6,
+          "unique_cited": 4,
+          "weak_citations": 1,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 880,
+          "citations_per_1000w": 6.82,
+          "sources_ranked_but_unused": 4,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1136,
+          "tps": 35.1
+        }
+      },
+      {
+        "key": "15.4",
+        "title": "Neuro-Symbolic Integration for AGI",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.7,
+          "n_citations_in_text": 5,
+          "unique_cited": 4,
+          "weak_citations": 1,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 802,
+          "citations_per_1000w": 6.23,
+          "sources_ranked_but_unused": 4,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 8,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1089,
+          "tps": 35.2
+        }
+      },
+      {
+        "key": "15.5",
+        "title": "Long-Horizon Planning and Memory Systems",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.573,
+          "n_citations_in_text": 11,
+          "unique_cited": 7,
+          "weak_citations": 4,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 1084,
+          "citations_per_1000w": 10.15,
+          "sources_ranked_but_unused": 1,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1307,
+          "tps": 35.0
+        }
+      },
+      {
+        "key": "15.6",
+        "title": "Autonomous Scientific Discovery Loops",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {
+            "linkedin.com": 1
+          },
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.48,
+          "n_citations_in_text": 10,
+          "unique_cited": 8,
+          "weak_citations": 4,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 726,
+          "citations_per_1000w": 13.77,
+          "sources_ranked_but_unused": 0,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 8,
+          "format": 9,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 958,
+          "tps": 35.3
+        }
+      },
+      {
+        "key": "15.7",
+        "title": "Energy Efficiency and Carbon Footprint of AGI",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 4,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.678,
+          "n_citations_in_text": 9,
+          "unique_cited": 6,
+          "weak_citations": 1,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 929,
+          "citations_per_1000w": 9.69,
+          "sources_ranked_but_unused": 2,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1198,
+          "tps": 35.2
+        }
+      },
+      {
+        "key": "15.8",
+        "title": "Alignment via Constitutional AI and RLHF",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.613,
+          "n_citations_in_text": 8,
+          "unique_cited": 6,
+          "weak_citations": 1,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 791,
+          "citations_per_1000w": 10.11,
+          "sources_ranked_but_unused": 2,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 9,
+          "coherence": 9,
+          "format": 10,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 999,
+          "tps": 35.3
+        }
+      },
+      {
+        "key": "15.9",
+        "title": "The Role of Simulation Environments",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 4,
+          "research_rounds": 1
+        },
+        "grounding": {
+          "score": 0.7,
+          "n_citations_in_text": 15,
+          "unique_cited": 6,
+          "weak_citations": 3,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 855,
+          "citations_per_1000w": 17.54,
+          "sources_ranked_but_unused": 2,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 8,
+          "coherence": 9,
+          "format": 9,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1060,
+          "tps": 35.2
+        }
+      },
+      {
+        "key": "15.10",
+        "title": "Ethical Governance and Regulatory Frameworks",
+        "retrieval": {
+          "n_sources": 8,
+          "must_cite_hits": [],
+          "must_cite_hit_kinds": {},
+          "must_cite_misses": [
+            "1706.03762",
+            "1810.04805",
+            "2005.14165",
+            "2203.02155",
+            "2302.13971"
+          ],
+          "should_cite_hits": [],
+          "should_cite_hit_kinds": {},
+          "forbidden_domain_hits": {},
+          "n_queries": 5,
+          "research_rounds": 2
+        },
+        "grounding": {
+          "score": 0.347,
+          "n_citations_in_text": 15,
+          "unique_cited": 8,
+          "weak_citations": 6,
+          "zero_cite_red_flag": false
+        },
+        "output": {
+          "word_count": 856,
+          "citations_per_1000w": 17.52,
+          "sources_ranked_but_unused": 0,
+          "looping_detected": false
+        },
+        "review": {
+          "depth": 7,
+          "coherence": 8,
+          "format": 9,
+          "skipped": false
+        },
+        "cost": {
+          "tokens": 1085,
+          "tps": 35.2
+        }
+      }
+    ],
+    "aggregate": {
+      "n_sections": 150,
+      "must_cite_recall": 0.4,
+      "must_cite_missed": [
+        "1810.04805",
+        "2005.14165",
+        "2203.02155"
+      ],
+      "must_cite_arxiv_direct": 0,
+      "must_cite_via_wiki": 2,
+      "should_cite_recall": 0.273,
+      "grounding_mean": 0.409,
+      "zero_cite_section_count": 51,
+      "loop_section_count": 0,
+      "loop_section_pct": 0.0,
+      "research_round_2_count": 96,
+      "research_round_2_rate": 0.64,
+      "forbidden_domain_hits": 67,
+      "subtopic_coverage": 0.95,
+      "subtopic_missing": [
+        "byte pair encoding"
+      ],
+      "median_words": 791.5,
+      "mean_citations_per_1000w": 9.72,
+      "total_tokens": 157639
+    },
+    "pass_fail": {
+      "checks": [
+        {
+          "check": "must_cite_recall",
+          "op": ">=",
+          "target": 0.8,
+          "actual": 0.4,
+          "pass": false
+        },
+        {
+          "check": "should_cite_recall",
+          "op": ">=",
+          "target": 0.5,
+          "actual": 0.273,
+          "pass": false
+        },
+        {
+          "check": "grounding_mean",
+          "op": ">=",
+          "target": 0.6,
+          "actual": 0.409,
+          "pass": false
+        },
+        {
+          "check": "zero_cite_sections",
+          "op": "<=",
+          "target": 3,
+          "actual": 51,
+          "pass": false
+        },
+        {
+          "check": "loop_section_pct",
+          "op": "<=",
+          "target": 0.05,
+          "actual": 0.0,
+          "pass": true
+        },
+        {
+          "check": "research_round_2_rate",
+          "op": "<=",
+          "target": 0.45,
+          "actual": 0.64,
+          "pass": false
+        },
+        {
+          "check": "forbidden_domain_hits",
+          "op": "<=",
+          "target": 5,
+          "actual": 67,
+          "pass": false
+        },
+        {
+          "check": "subtopic_coverage",
+          "op": ">=",
+          "target": 0.8,
+          "actual": 0.95,
+          "pass": true
+        },
+        {
+          "check": "median_words_min",
+          "op": ">=",
+          "target": 700,
+          "actual": 791.5,
+          "pass": true
+        },
+        {
+          "check": "median_words_max",
+          "op": "<=",
+          "target": 1500,
+          "actual": 791.5,
+          "pass": true
+        }
+      ],
+      "overall_pass": false,
+      "n_passed": 4,
+      "n_total": 10
+    }
+  }
+}
