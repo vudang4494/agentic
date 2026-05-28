@@ -29,8 +29,8 @@ PROVIDERS_DEFAULT = ("arxiv", "wikipedia", "tavily")
 TOP_K_DEFAULT = 8
 FULL_TEXT_TOP_N = 2          # fetch full body for the top-N ranked sources
 FULL_TEXT_MAX_WORDS = 350    # cap per source so the prompt doesn't blow up
-QUERY_GEN_MODEL = "qwen3.5:4b"
-JUDGE_MODEL = "qwen3.5:4b"   # citation grounding verifier (verify.verify_section)
+QUERY_GEN_MODEL = "qwen35:9b"
+JUDGE_MODEL = "qwen35:9b"   # citation grounding verifier (verify.verify_section)
 EMBED_MODEL = "bge-m3:latest"
 
 # Iterative-research thresholds (used by deep_research.run loop).

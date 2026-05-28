@@ -15,7 +15,7 @@ import httpx
 from .types import Query
 
 OLLAMA_BASE = "http://localhost:11434"
-DEFAULT_MODEL = "qwen3.5:4b"
+DEFAULT_MODEL = "qwen35:9b"
 DEFAULT_TIMEOUT = 90.0
 
 QUERY_GEN_SYS = (

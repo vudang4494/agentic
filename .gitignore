@@ -68,3 +68,6 @@ nohup.out
 # ============================================================
 /tmp_*
 .cache/
+
+# Local GGUF model weights (multi-GB, not committed)
+models/

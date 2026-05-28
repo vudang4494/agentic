@@ -26,7 +26,7 @@ from .query_gen import _strip_think
 from .types import Query
 
 OLLAMA_BASE = "http://localhost:11434"
-DEFAULT_PLANNER_MODEL = "qwen3.5:4b"
+DEFAULT_PLANNER_MODEL = "qwen35:9b"  # 9B: 4B truncated 15-chapter outlines (bookv4 maxed at 10/15)
 # 132-section JSON outlines push ~6000 output tokens; qwen3.5:4b ~30 tok/s -> ~200s.
 # Pad to 480s so 200-section outlines and CPU-only fallbacks still fit.
 DEFAULT_TIMEOUT = 480.0

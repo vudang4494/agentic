@@ -20,7 +20,7 @@ import httpx
 from .types import Source
 
 OLLAMA_BASE = "http://localhost:11434"
-DEFAULT_JUDGE_MODEL = "qwen3.5:4b"
+DEFAULT_JUDGE_MODEL = "qwen35:9b"
 DEFAULT_TIMEOUT = 60.0
 MAX_CLAIM_CHARS = 600
 MAX_EVIDENCE_CHARS = 1200
