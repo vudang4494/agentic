@@ -494,6 +494,16 @@ def sanitize(content: str) -> str:
         return content
     text = content.strip()
 
+    # Rank9: content-bleed. A leading line carrying an orphan "(ChN.M...)" outline
+    # tag is a prior section's disambiguated title that leaked into this body
+    # (bookv6 section 8.4 opened with "Multi-Objective Alignment... (Ch5.10.4)").
+    # Drop that whole leading line, then strip any residual inline tag anywhere.
+    text = re.sub(
+        r"\A\s*(?:#{1,6}\s*|\*\*\s*)?[^\n]*\((?:Ch|Chapter)\s*\d+\.\d+[^)]*\)[^\n]*\n+",
+        "", text,
+    )
+    text = re.sub(r"\s*\((?:Ch|Chapter)\s*\d+\.\d+(?:\.\d+)*[^)]*\)", "", text)
+
     # Structural pass.
     text = _META_INTRO_RE.sub("", text, count=1)
 
@@ -610,10 +620,16 @@ def extract_concepts(content: str, limit: int = 15) -> list:
 
 
 def prev_tail(content: str, n_words: int = CONTINUATION_WORDS) -> str:
-    """Return the last ~n_words of a section, used as continuity context for the next call."""
+    """Return the last ~n_words of a section, used as continuity context for the next call.
+
+    Rank9: strip markdown headings and "(ChN.M...)" outline tags from the tail first,
+    so the next section doesn't echo a heading/title it sees in the continuation
+    context (the content-bleed source)."""
     if not content:
         return ""
-    words = re.findall(r"\S+", content)
+    cleaned = re.sub(r"(?m)^\s*#{1,6}\s.*$", "", content)
+    cleaned = re.sub(r"\((?:Ch|Chapter)\s*\d+\.\d+[^)]*\)", "", cleaned)
+    words = re.findall(r"\S+", cleaned)
     tail = " ".join(words[-n_words:])
     return tail
 
