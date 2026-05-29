@@ -29,6 +29,7 @@ from . import search, query_gen, notes, embeddings, fetch, verify, planner  # no
 # HTTP 432 mid-run, the web channel doesn't collapse to arxiv+wiki only (Rank13).
 PROVIDERS_DEFAULT = ("arxiv", "wikipedia", "tavily", "ddg")
 TOP_K_DEFAULT = 8
+PRIMARY_FLOOR = 3   # Rank6: reserve >=3 of top-8 slots for arxiv/wikipedia primary sources
 FULL_TEXT_TOP_N = 2          # fetch full body for the top-N ranked sources
 FULL_TEXT_MAX_WORDS = 350    # cap per source so the prompt doesn't blow up
 QUERY_GEN_MODEL = "qwen3.5:4b"

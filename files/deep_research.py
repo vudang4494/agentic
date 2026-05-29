@@ -1475,7 +1475,8 @@ def run(batch=2, start_ch=1, start_pp=1, end_ch=None, render=True, review=False,
                 ranked = _research.notes.rank(
                     prefiltered, prompt,
                     top_k=_research.TOP_K_DEFAULT, embed_model=_research.EMBED_MODEL,
-                    precomputed=True,  # Rank13: reuse prefilter's cached relevance
+                    precomputed=True,            # Rank13: reuse prefilter's cached relevance
+                    primary_floor=_research.PRIMARY_FLOOR,  # Rank6: reserve arxiv/wiki slots
                 )
                 ranked = _research.notes.enrich_top_sources(
                     ranked, top_n=_research.FULL_TEXT_TOP_N, max_words_per=_research.FULL_TEXT_MAX_WORDS,

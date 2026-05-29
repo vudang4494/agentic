@@ -124,23 +124,43 @@ def prefilter(sources: List[Source], section_prompt: str,
     return kept
 
 
+_PRIMARY_PROVIDERS = ("arxiv", "wikipedia")
+
+
+def _apply_primary_quota(scored: List[Source], top_k: int, primary_floor: int) -> List[Source]:
+    """Guarantee up to `primary_floor` of the top_k slots for primary sources
+    (arxiv/wikipedia) before filling the rest with the best-cosine remainder.
+
+    Rank6: bge-m3 cosine has no provider awareness, so well-written Tavily blogs
+    out-ranked primary papers -- 114/150 bookv6 sections retained ZERO arxiv.
+    This reserves slots for primary sources when they exist, without wasting a
+    slot when they don't (degrades gracefully to pure cosine)."""
+    if primary_floor <= 0:
+        return scored[:top_k]
+    primary = [s for s in scored if (s.provider or "") in _PRIMARY_PROVIDERS]
+    reserved = primary[:primary_floor]
+    reserved_ids = {id(s) for s in reserved}
+    rest = [s for s in scored if id(s) not in reserved_ids]
+    return (reserved + rest)[:top_k]
+
+
 def rank(sources: List[Source], section_prompt: str, top_k: int = 8,
-         embed_model: str = "bge-m3:latest", precomputed: bool = False) -> List[Source]:
+         embed_model: str = "bge-m3:latest", precomputed: bool = False,
+         primary_floor: int = 0) -> List[Source]:
     """Score sources by cosine similarity to the section prompt, return top_k.
 
-    Rank13: when called right after prefilter() (which already embedded every
-    source and cached s.relevance), pass precomputed=True to reuse those scores
-    and skip a redundant embedding call -- roughly halves retrieval-path embeds.
+    Rank13: precomputed=True reuses prefilter's cached s.relevance (skips a
+    redundant embed). Rank6: primary_floor reserves N of top_k slots for
+    arxiv/wikipedia primary sources.
 
-    Falls back to keyword overlap if the embedding call fails (no relevance
-    scores assigned in that case; sources returned in their original order
-    truncated to top_k).
+    Falls back to insertion order if the embedding call fails.
     """
     sources = dedup(sources)
     if not sources:
         return []
     if precomputed and all(getattr(s, "relevance", 0.0) for s in sources):
-        return sorted(sources, key=lambda s: s.relevance, reverse=True)[:top_k]
+        scored = sorted(sources, key=lambda s: s.relevance, reverse=True)
+        return _apply_primary_quota(scored, top_k, primary_floor)
 
     texts = [section_prompt] + [f"{s.title}. {s.excerpt}" for s in sources]
     vectors = embed(texts, model=embed_model)
@@ -154,7 +174,7 @@ def rank(sources: List[Source], section_prompt: str, top_k: int = 8,
         s.relevance = cosine(query_vec, v)
         scored.append(s)
     scored.sort(key=lambda s: s.relevance, reverse=True)
-    return scored[:top_k]
+    return _apply_primary_quota(scored, top_k, primary_floor)
 
 
 def enrich_top_sources(sources: List[Source], top_n: int = 2,
