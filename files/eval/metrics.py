@@ -102,18 +102,30 @@ def gold_paper_hits(sources: list[dict], gold_papers: list[dict]) -> dict:
     return hits
 
 
+def _host(url: str) -> str:
+    """Lowercase host without a leading 'www.' prefix. ('' on parse failure).
+    Uses removeprefix, NOT lstrip -- lstrip('www.') strips ANY leading w/./3 chars
+    (e.g. 'wandb.ai' -> 'andb.ai'), which corrupted domain counts."""
+    try:
+        h = (urlparse(url).hostname or "").lower()
+    except Exception:
+        return ""
+    return h[4:] if h.startswith("www.") else h
+
+
+def _host_suffix_match(host: str, domains) -> bool:
+    """host == d or host endswith '.d' (suffix-match, not substring) -- so
+    'labelbox.com'/'matrix.com' do NOT spuriously match 'x.com'."""
+    return any(host == d or host.endswith("." + d) for d in domains)
+
+
 def domains_in_sources(sources: list[dict]) -> Counter:
     """Count occurrences of each domain in a section's source list."""
     c: Counter = Counter()
     for s in sources or []:
-        url = s.get("url") or ""
-        try:
-            host = urlparse(url).hostname or ""
-            host = host.lower().lstrip("www.")
-            if host:
-                c[host] += 1
-        except Exception:
-            pass
+        host = _host(s.get("url") or "")
+        if host:
+            c[host] += 1
     return c
 
 
@@ -183,7 +195,8 @@ def section_metrics(key: str, section: dict, gold: dict) -> dict:
     must_hits = gold_paper_hits(sources, must_papers)
     should_hits = gold_paper_hits(sources, should_papers)
     domain_hits = domains_in_sources(sources)
-    forbidden_hits = {d: c for d, c in domain_hits.items() if any(f in d for f in forbidden)}
+    # Host-suffix match (not substring): 'labelbox.com' must NOT count as 'x.com'.
+    forbidden_hits = {d: c for d, c in domain_hits.items() if _host_suffix_match(d, forbidden)}
 
     cites = citations_in(content)
     n_cites = len(cites)

@@ -520,13 +520,13 @@ def _split_glued_display(content: str) -> str:
 
 def _balance_display_math(content: str) -> str:
     """Repair odd `$$` counts (outside fenced code) that crash tectonic with
-    'Missing $ inserted'. The real bookv6 cause: the writer glued two display
-    formulas as `$$F1$$F2$$`, so F2 (containing \\frac, \\text, ...) lands in
-    TEXT mode and its LaTeX commands break math. With an odd count the dangling
-    segment sits between the last two `$$`:
-      - if it contains LaTeX commands -> it's a formula missing its opener; wrap
-        it as its own display block.
-      - otherwise it's stray prose with a lone `$$` -> drop the orphan delimiter.
+    'Missing $ inserted'. With an odd count the LAST `$$` is unpaired; the
+    unclosed formula can sit on EITHER side of it:
+      - MISSING-OPENER: a LaTeX-bearing segment sits between the prev `$$` and
+        the orphan -> wrap that segment as its own display block.
+      - MISSING-CLOSER: a LaTeX-bearing segment trails AFTER the orphan (writer
+        opened `$$F` and never closed) -> close it by appending `$$`.
+      - otherwise (no LaTeX either side) -> drop the orphan delimiter.
     """
     fences = _code_fence_spans(content)
     def in_fence(pos):
@@ -536,10 +536,22 @@ def _balance_display_math(content: str) -> str:
         return content
     last = positions[-1]
     prev = positions[-2] if len(positions) >= 2 else None
-    dangling = content[prev + 2:last] if prev is not None else ""
-    if prev is not None and re.search(r"\\[A-Za-z]+", dangling):
-        print("[normalize_math] odd $$ count; wrapping dangling display formula", flush=True)
-        return (content[:prev + 2] + "\n\n$$" + dangling.strip() + "$$\n\n"
+    before = content[prev + 2:last] if prev is not None else ""
+    after = content[last + 2:]
+    has_latex = lambda s: bool(re.search(r"\\[A-Za-z]+", s))
+    # Prefer the side whose dangling segment looks like a formula. Check the
+    # AFTER side first (missing-closer is the common "$$F never closed" case
+    # the review flagged); fall back to the BEFORE side (missing-opener).
+    if has_latex(after) and not has_latex(before):
+        # trailing formula opened by `last`, never closed: close it.
+        # close at the end of the formula-ish run (first blank line) or doc end.
+        m = re.search(r"\n\s*\n", after)
+        cut = (last + 2 + m.start()) if m else len(content)
+        print("[normalize_math] odd $$ count; closing unclosed trailing display formula", flush=True)
+        return content[:cut] + "$$" + content[cut:]
+    if prev is not None and has_latex(before):
+        print("[normalize_math] odd $$ count; wrapping dangling display formula (missing opener)", flush=True)
+        return (content[:prev + 2] + "\n\n$$" + before.strip() + "$$\n\n"
                 + content[last + 2:])
     print(f"[normalize_math] odd $$ count ({len(positions)}); dropping orphan display delimiter", flush=True)
     return content[:last] + content[last + 2:]
@@ -1183,8 +1195,10 @@ def _build_references(state) -> str:
         year = f" ({s['year']})" if s.get("year") else ""
         title = s.get("title", "Untitled")
         url = s.get("url", "")
-        sep = ". " if authors else ""
-        lines.append(f"[{n}] {authors}{year}{sep}_{title}_. <{url}>")
+        # Build attribution so empty-author + present-year never glues "(2024)_Title_".
+        attribution = (authors + year).strip()
+        prefix = f"{attribution}. " if attribution else ""
+        lines.append(f"[{n}] {prefix}_{title}_. <{url}>")
         lines.append("")
     return "\n".join(lines) + "\n"
 
@@ -1666,6 +1680,17 @@ def run(batch=2, start_ch=1, start_pp=1, end_ch=None, render=True, review=False,
                         if ranked:
                             content2, _ = _research.notes.clean_citations(content2, len(ranked))
                         content, w = content2, w2
+                        # Keep stats + verify aligned with the regenerated content
+                        # (else tokens/tps and grounding describe the discarded draft).
+                        tokens = stats2.get("tokens", tokens)
+                        tps = stats2.get("tps", tps)
+                        elapsed_min = stats2.get("elapsed", 0) / 60 or elapsed_min
+                        if ranked:
+                            try:
+                                verify_res = _research.verify.verify_section(
+                                    content, ranked, model=_research.JUDGE_MODEL)
+                            except Exception:
+                                pass
                         try:
                             _vecs = _research.embeddings.embed([content[:1500]], model=_research.EMBED_MODEL)
                             cur_vec = _vecs[0] if _vecs else cur_vec

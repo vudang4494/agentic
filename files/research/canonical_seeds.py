@@ -28,7 +28,8 @@ SEED_MAP = {
     "t5": "1910.10683",
     "text-to-text transfer": "1910.10683",
     "elmo": "1802.05365",
-    "gpt-2": "1902.09737",
+    # gpt-2 omitted: it was an OpenAI tech report, not a canonical arxiv paper
+    # (the old id 1902.09737 was wrong). Don't seed a fabricated id.
     # Scaling / large models
     "gpt-3": "2005.14165",
     "few-shot learners": "2005.14165",
@@ -140,46 +141,51 @@ _ATTRIB_PATTERNS = (_ORIGIN_ATTRIB_RE, _POSSESSIVE_ATTRIB_RE)
 def check_attribution(content: str) -> list:
     """Flag confidently-wrong ORIGINATION attributions for canonical methods.
 
-    For each canonical alias present in `content`, look in a window around it for
-    an origination claim ('introduced/proposed by Surname (YYYY)') and compare to
-    the known truth. Advisory, not a hard failure -- grounding measures snippet
-    support, this measures factual truth (e.g. Chinchilla credited to the wrong
-    author). Verb-gated to avoid flagging legit adjacent citations.
+    Attribution-centric: for each origination claim ('introduced by Surname
+    (YYYY)' or 'Surname et al.'s (YYYY) work on ...') found in the text, assign
+    it to the NEAREST canonical method (within a tight +/-30-char window of the
+    claim) and compare to the known truth. Anchoring to the nearest method avoids
+    charging a far-away method in the same sentence (e.g. a 'work on Chinchilla'
+    claim won't be blamed on a 'GPT-3' mentioned 40 chars later). Advisory only;
+    grounding measures snippet support, this measures factual truth.
     """
     if not content:
         return []
     flags = []
     seen = set()
-    for alias in _FACT_ALIASES:
-        truth_surname, truth_year = CANONICAL_FACTS[alias]
-        if (truth_surname, truth_year) in seen:
-            continue
-        m = _FACT_RE[alias].search(content)
-        if not m:
-            continue
-        window = content[max(0, m.start() - 160): m.end() + 160]
-        matched = False
-        for pat in _ATTRIB_PATTERNS:
-            for am in pat.finditer(window):
-                surname, year_s = am.group(1), am.group(2)
-                try:
-                    year = int(year_s)
-                except ValueError:
+    for pat in _ATTRIB_PATTERNS:
+        for am in pat.finditer(content):
+            try:
+                year = int(am.group(2))
+            except (ValueError, IndexError):
+                continue
+            if year < 2010 or year > 2027:
+                continue
+            surname = am.group(1)
+            # Which canonical method does this claim refer to? The nearest alias
+            # within +/-30 chars of the claim span.
+            win_start = max(0, am.start() - 30)
+            window = content[win_start: am.end() + 30]
+            best_alias, best_dist = None, 10 ** 9
+            for alias in _FACT_ALIASES:
+                am2 = _FACT_RE[alias].search(window)
+                if not am2:
                     continue
-                if year < 2010 or year > 2027:
-                    continue
-                surname_wrong = surname.lower() != truth_surname.lower()
-                year_wrong = abs(year - truth_year) > 1
-                if surname_wrong or year_wrong:
-                    flags.append({
-                        "concept": alias, "found": f"{surname} ({year})",
-                        "expected": f"{truth_surname} ({truth_year})",
-                    })
-                    seen.add((truth_surname, truth_year))
-                    matched = True
-                    break
-            if matched:
-                break
+                apos = win_start + am2.start()
+                dist = min(abs(apos - am.start()), abs(apos - am.end()))
+                if dist < best_dist:
+                    best_dist, best_alias = dist, alias
+            if best_alias is None:
+                continue
+            truth_surname, truth_year = CANONICAL_FACTS[best_alias]
+            if (truth_surname, truth_year) in seen:
+                continue
+            if surname.lower() != truth_surname.lower() or abs(year - truth_year) > 1:
+                flags.append({
+                    "concept": best_alias, "found": f"{surname} ({year})",
+                    "expected": f"{truth_surname} ({truth_year})",
+                })
+                seen.add((truth_surname, truth_year))
     return flags
 
 

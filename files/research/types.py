@@ -75,9 +75,12 @@ class Source:
         """Single-line bibliography entry for the References page.
         Author label never exposes a search-tool brand (uses display_author)."""
         authors_str = self.display_author()
-        sep = ". " if authors_str else ""
         year_str = f" ({self.year})" if self.year else ""
-        return f"[{n}] {authors_str}{year_str}{sep}_{self.title}_. {self.url}"
+        # Build the attribution segment so an empty author + present year never
+        # produces "[n]  (2024)_Title_." (double space + year glued to title).
+        attribution = (authors_str + year_str).strip()
+        prefix = f"{attribution}. " if attribution else ""
+        return f"[{n}] {prefix}_{self.title}_. {self.url}"
 
 
 @dataclass
