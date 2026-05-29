@@ -477,6 +477,117 @@ def normalize_math(content: str) -> str:
         content,
     )
 
+    # 6. Rank10 -- the REAL tectonic crash. The writer glues consecutive display
+    #    formulas sharing a delimiter: `$$F1$$F2$$` -> pandoc reads F1 as math,
+    #    F2 as TEXT (its \frac/\text commands then break math mode -> "Missing $
+    #    inserted"). First split shared delimiters (a `$$` flush against a
+    #    formula-end before AND a \command after is a close+open that must become
+    #    two blocks), then balance any residual odd count.
+    content = _split_glued_display(content)
+    content = _balance_display_math(content)
+
+    # 7. Rank10 -- escape raw Unicode Greek INSIDE math spans to LaTeX commands
+    #    (the real cause of the tectonic "no beta glyph" warning + silent glyph
+    #    drop). Only touches text between $...$ / $$...$$ so prose Greek is left
+    #    alone. Idempotent: \beta has no Unicode Greek to re-convert.
+    content = _escape_unicode_math(content)
+
+    return content
+
+
+def _code_fence_spans(text: str):
+    return [(m.start(), m.end()) for m in re.finditer(r"```.*?```", text, re.DOTALL)]
+
+
+# A `$$` that is flush against a formula-ending char on the left AND a LaTeX
+# `\command` on the right is a shared close+open delimiter between two glued
+# display formulas. Requiring the `\command` lookahead means a `$$` that closes
+# a formula and is followed by ordinary prose (" The model...") is NOT split.
+_GLUED_DISPLAY_RE = re.compile(r"(?<=[}\)\]A-Za-z0-9])\$\$(?=\s*\\[A-Za-z])")
+
+
+def _split_glued_display(content: str) -> str:
+    """Split `$$F1$$F2$$`-style glued display formulas into separate blocks."""
+    new, n = _GLUED_DISPLAY_RE.subn("$$\n\n$$", content)
+    if n:
+        print(f"[normalize_math] split {n} glued display-math delimiter(s)", flush=True)
+    return new
+
+
+def _balance_display_math(content: str) -> str:
+    """Repair odd `$$` counts (outside fenced code) that crash tectonic with
+    'Missing $ inserted'. The real bookv6 cause: the writer glued two display
+    formulas as `$$F1$$F2$$`, so F2 (containing \\frac, \\text, ...) lands in
+    TEXT mode and its LaTeX commands break math. With an odd count the dangling
+    segment sits between the last two `$$`:
+      - if it contains LaTeX commands -> it's a formula missing its opener; wrap
+        it as its own display block.
+      - otherwise it's stray prose with a lone `$$` -> drop the orphan delimiter.
+    """
+    fences = _code_fence_spans(content)
+    def in_fence(pos):
+        return any(a <= pos < b for a, b in fences)
+    positions = [m.start() for m in re.finditer(r"\$\$", content) if not in_fence(m.start())]
+    if len(positions) % 2 == 0:
+        return content
+    last = positions[-1]
+    prev = positions[-2] if len(positions) >= 2 else None
+    dangling = content[prev + 2:last] if prev is not None else ""
+    if prev is not None and re.search(r"\\[A-Za-z]+", dangling):
+        print("[normalize_math] odd $$ count; wrapping dangling display formula", flush=True)
+        return (content[:prev + 2] + "\n\n$$" + dangling.strip() + "$$\n\n"
+                + content[last + 2:])
+    print(f"[normalize_math] odd $$ count ({len(positions)}); dropping orphan display delimiter", flush=True)
+    return content[:last] + content[last + 2:]
+
+
+_MATH_SPAN_RE = re.compile(r"\$\$.+?\$\$|\$[^$\n]+?\$", re.DOTALL)
+
+# Unicode math symbols that pandoc renders as math-mode-only LaTeX commands
+# (e.g. ℝ -> \symbb{R}, which crashes tectonic with "allowed only in math mode"
+# when the char sits in TEXT). bookv6 had ℝ, ∈, ∞, plus mathematical-alphanumeric
+# styled letters (𝑑, 𝒃) handled separately via NFKC folding.
+_MATH_UNICODE = {
+    "ℝ": r"\mathbb{R}", "ℕ": r"\mathbb{N}", "ℤ": r"\mathbb{Z}",
+    "ℚ": r"\mathbb{Q}", "ℂ": r"\mathbb{C}", "𝔼": r"\mathbb{E}",
+    "∈": r"\in", "∉": r"\notin", "∞": r"\infty", "∑": r"\sum",
+    "∏": r"\prod", "∇": r"\nabla", "∂": r"\partial",
+    "≈": r"\approx", "≤": r"\leq", "≥": r"\geq", "≠": r"\neq",
+    "×": r"\times", "⋅": r"\cdot",
+    "²": r"^{2}", "³": r"^{3}", "⁴": r"^{4}", "ⁿ": r"^{n}",
+    "₀": r"_{0}", "₁": r"_{1}", "₂": r"_{2}", "√": r"\sqrt{}",
+}
+
+
+def _escape_unicode_math(content: str) -> str:
+    r"""Make Unicode math safe for tectonic:
+      - NFKC-fold mathematical-alphanumeric styled letters (italic d -> d) everywhere
+        (harmless in prose, fixes \symbb-style commands in math).
+      - Inside math spans: Unicode Greek + math symbols -> LaTeX commands.
+      - In text: stray math symbols (R-double-struck, in, infinity, ...) get
+        wrapped in $...$ so they render in math mode instead of crashing tectonic.
+    """
+    import unicodedata
+    content = "".join(
+        unicodedata.normalize("NFKC", c) if 0x1D400 <= ord(c) <= 0x1D7FF else c
+        for c in content
+    )
+
+    def _fix_span(m):
+        span = m.group(0)
+        for ch, tex in _GREEK_TEX.items():
+            if ch in span:
+                span = span.replace(ch, tex + " ")
+        for ch, tex in _MATH_UNICODE.items():
+            if ch in span:
+                span = span.replace(ch, tex + " ")
+        return span
+    content = _MATH_SPAN_RE.sub(_fix_span, content)
+
+    # Remaining math symbols are in TEXT -> wrap each in $...$.
+    for ch, tex in _MATH_UNICODE.items():
+        if ch in content:
+            content = content.replace(ch, f"${tex}$")
     return content
 
 
@@ -1133,7 +1244,14 @@ def _prepare_clean_md() -> Path:
             fixed.append("* * *")
         else:
             fixed.append(line)
-    CLEAN_MD.write_text("\n".join(fixed))
+    clean = "\n".join(fixed)
+    # Rank10 safety net: repair display math across the WHOLE assembled doc
+    # before pandoc->tectonic, so math mangling from any section (or an
+    # already-generated book) can't crash tectonic at render time.
+    clean = _split_glued_display(clean)
+    clean = _balance_display_math(clean)
+    clean = _escape_unicode_math(clean)
+    CLEAN_MD.write_text(clean)
     return CLEAN_MD
 
 
