@@ -18,7 +18,7 @@ pipeline detects RESEARCH_AVAILABLE=False and runs in legacy mode.
 """
 
 from .types import Source, Query
-from . import search, query_gen, notes, embeddings, fetch, verify, planner  # noqa: F401
+from . import search, query_gen, notes, embeddings, fetch, verify, planner, canonical_seeds  # noqa: F401
 
 # Provider order matters: cheap+reliable first (arxiv, wikipedia), then web sources.
 # 2026-05-27 (bookv3 eval): Tavily-only run had must_cite_recall=0.20 because

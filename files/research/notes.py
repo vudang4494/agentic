@@ -71,7 +71,8 @@ def _is_noisy_domain(url: str) -> bool:
 def prefilter(sources: List[Source], section_prompt: str,
               min_relevance: float = 0.45,
               noisy_min_relevance: float = 0.60,
-              embed_model: str = "bge-m3:latest") -> List[Source]:
+              embed_model: str = "bge-m3:latest",
+              protected_ids: set = None) -> List[Source]:
     """Drop obviously off-topic sources BEFORE the main rank().
 
     Two thresholds (tightened 2026-05-27 after eval found off-topic papers
@@ -102,12 +103,19 @@ def prefilter(sources: List[Source], section_prompt: str,
         # embedding failed -- pass through, rank() will still try
         return sources
     qv = vectors[0]
+    protected_ids = protected_ids or set()
     kept = []
     dropped_noisy = 0
     dropped_offtopic = 0
     for s, v in zip(sources, vectors[1:]):
         rel = cosine(qv, v)
         s.relevance = rel  # cache for rank() to reuse
+        # Rank5: canonical seeds bypass the cosine gate -- they are known-good
+        # primary sources injected on purpose, kept even if the descriptive
+        # section prompt embeds at a lower cosine than the paper's abstract.
+        if s.id in protected_ids:
+            kept.append(s)
+            continue
         threshold = noisy_min_relevance if _is_noisy_domain(s.url) else min_relevance
         if rel < threshold:
             if _is_noisy_domain(s.url):

@@ -1467,10 +1467,23 @@ def run(batch=2, start_ch=1, start_pp=1, end_ch=None, render=True, review=False,
                 raw_sources = _research.search.gather(
                     queries, providers=_research.PROVIDERS_DEFAULT, per_provider_k=3,
                 )
+                # Rank5: known-item retrieval. Resolve canonical paper/method names
+                # mentioned in this section to arxiv IDs and fetch them directly, so
+                # foundations (Vaswani, BERT, GPT-3, ...) are present even when the
+                # keyword search never surfaces them. Seeds are protected from the
+                # prefilter cosine gate and reserved by rank6's primary_floor.
+                seed_ids = _research.canonical_seeds.resolve_seeds(f"{pp_t}\n{prompt}")
+                seed_sources = _research.search.arxiv_by_id(seed_ids) if seed_ids else []
+                protected = {s.id for s in seed_sources}
+                if seed_sources:
+                    print(f"  [SEED] injected {len(seed_sources)} canonical paper(s): "
+                          + ", ".join(s.id for s in seed_sources))
+                raw_sources = seed_sources + raw_sources
                 # Prefilter: drop obviously off-topic + noisy-domain results BEFORE rank
                 # so the top-8 pool isn't polluted with YouTube/DDG/etc. false matches.
                 prefiltered = _research.notes.prefilter(
                     raw_sources, prompt, embed_model=_research.EMBED_MODEL,
+                    protected_ids=protected,
                 )
                 ranked = _research.notes.rank(
                     prefiltered, prompt,

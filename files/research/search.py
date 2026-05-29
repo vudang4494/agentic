@@ -94,21 +94,21 @@ def _arxiv_title_query(q: str) -> str:
     return " ".join(tokens[:4])
 
 
-def _arxiv_raw_query(search_query: str, k: int) -> List[Source]:
-    """Single arxiv API call with the given search_query string."""
+def _arxiv_raw_query_params(extra: dict) -> List[Source]:
+    """Single arxiv API call with arbitrary params (search_query OR id_list)."""
     global _LAST_ARXIV_CALL
     elapsed = time.time() - _LAST_ARXIV_CALL
     if elapsed < ARXIV_MIN_INTERVAL:
         time.sleep(ARXIV_MIN_INTERVAL - elapsed)
     _LAST_ARXIV_CALL = time.time()
 
-    params = urllib.parse.urlencode({
-        "search_query": search_query,
-        "start": 0,
-        "max_results": k,
-        "sortBy": "relevance",
-        "sortOrder": "descending",
-    })
+    base = {"start": 0, "max_results": 5, "sortBy": "relevance", "sortOrder": "descending"}
+    # id_list queries must NOT carry sortBy=relevance with no search_query.
+    if "id_list" in extra:
+        base.pop("sortBy", None)
+        base.pop("sortOrder", None)
+    base.update(extra)
+    params = urllib.parse.urlencode(base)
     url = f"{ARXIV_API}?{params}"
     rec = fetch(url, accept="application/atom+xml")
     if not rec or rec.get("status", 0) >= 400 or not rec.get("content"):
@@ -151,6 +151,22 @@ def _arxiv_raw_query(search_query: str, k: int) -> List[Source]:
             year=year,
         ))
     return out
+
+
+def _arxiv_raw_query(search_query: str, k: int) -> List[Source]:
+    """Keyword arxiv query (ti:/all:). Thin wrapper over _arxiv_raw_query_params."""
+    return _arxiv_raw_query_params({"search_query": search_query, "max_results": k})
+
+
+def arxiv_by_id(arxiv_ids) -> List[Source]:
+    """Fetch specific arxiv papers by id (Rank5 canonical-seed retrieval).
+
+    Uses the arxiv API id_list param so a named canonical paper is retrieved
+    directly instead of hoping a keyword search surfaces it."""
+    ids = [i for i in (arxiv_ids or []) if i]
+    if not ids:
+        return []
+    return _arxiv_raw_query_params({"id_list": ",".join(ids), "max_results": len(ids)})
 
 
 def arxiv_search(query: str, k: int = 3) -> List[Source]:
