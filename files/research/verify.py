@@ -349,8 +349,15 @@ def topic_relevance_check(
     prior_sections: List[dict] = None,
     model: str = DEFAULT_JUDGE_MODEL,
     timeout: float = DEFAULT_TIMEOUT,
+    llm_call_fn=None,
 ) -> Dict:
-    """Check whether a section answers its intended goal and avoids topic drift."""
+    """Check whether a section answers its intended goal and avoids topic drift.
+
+    G4: when `llm_call_fn` (the product's LOCAL gemma judge via Ollama) is supplied,
+    the quantized term-count heuristic is blended with a real reverse-question
+    relevance judge (answer_relevance). LOCAL MODEL ONLY -- never Claude/external;
+    falls back to the pure heuristic if llm_call_fn is None or fails.
+    """
     prior_sections = prior_sections or []
     text = content or ""
     lowered = text.lower()
@@ -381,7 +388,28 @@ def topic_relevance_check(
         score -= 0.2
     if len(text.split()) < 120:
         score -= 0.1
+    heuristic_score = max(0.0, min(1.0, score))
+
+    # G4: refine the quantized term-count heuristic with a real semantic judge.
+    # answer_relevance() asks the LOCAL gemma judge "does the body answer the goal?" --
+    # catches well-grounded prose that drifts off the question, which the term-count
+    # heuristic (quantizes to {0.5,0.75,1.0}) cannot see. Local Ollama model only.
+    ar_score = None
+    score = heuristic_score
+    if llm_call_fn is not None:
+        try:
+            ar = answer_relevance(content, f"{section_title}. {goal}", llm_call_fn)
+            if ar and ar.get("verdict") not in (None, "unknown"):
+                ar_score = float(ar.get("score", 0.5))
+                score = 0.6 * ar_score + 0.4 * heuristic_score
+        except Exception:
+            score = heuristic_score
     score = max(0.0, min(1.0, score))
+
+    # StageE protection: the judge ALONE must not push a fully term-covered, non-drifting
+    # section below the 0.50 hard-block line (avoid false topic-drift blocks).
+    if score < 0.50 and not missing_terms and not drift_terms:
+        score = 0.50
 
     verdict = "relevant"
     if score < 0.50:
@@ -401,6 +429,8 @@ def topic_relevance_check(
 
     return {
         "topic_relevance": round(score, 3),
+        "heuristic_score": round(heuristic_score, 3),
+        "answer_relevance_score": ar_score,
         "verdict": verdict,
         "missing_terms": missing_terms,
         "drift_terms": drift_terms,

@@ -56,6 +56,8 @@ Module phụ trợ (load-bearing): `config.py` (hằng số), `canonical_seeds.p
 | Rerank | `BAAI/bge-reranker-v2-m3` (transformers) |
 | Grounding | `vectara/hallucination_evaluation_model` (HHEM v2) |
 
+> **LOCAL-ONLY (bất biến):** mọi model trong pipeline chạy cục bộ (Ollama `localhost:11434` + transformers). Mọi judge verify — P0a domain, topic G4 (`answer_relevance`), citation-integrity G2 (`verify_section`) — đều dùng **gemma4:e4b LOCAL**; grounding = **HHEM local**; embed = **bge-m3/nomic local**. **TUYỆT ĐỐI KHÔNG gọi Claude/OpenAI/external API lúc runtime.** Claude (tôi) chỉ để review + chuẩn hóa docs + thiết kế cấu trúc verify, KHÔNG phải một model trong pipeline.
+
 ## 5. Ngưỡng gate THẬT (code = chuẩn; chi tiết → `RULES.md`)
 | Gate | Giá trị thật (code) | File |
 |------|---------------------|------|

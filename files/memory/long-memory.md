@@ -19,7 +19,8 @@
   - **Dead/legacy:** 6/8 hàm `verify.py` chỉ `deep_research.py`/scripts/eval gọi, KHÔNG live v3.
   - **Bug tiềm ẩn:** `faithfulness.py:183` except-fallback NameError; cross-ref 3 chỗ gate chồng + bug ngưỡng `:583` (flat min thay vì rule động).
 - **Thay đổi (APPLY-NOW, 0 đổi hành vi):** code: message `:499`→in `ev_threshold`, comment `:450/:476`, xoá param chết `notes.py:461`, docstring `verify.py:242`. docs: GLOSSARY (0.60→0.40, grounding saturation, topic heuristic, embed split), CLAUDE/RULES (embed split, providers, topic heuristic, bản đồ Verify LIVE/LEGACY, target G0-G6), short-memory.
-- **Còn lại (cần test/confirm):** de-saturate grounding (per-citation), thay topic heuristic bằng judge thật, wire citation-integrity G2 + cross-ref accuracy G4, gộp 3 cross-ref gate + fix bug `:583`, fix NameError `faithfulness.py:183`, unify embed model.
+- **Đã implement (LOCAL-only, unit-test 13/13 pass):** G3 grounding de-saturated (per-source max HHEM, `faithfulness.py`), G4 topic judge gemma-local (blend `answer_relevance` + StageE floor), G2 citation-integrity (`verify_section` cite_precision fail-open), G5a fix cross-ref bug `:583` + gộp gate, G5b numeric-ref hint, fix NameError `faithfulness.py`. Mọi judge = model local; KHÔNG Claude/external trong pipeline. Test: `files/eval/test_verify_optim.py`.
+- **Còn lại:** validation run đầy đủ (Ollama) để tinh chỉnh ngưỡng; G5b resolve "Section N.M" vs outline thật; G6 redundancy; unify embed model.
 
 ---
 

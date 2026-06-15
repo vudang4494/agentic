@@ -162,57 +162,96 @@ def grounding_score(claims: list, sources: list, threshold: float = HHEM_SUPPORT
 
     hhem = _get_hhem()
 
-    # Build premise from all source excerpts (truncate to avoid HHEM 512-token truncation)
-    MAX_PREMISE_CHARS = 2000  # ~500 tokens; keeps each (premise, claim) pair within limit
-    premises = []
-    total_chars = 0
-    for s in sources:
-        exc = (s.excerpt if hasattr(s, "excerpt") else s.get("excerpt", "")) if s else ""
-        if exc and total_chars < MAX_PREMISE_CHARS:
-            premises.append(exc[: MAX_PREMISE_CHARS - total_chars])
-            total_chars += len(premises[-1])
-    premise_text = "\n".join(premises)
+    # G3 DE-SATURATE: score each claim against each source SEPARATELY (one batched
+    # predict) and take the MAX. The old code concatenated ALL excerpts into one
+    # ~2000-char mega-premise, so almost any topical sentence matched something and
+    # grounding saturated at 1.0 across all 280 v36 sections. Per-source-max requires
+    # a claim to be supported by a SINGLE excerpt -> a discriminating signal.
+    MAX_PREMISE_CHARS = 1200   # per-source excerpt cap (~300 tokens)
+    MAX_SOURCES = 6            # bound the (claim x source) pair count
+    MAX_CLAIMS = 40
+    claims = claims[:MAX_CLAIMS]
 
-    # Score each claim against the combined premise
-    pairs = [(premise_text, claim[:500]) for claim in claims]
+    excerpts = []
+    for s in sources[:MAX_SOURCES]:
+        exc = (s.excerpt if hasattr(s, "excerpt") else s.get("excerpt", "")) if s else ""
+        if exc:
+            excerpts.append(exc[:MAX_PREMISE_CHARS])
+
+    if not excerpts:
+        # No evidence to ground against -> nothing can be supported.
+        return {
+            "grounding": 0.0, "grounding_mean": 0.0, "unsupported_fraction": 1.0,
+            "n_supported": 0, "n_partial": 0, "n_unsupported": len(claims),
+            "per_claim": [(c, 0.0, "unsupported") for c in claims], "n_claims": len(claims),
+            "weak_summary": "no source excerpts available to ground claims",
+        }
+
+    # All (excerpt, claim) pairs in ONE batched predict; remember each pair's claim.
+    pairs, pair_claim_idx = [], []
+    for ci, claim in enumerate(claims):
+        c = claim[:500]
+        for exc in excerpts:
+            pairs.append((exc, c))
+            pair_claim_idx.append(ci)
 
     try:
         raw_scores = hhem.predict(pairs)  # returns list of floats [0,1]
     except Exception:
-        # Fallback: try device_map auto
-        hhem = AutoModelForSequenceClassification.from_pretrained(
-            HHEM_MODEL, trust_remote_code=True
-        )
-        raw_scores = hhem.predict(pairs)
+        try:
+            from transformers import AutoModelForSequenceClassification
+            hhem = AutoModelForSequenceClassification.from_pretrained(
+                HHEM_MODEL, trust_remote_code=True
+            )
+            raw_scores = hhem.predict(pairs)
+        except Exception as e:
+            # Never crash the pipeline on a scorer failure -> neutral, non-blocking signal.
+            print(f"[faithfulness] HHEM predict failed, neutral grounding: {e}", flush=True)
+            return {
+                "grounding": 0.5, "grounding_mean": 0.5, "unsupported_fraction": 0.0,
+                "n_supported": 0, "n_partial": len(claims), "n_unsupported": 0,
+                "per_claim": [(c, 0.5, "partial") for c in claims], "n_claims": len(claims),
+                "weak_summary": "", "fallback": True,
+            }
+
+    # Max HHEM score per claim across its candidate sources.
+    best = [0.0] * len(claims)
+    for pi, score in enumerate(raw_scores):
+        ci = pair_claim_idx[pi]
+        sc = float(score)
+        if sc > best[ci]:
+            best[ci] = sc
 
     per_claim = []
-    n_supported = 0
-    n_partial = 0
-    n_unsupported = 0
-
-    for claim, score in zip(claims, raw_scores):
-        s = float(score)
-        if s >= threshold:
-            verdict = "supported"
-            n_supported += 1
-        elif s >= 0.3:
-            verdict = "partial"
-            n_partial += 1
+    n_supported = n_partial = n_unsupported = 0
+    for claim, sc in zip(claims, best):
+        if sc >= threshold:
+            verdict = "supported"; n_supported += 1
+        elif sc >= 0.3:
+            verdict = "partial"; n_partial += 1
         else:
-            verdict = "unsupported"
-            n_unsupported += 1
-        per_claim.append((claim, s, verdict))
+            verdict = "unsupported"; n_unsupported += 1
+        per_claim.append((claim, sc, verdict))
 
     total = len(claims)
-    grounding = n_supported / total if total > 0 else 1.0
+    # Continuous grounding: full credit for supported, half for partial.
+    grounding = (n_supported + 0.5 * n_partial) / total if total else 1.0
+    grounding_mean = sum(best) / total if total else 1.0
+    unsupported_fraction = n_unsupported / total if total else 0.0
 
     return {
-        "grounding": grounding,
+        "grounding": round(grounding, 3),
+        "grounding_mean": round(grounding_mean, 3),
+        "unsupported_fraction": round(unsupported_fraction, 3),
         "n_supported": n_supported,
         "n_partial": n_partial,
         "n_unsupported": n_unsupported,
         "per_claim": per_claim,
         "n_claims": total,
+        "weak_summary": (
+            f"{n_unsupported}/{total} claims not supported by any single source"
+            if n_unsupported else ""
+        ),
     }
 
 

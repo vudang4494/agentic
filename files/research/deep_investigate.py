@@ -219,6 +219,7 @@ def investigate_section(
     min_grounding: float = 0.70,
     min_topic_relevance: float = 0.50,
     min_cross_refs: int = 2,  # 1.2-style retry: if only 1 prior section, can accept 1 ref
+    min_cite_precision: float = 0.45,  # G2: avg per-[N] citation support (local gemma verify_section); fail-open
     concept_callback: Optional[Callable] = None,
     section_meta: Optional[dict] = None,
     # P0b: canonical source IDs injected at discovery stage -- these survive cosine gate
@@ -580,27 +581,29 @@ def investigate_section(
                 cross_refs_found = sum(1 for pt in prior_titles_lower if pt and pt.lower() in content.lower())
                 print(f"  [R{round_n}] Cross-refs (fallback): {cross_refs_found}")
 
-        # F5: Cross-reference gate -- retry with hint if < min_cross_refs, hard block on last round
-        if prior_sections and cross_refs_found < min_cross_refs:
+        # F5: Cross-reference gate -- ONE dynamic rule. Fixes the old bug where this block
+        # used a flat min_cross_refs(=2) and ran BEFORE the prior-count-aware min_refs_needed,
+        # forcing a 1-prior section to find 2 refs. Compute min_refs_needed HERE and use it.
+        min_refs_needed = 2 if len(prior_sections) >= 2 else (1 if len(prior_sections) == 1 else 0)
+        if prior_sections and cross_refs_found < min_refs_needed:
             if round_n < max_rounds:
-                # Retry with explicit hint about cross-refs
                 prior_title_1 = prior_sections[-1].get("title", "prior section")
                 prior_title_2 = prior_sections[-2].get("title", "earlier section") if len(prior_sections) >= 2 else prior_sections[0].get("title", "earlier section")
                 current_hint = (
-                    f"CRITICAL: Section lacks cross-references ({cross_refs_found}/{min_cross_refs} found). "
-                    f"You MUST add at least {min_cross_refs} cross-references to prior sections using their EXACT titles. "
-                    f"Add sentences like: 'As discussed in Section [exact title: {prior_title_1}]...' "
-                    f"and 'Building on [exact title: {prior_title_2}]...' "
-                    f"Cross-references are MANDATORY for book coherence. "
+                    f"CRITICAL: Section lacks cross-references ({cross_refs_found}/{min_refs_needed} found). "
+                    f"You MUST add at least {min_refs_needed} cross-reference(s) to prior sections using their EXACT TITLES. "
+                    f"Add sentences like: 'As discussed in [{prior_title_1}]...' "
+                    f"and 'Building on [{prior_title_2}]...'. "
+                    f"Use section TITLES, NOT numeric refs like 'Section 2.1'. "
                     f"Rewrite the section NOW with these cross-references included."
                 )
-                print(f"  [R{round_n}] RETRY: cross-refs={cross_refs_found}/{min_cross_refs} -- hint added")
+                print(f"  [R{round_n}] RETRY: cross-refs={cross_refs_found}/{min_refs_needed} -- hint added")
                 continue  # Skip expensive verification, retry immediately
             else:
                 raise RuntimeError(
                     f"[CROSS-REF BLOCK] Section '{spec.title}': "
-                    f"only {cross_refs_found}/{min_cross_refs} cross-references after {round_n} rounds. "
-                    f"Writer must include >= {min_cross_refs} cross-references to prior sections. "
+                    f"only {cross_refs_found}/{min_refs_needed} cross-references after {round_n} rounds. "
+                    f"Writer must reference prior sections by TITLE. "
                     f"DO NOT write sections without cross-references."
                 )
 
@@ -618,6 +621,9 @@ def investigate_section(
 
         try:
             from . import verify as _verify
+            def _judge_llm(p):  # LOCAL gemma judge via Ollama -- never Claude/external
+                return _ollama_chat(judge_model, [{"role": "user", "content": p}],
+                                    temperature=0.1, num_predict=200)
             topic_res = _verify.topic_relevance_check(
                 section_title=spec.title,
                 goal=spec.goal,
@@ -626,6 +632,7 @@ def investigate_section(
                 content=content,
                 prior_sections=prior_sections,
                 model=judge_model,
+                llm_call_fn=_judge_llm,
             )
             topic_relevance = float(topic_res.get("topic_relevance", 0.5))
         except Exception as e:
@@ -662,42 +669,32 @@ def investigate_section(
             best_evidence = evidence_block
             _best_round_tuple = _round_tuple()
 
-        # --- CRAG + cross-ref gate ---
-        # F5: Cross-refs required: >=2 if >=2 prior sections, >=1 if exactly 1 prior section.
-        # No requirement for first section (0 prior).
-        min_refs_needed = 2 if len(prior_sections) >= 2 else (1 if len(prior_sections) == 1 else 0)
+        # --- Accept gates ---
+        # Cross-ref requirement (min_refs_needed already computed at the F5 gate above;
+        # by here cross_refs_found >= min_refs_needed, so this is effectively satisfied).
         has_min_cross_refs = cross_refs_found >= min_refs_needed
 
-        # ACCEPT only when ALL conditions pass
-        if (grounding >= min_grounding and n_cites > 0 and
-                topic_relevance >= min_topic_relevance and has_min_cross_refs):
-            print(f"  [R{round_n}] ACCEPT: grounding={grounding:.3f}, topic={topic_relevance:.3f}, cross-refs={cross_refs_found}")
-            break
+        # G2 CITATION INTEGRITY: does each [N] actually support its own cited claim?
+        # verify_section() = bge-m3 cosine prefilter + LOCAL gemma batch judge (never
+        # Claude/external). Run ONLY when the cheaper gates already pass, to avoid an
+        # extra judge call on rounds that will retry anyway. Fail-open on any error.
+        base_ok = (grounding >= min_grounding and n_cites > 0 and
+                   topic_relevance >= min_topic_relevance and has_min_cross_refs)
+        cite_precision = 1.0
+        if base_ok:
+            try:
+                cite_res = _verify.verify_section(content, ranked, model=judge_model)
+                cite_precision = float(cite_res.get("grounding", 1.0))
+                print(f"  [R{round_n}] Citation integrity (G2): {cite_precision:.3f}")
+            except Exception as e:
+                print(f"  [R{round_n}] Citation integrity failed (fail-open): {e}")
+                cite_precision = 1.0
 
-        # F5: Cross-ref gate -- only mandatory when there are >= 2 prior sections.
-        # With only 1 prior section, a single cross-ref is sufficient.
-        # With 0 prior sections, no cross-refs are needed (first section in the book).
-        if prior_sections and len(prior_sections) >= 2 and cross_refs_found < 2:
-            if round_n < max_rounds:
-                # Retry immediately with explicit cross-ref hint
-                prior_title_1 = prior_sections[-1].get("title", "prior section")
-                prior_title_2 = (prior_sections[-2].get("title", "earlier section")
-                                 if len(prior_sections) >= 2 else prior_sections[0].get("title", "earlier section"))
-                current_hint = (
-                    f"CRITICAL: Section lacks cross-references ({cross_refs_found}/2 found). "
-                    f"You MUST add at least 2 cross-references to prior sections using their EXACT titles. "
-                    f"Add sentences like: 'As discussed in [{prior_title_1}]...' "
-                    f"and 'Building on [{prior_title_2}]...' "
-                    f"Cross-references are MANDATORY. Rewrite the section now."
-                )
-                print(f"  [R{round_n}] RETRY: cross-refs={cross_refs_found}/2 -- hint added")
-                continue  # Skip expensive verification, retry immediately
-            else:
-                raise RuntimeError(
-                    f"[CROSS-REF BLOCK] Section '{spec.title}': "
-                    f"only {cross_refs_found}/2 cross-refs after {round_n} rounds. "
-                    f"MANDATORY to reference >= 2 prior sections. Rewrite."
-                )
+        # ACCEPT only when ALL gates pass
+        if base_ok and cite_precision >= min_cite_precision:
+            print(f"  [R{round_n}] ACCEPT: grounding={grounding:.3f}, topic={topic_relevance:.3f}, "
+                  f"cite_prec={cite_precision:.3f}, cross-refs={cross_refs_found}")
+            break
 
         # Topic purity gate
         if grounding >= min_grounding and topic_relevance < min_topic_relevance and n_cites > 0:
@@ -708,15 +705,22 @@ def investigate_section(
                 f"topic drift detected. DO NOT write."
             )
 
-        # Retry for grounding / topic issues
+        # Retry for grounding / topic / citation issues
         if round_n < max_rounds:
             weak_summary = grounding_res.get("weak_summary", "") if isinstance(grounding_res, dict) else ""
             drift_terms = ", ".join(topic_res.get("drift_terms", [])[:4]) if isinstance(topic_res, dict) else ""
             missing_terms = ", ".join(topic_res.get("missing_terms", [])[:4]) if isinstance(topic_res, dict) else ""
+            # G5b: numeric cross-refs ("Section 2.1") are fabrication-prone -- the book
+            # cannot verify them; nudge the writer to use exact section TITLES instead.
+            numeric_refs = re.findall(r"\b(?:Section|Chapter)\s+\d+(?:\.\d+)?", content)
+            numeric_hint = (f" Replace numeric refs ({', '.join(numeric_refs[:3])}) with exact section TITLES."
+                            if numeric_refs else "")
+            cite_hint = (" Some citations do not support their claim -- attach the correct [N] to each fact."
+                         if cite_precision < min_cite_precision else "")
             current_hint = (
-                f"Previous draft: grounding={grounding:.3f}, topic={topic_relevance:.3f}. "
+                f"Previous draft: grounding={grounding:.3f}, topic={topic_relevance:.3f}, cite_prec={cite_precision:.3f}. "
                 f"Focus on: {missing_terms or 'none'}. Avoid: {drift_terms or 'none'}. "
-                f"{weak_summary[:160] if weak_summary else 'cite more specific facts'}"
+                f"{weak_summary[:140] if weak_summary else 'cite more specific facts'}.{cite_hint}{numeric_hint}"
             )
             print(f"  [R{round_n}] RETRY with refined queries")
 

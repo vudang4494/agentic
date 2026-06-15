@@ -17,7 +17,7 @@
 1. **Matrix pattern (outline):** `outline_audit` v36 `ok=false` (matrix + coherence_low); section gần-trùng jaccard ~0.80; RAG/CoT bị tách 2 anchor. Outline audit chỉ advisory → redundancy lọt. → Sửa Stage A (Guardrail 3).
 2. **~45% reference off-topic:** prefilter 0.45 + domain gate ~0.40 quá lỏng; per-section sourcing kém dù canonical recall cao. → Siết gate (Guardrail 6).
 3. **Embed SPLIT:** retrieval+query_router chạy `nomic-embed-text` (runtime), verify-side chạy `bge-m3:latest`. config nomic khớp retrieval; unify về 1 model trước khi tuning.
-4. **Verify layer:** `topic_relevance` là heuristic lượng tử hóa (KHÔNG LLM), grounding bão hòa; 6/8 hàm `verify.py` là legacy-only. Xem CLAUDE.md "Verify LIVE vs LEGACY" + RULES.md target G0-G6.
+4. **Verify layer (đã tối ưu, LOCAL-only):** G3 grounding de-saturated (per-source HHEM), G4 topic judge thật (gemma local), G2 citation-integrity, fix cross-ref bug `:583`. Cần validation run đầy đủ để tinh chỉnh ngưỡng. Test: `python3 files/eval/test_verify_optim.py`. Pipeline TUYỆT ĐỐI không gọi Claude/external.
 
 ## Ngưỡng vận hành (nhắc nhanh — chuẩn ở RULES.md)
 - P0a domain gate ≈ 0.40 · accept: grounding ≥0.70 ∧ topic ≥0.50 ∧ cites>0 ∧ cross-ref đủ.
