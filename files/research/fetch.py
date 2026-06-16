@@ -137,6 +137,43 @@ def _looks_binary(record: dict) -> bool:
     return False
 
 
+def _mathml_to_latex(html: str) -> str:
+    """arxiv /html/ pages embed equations as <math>...<annotation
+    encoding="application/x-tex">LATEX</annotation>...</math>. Replace each <math> block
+    with its TeX annotation as inline $...$ so the equation SURVIVES _html_to_text (which
+    would otherwise flatten MathML to noise). This is what lets the writer + grounding
+    scorer see the paper's REAL formulas instead of the writer inventing them from memory."""
+    import re as _re
+
+    def _repl(m):
+        a = _re.search(r'<annotation[^>]*encoding="application/x-tex"[^>]*>(.*?)</annotation>',
+                       m.group(0), _re.DOTALL)
+        if not a:
+            return " "
+        tex = (a.group(1).replace("&lt;", "<").replace("&gt;", ">")
+               .replace("&amp;", "&").replace("&quot;", '"')).strip()
+        return f" $ {tex} $ " if tex else " "
+
+    return _re.sub(r"<math\b[^>]*>.*?</math>", _repl, html, flags=_re.DOTALL | _re.IGNORECASE)
+
+
+def _pick_math_window(text: str, max_words: int) -> str:
+    """When the body exceeds max_words, return the window RICHEST in math/equation tokens
+    so the writer gets the method/equation region, not the title/ToC/intro."""
+    import re as _re
+    words = text.split()
+    if len(words) <= max_words:
+        return text
+    best_i, best = 0, -1
+    step = max(1, max_words // 2)
+    for i in range(0, len(words) - max_words + 1, step):
+        chunk = " ".join(words[i:i + max_words])
+        score = len(_re.findall(r"\\(?:frac|sqrt|sum|prod|softmax|text|mathbf|cdot)|[=^_]|\$", chunk))
+        if score > best:
+            best, best_i = score, i
+    return " ".join(words[best_i:best_i + max_words])
+
+
 def fetch_full_text(url: str, max_words: int = 350) -> str:
     """Fetch a page and return up to max_words of readable body text.
 
@@ -180,12 +217,22 @@ def fetch_full_text(url: str, max_words: int = 350) -> str:
             except Exception:
                 pass
 
-    # arxiv -- abstract pages serve clean HTML
-    arxiv_url = url
-    if "arxiv.org/abs/" in url:
-        # Keep the abstract page; it has the most concise summary + meta
-        arxiv_url = url
-    rec = fetch(arxiv_url, accept="text/html")
+    # arxiv -- PREFER the /html/ full paper: it carries the Method section + equations as
+    # MathML/TeX, whereas /abs/ is only the abstract (0 equations -> the writer would invent
+    # formulas from memory). Additive: on 404/empty (pre-2023 papers have no /html/) we fall
+    # back to the /abs/ abstract path below, so this never loses information or hard-fails.
+    m_aid = re.search(r"arxiv\.org/(?:abs|pdf|html)/([0-9]{4}\.[0-9]{4,5}(?:v\d+)?)", url, re.IGNORECASE)
+    if m_aid:
+        hrec = fetch(f"https://arxiv.org/html/{m_aid.group(1)}", accept="text/html")
+        if hrec and hrec.get("status", 0) < 400 and hrec.get("content") and not _looks_binary(hrec):
+            htext = _html_to_text(_mathml_to_latex(hrec["content"]))  # MathML -> TeX BEFORE tag-strip
+            htext = _pick_math_window(htext, max_words)                # equation-dense region, not ToC
+            hwords = htext.split()
+            if len(hwords) >= 40:  # got a real body
+                return " ".join(hwords[:max_words])
+        # else: fall through to the /abs/ abstract path
+
+    rec = fetch(url, accept="text/html")
     if not rec or rec.get("status", 0) >= 400 or not rec.get("content"):
         return ""
     # Don't try to render PDF / image / archive bytes as text.

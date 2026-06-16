@@ -199,6 +199,14 @@ WRITE RULES:
 - Do NOT write a 'References', 'Bibliography', or 'Further Reading' section. A single
   ## References section is added by the assembler.
 - Cross-reference at least 2 prior sections by title (e.g., "As discussed in 'Section X.X: [exact prior section title]'..."). These are MANDATORY -- the section will be REJECTED if fewer than 2 cross-references are included. Count your cross-references before finishing and ensure you have >= 2.
+- TECHNICAL DEPTH (this book must TEACH the mechanism, not just summarize it): WHENEVER the
+  EVIDENCE provides them, you MUST (a) explain the core algorithm/method STEP BY STEP (a short
+  numbered walkthrough of what it computes and why), (b) reproduce the key mathematical
+  formula(s) as LaTeX display math on their own line, written as $$ ... $$, and define every
+  symbol you use, and (c) give short pseudocode in a fenced code block when the method is
+  algorithmic. GROUND every formula/step in a cited source [N] -- do NOT invent equations or
+  steps the evidence does not contain (if the math is absent, explain the mechanism in words
+  and say so). Prefer ONE correct, fully-derived mechanism over a broad shallow survey.
 - If a required term is missing from the evidence, say the literature is limited rather than inventing details.
 """
 
@@ -441,7 +449,10 @@ def investigate_section(
             ranked = ranked[:8]
 
         # --- Full-text enrichment ---
-        ranked = _notes.enrich_top_sources(ranked, top_n=2, max_words_per=350)
+        # #2 EVIDENCE DEPTH: pull more full-text from MORE sources so the writer actually
+        # sees the papers' methods/equations to reproduce (was top-2 @ 350w -> too thin for
+        # formulas/algorithms). Adds info, never removes.
+        ranked = _notes.enrich_top_sources(ranked, top_n=4, max_words_per=550)
         evidence_ok, evidence_reason = _evidence_adequate(spec, ranked)
 
         if not evidence_ok:
@@ -545,7 +556,7 @@ def investigate_section(
             writer_model,
             [{"role": "user", "content": writer_prompt}],
             temperature=0.7,
-            num_predict=2000,
+            num_predict=2600,  # #1 headroom for step-by-step + formulas + pseudocode
         )
 
         if not content:

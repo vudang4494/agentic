@@ -167,16 +167,23 @@ def grounding_score(claims: list, sources: list, threshold: float = HHEM_SUPPORT
     # ~2000-char mega-premise, so almost any topical sentence matched something and
     # grounding saturated at 1.0 across all 280 v36 sections. Per-source-max requires
     # a claim to be supported by a SINGLE excerpt -> a discriminating signal.
-    MAX_PREMISE_CHARS = 1200   # per-source excerpt cap (~300 tokens)
+    MAX_PREMISE_CHARS = 3000   # cover the #2-enriched full-text excerpts (~550 words)
+    WINDOW_CHARS = 1500        # HHEM premise window (excerpts are WINDOWED, not truncated)
     MAX_SOURCES = 6            # bound the (claim x source) pair count
     MAX_CLAIMS = 40
     claims = claims[:MAX_CLAIMS]
 
+    # WINDOW each excerpt instead of truncating: #2 enrichment made excerpts ~550 words, and
+    # the writer cites method/equation text that lived PAST the old 1200-char cut -> the
+    # scorer never saw the support -> every claim scored 'partial' -> false grounding=0.5.
+    # Windowing scores each claim against support ANYWHERE in the full excerpt.
     excerpts = []
     for s in sources[:MAX_SOURCES]:
         exc = (s.excerpt if hasattr(s, "excerpt") else s.get("excerpt", "")) if s else ""
         if exc:
-            excerpts.append(exc[:MAX_PREMISE_CHARS])
+            exc = exc[:MAX_PREMISE_CHARS]
+            for w in range(0, len(exc), WINDOW_CHARS):
+                excerpts.append(exc[w:w + WINDOW_CHARS])
 
     if not excerpts:
         # No evidence to ground against -> nothing can be supported.
