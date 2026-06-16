@@ -150,7 +150,11 @@ def _mathml_to_latex(html: str) -> str:
                        m.group(0), _re.DOTALL)
         if not a:
             return " "
-        tex = (a.group(1).replace("&lt;", "<").replace("&gt;", ">")
+        # Map &lt;/&gt; to math-safe \lt/\gt (valid in math mode), NOT raw < > -- otherwise
+        # the downstream _html_to_text tag-stripper `<[^>]+>` eats the math '<' PLUS all
+        # prose up to the next real '>' (verified on 1706.03762: k<n destroyed ~40 words +
+        # 2 formulas). So the inlined $...$ must carry no bare angle brackets.
+        tex = (a.group(1).replace("&lt;", r" \lt ").replace("&gt;", r" \gt ")
                .replace("&amp;", "&").replace("&quot;", '"')).strip()
         return f" $ {tex} $ " if tex else " "
 

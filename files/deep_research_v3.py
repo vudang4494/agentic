@@ -226,6 +226,9 @@ def assemble_book(outline, sections, output_path):
     else:
         print("[ASSEMBLE] Heading hygiene OK: %d H2, %d H3" % (len(h2_titles), len(h3_titles)))
 
+    # Guard: a lone surrogate (from a botched upstream decode) crashes write_text(utf-8)
+    # with 'surrogates not allowed', aborting the whole run before render. Strip un-encodable.
+    assembled = assembled.encode("utf-8", "ignore").decode("utf-8")
     output_path.write_text(assembled, encoding="utf-8")
     wc = len(output_path.read_text(encoding="utf-8").split())
     print("[ASSEMBLE] " + str(output_path) + " (" + str(wc) + " words)")

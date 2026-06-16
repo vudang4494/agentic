@@ -362,6 +362,17 @@ def clean_citations(content: str, n_sources: int) -> tuple:
         return content, 0
     dropped = 0
 
+    # MATH/CODE SAFETY: mask $$...$$ / $...$ math spans + ``` code fences so the citation
+    # regexes below never strip ML notation like [N] (index set {1..N}), [n], [N,k] (dim
+    # list) out of a formula. Verified bug: `$[N]$` -> `$$` and `$$\sum_{i\in[N]}$$` ->
+    # broken `\in ` -> tectonic crash, silently. Only inter-span PROSE is cleaned; spans
+    # are restored verbatim at the end.
+    _spans = []
+    def _mask(m):
+        _spans.append(m.group(0))
+        return f"\x00MATHSPAN{len(_spans) - 1}\x00"
+    content = _re.sub(r"```[\s\S]*?```|\$\$[\s\S]+?\$\$|\$[^$\n]+\$", _mask, content)
+
     # 1: N-PREFIXED PLACEHOLDER markers leaked from the SYS template. bookv6
     #    leaked 77 of these into the rendered book ([N], [N1], [N10], [N3, N7],
     #    [N2, 5]) because the old regex `\[([Nn]|\d+)\]` only caught the bare
@@ -398,6 +409,9 @@ def clean_citations(content: str, n_sources: int) -> tuple:
     # Cleanup: collapse double-spaces / orphan trailing punctuation
     cleaned = _re.sub(r" {2,}", " ", cleaned)
     cleaned = _re.sub(r"\s+([,.;:])", r"\1", cleaned)
+    # restore masked math/code spans verbatim
+    for _i, _sp in enumerate(_spans):
+        cleaned = cleaned.replace(f"\x00MATHSPAN{_i}\x00", _sp)
     return cleaned, dropped
 
 
