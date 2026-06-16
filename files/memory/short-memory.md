@@ -16,7 +16,7 @@
 ## Blocker đang mở
 1. **Matrix pattern (outline):** `outline_audit` v36 `ok=false` (matrix + coherence_low); section gần-trùng jaccard ~0.80; RAG/CoT bị tách 2 anchor. Outline audit chỉ advisory → redundancy lọt. → Sửa Stage A (Guardrail 3).
 2. **~45% reference off-topic:** prefilter 0.45 + domain gate ~0.40 quá lỏng; per-section sourcing kém dù canonical recall cao. → Siết gate (Guardrail 6).
-3. **Embed SPLIT:** retrieval+query_router chạy `nomic-embed-text` (runtime), verify-side chạy `bge-m3:latest`. config nomic khớp retrieval; unify về 1 model trước khi tuning.
+3. **Embed unified (#3 done):** đã gộp `bge-m3:latest` toàn bộ (retrieval+router+config). validate_v39 OK: prefilter drop lành mạnh (kept 7-16, chỉ off-topic/grey), KHÔNG mất relevant info.
 4. **Verify layer (tối ưu + VALIDATED, LOCAL-only):** validation `validate_v37` (06-16): pipeline OK không vỡ; **G2 cite_prec 0.75-1.0 + G4 topic 0.77-0.90 PHÂN BIỆT được** (hết mù); grounding vẫn 1.0 trên section sạch (#4 citation-aware nếu cần, nhưng G2 đã lấp); #1 outline hết matrix; G6 sạch. Test: `python3 files/eval/test_verify_optim.py`. Pipeline TUYỆT ĐỐI không gọi Claude/external.
 
 ## Ngưỡng vận hành (nhắc nhanh — chuẩn ở RULES.md)

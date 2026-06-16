@@ -239,8 +239,39 @@ def grounding_score(claims: list, sources: list, threshold: float = HHEM_SUPPORT
     grounding_mean = sum(best) / total if total else 1.0
     unsupported_fraction = n_unsupported / total if total else 0.0
 
+    # #4 CITATION-AWARE (warn-first): score each claim against the source it actually
+    # CITES ([N] -> sources[N-1]), stripped of markers -- the correct grounding unit.
+    # Logged for comparison; the GATE still uses `grounding` (per-source-max) until a
+    # validation run re-baselines min_grounding (citation-aware drops below 0.70 more).
+    import re as _re2
+    _cited_pairs, _cited_ci = [], []
+    for ci, claim in enumerate(claims):
+        _idxs = [int(m) for m in _re2.findall(r"\[(\d+)\]", claim)]
+        _excs = []
+        for n in _idxs:
+            if 1 <= n <= len(sources):
+                s = sources[n - 1]
+                e = (s.excerpt if hasattr(s, "excerpt") else s.get("excerpt", "")) if s else ""
+                if e:
+                    _excs.append(e[:MAX_PREMISE_CHARS])
+        if _excs:
+            _cited_pairs.append(("\n".join(_excs)[: MAX_PREMISE_CHARS * 2],
+                                 _re2.sub(r"\[\d+\]", "", claim)[:500]))
+            _cited_ci.append(ci)
+    _cited_score = {}
+    if _cited_pairs:
+        try:
+            for _k, _sc in enumerate(hhem.predict(_cited_pairs)):
+                _cited_score[_cited_ci[_k]] = float(_sc)
+        except Exception:
+            _cited_score = {}
+    _n_sup_cited = sum(1 for ci in range(total) if _cited_score.get(ci, best[ci]) >= threshold)
+    grounding_cited = _n_sup_cited / total if total else 1.0
+
     return {
         "grounding": round(grounding, 3),
+        "grounding_cited": round(grounding_cited, 3),
+        "n_cited_claims": len(_cited_pairs),
         "grounding_mean": round(grounding_mean, 3),
         "unsupported_fraction": round(unsupported_fraction, 3),
         "n_supported": n_supported,

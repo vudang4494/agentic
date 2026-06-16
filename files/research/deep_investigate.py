@@ -211,7 +211,7 @@ def investigate_section(
     prior_sections: List[dict] = None,  # [{title, content}] for cross-ref
     prior_concepts: List[str] = None,     # concepts already covered elsewhere
     providers: tuple = ("arxiv", "wikipedia", "ddg"),
-    embed_model: str = "nomic-embed-text",
+    embed_model: str = "bge-m3:latest",  # #3 unify retrieval embed with verify-side
     reranker_model: str = "BAAI/bge-reranker-v2-m3",
     writer_model: str = "batiai/qwen3.6-35b:iq3",  # WRT: stable writer on this machine
     judge_model: str = "gemma4:e4b",  # Research/Topic gate: stable fast model on 24 GB
@@ -379,6 +379,13 @@ def investigate_section(
                 break
 
         # --- Rank (RRF) ---
+        # #5 ANCHORING (SAFE / NO information loss): the section's domain term anchors ONLY
+        # ranking + selection (rank_rrf + rerank below) so on-topic sources rise into the
+        # top-8 and off-domain ones fall out -- WITHOUT dropping anything. The prefilter
+        # (the only HARD-DROP) keeps the UNANCHORED section_prompt, so anchoring can never
+        # shrink the candidate pool. Anchor = short noun phrase (must_cover_terms[0] / title).
+        _anchor = (spec.must_cover_terms[0] if spec.must_cover_terms else "") or spec.title
+        retrieval_query = f"{_anchor}. {section_prompt}".strip()
         # P0b: prefilter with protected IDs so canonical papers survive the cosine gate
         filtered = _notes.prefilter(
             raw_sources, section_prompt,
@@ -387,7 +394,7 @@ def investigate_section(
         )
         ranked = _notes.rank_rrf(
             filtered if filtered else raw_sources,
-            section_prompt,
+            retrieval_query,
             top_k=20, embed_model=embed_model,
             protected_ids=protected_source_ids,
             seen_counts=seen_counts,   # P0c: penalize over-represented sources
@@ -427,7 +434,7 @@ def investigate_section(
 
         # --- RRK rerank ---
         try:
-            ranked = _rerank.rerank(section_prompt, ranked, top_k=8)
+            ranked = _rerank.rerank(retrieval_query, ranked, top_k=8)
             print(f"  [R{round_n}] RRK: top-{len(ranked)}")
         except Exception as e:
             print(f"  [R{round_n}] RRK failed: {e}, using RRF top-8")
@@ -614,6 +621,11 @@ def investigate_section(
             claims = _f.decompose_claims(content, None)
             grounding_res = _f.grounding_score(claims, ranked)
             grounding = grounding_res.get("grounding", 0.0)
+            _g_cited = grounding_res.get("grounding_cited")
+            if _g_cited is not None:
+                print(f"  [R{round_n}] [#4 WARN] grounding(per-source)={grounding:.3f} vs "
+                      f"grounding(cited)={_g_cited:.3f} on {grounding_res.get('n_cited_claims', 0)} cited claims "
+                      f"-- gate uses per-source until re-baselined")
         except Exception as e:
             print(f"  [R{round_n}] Grounding failed: {e}")
             grounding = 0.5  # Optimistic default
@@ -687,8 +699,11 @@ def investigate_section(
                 cite_precision = float(cite_res.get("grounding", 1.0))
                 print(f"  [R{round_n}] Citation integrity (G2): {cite_precision:.3f}")
             except Exception as e:
-                print(f"  [R{round_n}] Citation integrity failed (fail-open): {e}")
-                cite_precision = 1.0
+                # #4 fail-CLOSED (was fail-open to 1.0). verify_section is the only per-[N]
+                # correctness gate; on error do NOT auto-pass -- 0.0 means this round won't
+                # clean-accept (retries / ships best-effort, never hard-blocks).
+                print(f"  [R{round_n}] Citation integrity UNVERIFIED (fail-closed): {e}")
+                cite_precision = 0.0
 
         # ACCEPT only when ALL gates pass
         if base_ok and cite_precision >= min_cite_precision:

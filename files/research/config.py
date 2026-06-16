@@ -31,7 +31,7 @@ JUDGE_MODEL = "gemma4:e4b"
 DISCOVERY_MODEL = "gemma4:e4b"
 OUTLINE_MODEL = "gemma4:e4b"
 WRITER_MODEL = "batiai/qwen3.6-35b:iq3"
-EMBED_MODEL = "nomic-embed-text"
+EMBED_MODEL = "bge-m3:latest"  # #3 unify with verify-side (was nomic: asymmetric, needs search_query/document prefix the code never passed)
 
 # Iterative-research thresholds
 MIN_GROUNDING = 0.55

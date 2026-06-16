@@ -123,10 +123,27 @@ def test_numeric_refs():
     check("title-based refs are NOT flagged", none == [], f"found={none}")
 
 
+def test_grounding_citation_aware():
+    print("#4 citation-aware grounding (vs per-source-max):")
+    faithfulness._hhem = FakeHHEM()
+    # Claim cites [2], but its real support lives in source 1 (uncited).
+    claims = ["Gradient descent converges reliably [2]."]
+    sources = [
+        {"excerpt": "Gradient descent converges reliably under standard assumptions."},
+        {"excerpt": "Completely unrelated cooking recipes and kitchen techniques."},
+    ]
+    res = faithfulness.grounding_score(claims, sources)
+    check("per-source-max credits it (lenient)", res["grounding"] >= 0.99, f"g={res['grounding']}")
+    check("citation-aware does NOT (cited src2 unrelated)", res["grounding_cited"] <= 0.01,
+          f"g_cited={res['grounding_cited']}")
+    check("n_cited_claims counted", res["n_cited_claims"] == 1, f"n={res['n_cited_claims']}")
+
+
 if __name__ == "__main__":
     test_grounding_desaturate()
     test_topic_g4()
     test_numeric_refs()
+    test_grounding_citation_aware()
     print()
     if _fail:
         print(f"RESULT: {_fail} check(s) FAILED")

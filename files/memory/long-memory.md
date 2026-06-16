@@ -11,6 +11,13 @@
 
 ## Session log (mới nhất trước)
 
+### [2026-06-16] #3+#4+#5 SAFE (no info loss) + validate_v39
+- **#3 embed unify** → `bge-m3:latest` toàn bộ (config/query_router/deep_investigate; bỏ nomic dùng-thiếu-prefix). **#5 anchoring AN TOÀN:** anchor (must_cover_terms[0]) CHỈ vào rank_rrf + rerank (ordering/chọn top-8); **prefilter — chỗ hard-drop duy nhất — giữ section_prompt gốc** → KHÔNG bao giờ thu nhỏ pool. **#4 citation-aware grounding** (parse [N], premise = nguồn được cite, strip marker) = **warn-first** (log grounding_cited vs per-source; gate KHÔNG đổi) + **G2 fail-CLOSED** (lỗi verify_section → cite_prec=0.0, retry/best-effort, không hard-block, không mất content).
+- **Validation `validate_v39`** (safe version, exit 0): KHÔNG mất thông tin — prefilter kept 7-16, chỉ drop off-topic/grey, 0 empty-pool/HARD-BLOCK, 4 section ship (3219 từ > v37). #4: grounding(cited)=1.0=per-source trên section sạch (bật gate sẽ không mass-block). **G2 bắt đúng**: 2.1 cite_prec=0.0 trên section evidence borderline (rel=0.425) mà g/topic bỏ sót → vẫn ship best-effort. Đã dừng v38 (bản prefilter-anchored kém an toàn) trước khi sửa.
+- Unit test 16/16 (thêm test #4 citation-aware phân biệt). Còn lại: re-tune floor/ngưỡng nếu cần (data đã có); cân nhắc bật #4 làm gate (thấp vì G2 đã lấp).
+
+---
+
 ### [2026-06-16] Ship #1+G6, validation run validate_v37, fix R7 + chapter-title
 - **Đã ship + push** (branch chore/normalize-docs-cleanup): #1 outline anti-matrix (section title term-centric theo global index, pool 15 coprime spp=7); G6 bge-m3 cosine dedup section-vs-prior warn-first (≥0.85 log, KHÔNG block).
 - **Validation `validate_v37`** (2ch×2sec, max_rounds 2, topic "LLMs"): pipeline OK exit 0, không vỡ. **G2 cite_prec phân biệt 0.75-1.0; G4 topic liên tục 0.77-0.90** (hết quantize {0.5,0.75,1.0}). grounding vẫn 1.0 trên section sạch (per-source-max chưa đủ de-sat; #4 citation-aware mới làm thật, NHƯNG G2 đã lấp chỗ trống). G6 chạy sạch (không false-warn). #1 confirmed: title đa dạng, hết matrix.

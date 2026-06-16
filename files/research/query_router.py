@@ -207,7 +207,7 @@ _QUERY_DECOMPOSE_SYS = (
 _JSON_STR_ARRAY_RE = re.compile(r'\[\s*(?:"[^"]+"\s*,?\s*)+\]', re.DOTALL)
 _THINK_RE = re.compile(r"<THINK>.*?</THINK>", re.DOTALL | re.IGNORECASE)
 _JSON_ARRAY_RE = re.compile(r"\[\s*(?:\{[^\[\]]*\}\s*,?\s*)+\]", re.DOTALL)
-_EMBED_MODEL = "nomic-embed-text"
+_EMBED_MODEL = "bge-m3:latest"  # #3 unify (was nomic, used without required prefix)
 _LOCK = threading.Lock()
 
 
