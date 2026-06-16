@@ -682,8 +682,32 @@ def _semantic_fallback_outline(topic_profile, evidence_map: List[dict], n_ch: in
                     template_short_label = template_short_label[len(prefix):].strip()
                     break
 
-            # Combine section's unique term with the template -- NO bucket prefix
-            sec_title = f"{sec_term_cap}: {template_short_label}"
+            # ANTI-MATRIX (rank-1 fix): build a TERM-CENTRIC title from a phrasing pool
+            # keyed by the ABSOLUTE global index, so the same template label no longer
+            # repeats in a fixed column across chapters (the v36 "anchor: same-suffix"
+            # matrix). Pool size 15 is coprime with the common spp(=7) so each chapter's
+            # 7-slot window shifts and within-chapter titles stay distinct. The anchor
+            # term + template label are kept in must_cover_terms/pr below, so retrieval /
+            # P0a / G4 term signals are UNCHANGED.
+            _SECTION_PHRASINGS = [
+                "{t}: Foundations and Motivation",
+                "How {t} Works — Core Mechanisms",
+                "Inside {t}: Formal Definitions",
+                "{t} in Practice: Methods and Implementation",
+                "Evaluating {t}: Metrics and Benchmarks",
+                "Scaling {t}: Efficiency and Trade-offs",
+                "Limitations and Failure Modes of {t}",
+                "Advances and Open Problems in {t}",
+                "{t}: A Comparative Analysis",
+                "Applying {t} to Real Systems",
+                "Theoretical Underpinnings of {t}",
+                "{t}: Design Choices and Architecture",
+                "From Theory to Deployment of {t}",
+                "Recent Research Directions in {t}",
+                "Case Studies and Lessons in {t}",
+            ]
+            _phr_idx = ((i - 1) * spp + (j - 1)) % len(_SECTION_PHRASINGS)
+            sec_title = _SECTION_PHRASINGS[_phr_idx].format(t=sec_term_cap)
 
             # F6: Global cross-chapter deduplication.
             # If this exact title already exists in a prior chapter, append (N) suffix.

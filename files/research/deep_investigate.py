@@ -744,6 +744,26 @@ def investigate_section(
                     f"DO NOT write thin sections."
                 )
 
+    # G6 (warn-first): flag near-duplicate sections via bge-m3 cosine vs prior bodies.
+    # Soft signal ONLY -- logs, does NOT block (a blocking threshold needs calibration
+    # from a real run). Gives the bge-m3 content-dedup signal the product wants.
+    try:
+        if best_content and prior_sections:
+            from .embeddings import embed as _g6_embed, cosine as _g6_cos
+            _g6_prior = prior_sections[-12:]
+            _g6_texts = [best_content[:1500]] + [(ps.get("content", "") or "")[:1500] for ps in _g6_prior]
+            _g6_vecs = _g6_embed(_g6_texts, model="bge-m3:latest")
+            if _g6_vecs and len(_g6_vecs) == len(_g6_texts):
+                _g6_sims = [(_g6_cos(_g6_vecs[0], _g6_vecs[k + 1]), _g6_prior[k].get("title", ""))
+                            for k in range(len(_g6_prior))]
+                if _g6_sims:
+                    _g6_mx, _g6_who = max(_g6_sims, key=lambda x: x[0])
+                    if _g6_mx >= 0.85:
+                        print(f"  [G6 DEDUP-WARN] section ~{_g6_mx:.2f} cosine to prior "
+                              f"'{_g6_who[:50]}' (>=0.85; warn-first, not blocked)")
+    except Exception as e:
+        print(f"  [G6 DEDUP] skipped: {e}")
+
     # --- Extract new concepts ---
     discovered = _concept_decomposition(best_content)
     all_concepts.extend(discovered)
