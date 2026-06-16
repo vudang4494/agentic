@@ -11,6 +11,14 @@
 
 ## Session log (mới nhất trước)
 
+### [2026-06-16] Ship #1+G6, validation run validate_v37, fix R7 + chapter-title
+- **Đã ship + push** (branch chore/normalize-docs-cleanup): #1 outline anti-matrix (section title term-centric theo global index, pool 15 coprime spp=7); G6 bge-m3 cosine dedup section-vs-prior warn-first (≥0.85 log, KHÔNG block).
+- **Validation `validate_v37`** (2ch×2sec, max_rounds 2, topic "LLMs"): pipeline OK exit 0, không vỡ. **G2 cite_prec phân biệt 0.75-1.0; G4 topic liên tục 0.77-0.90** (hết quantize {0.5,0.75,1.0}). grounding vẫn 1.0 trên section sạch (per-source-max chưa đủ de-sat; #4 citation-aware mới làm thật, NHƯNG G2 đã lấp chỗ trống). G6 chạy sạch (không false-warn). #1 confirmed: title đa dạng, hết matrix.
+- **2 bug phụ (từ validate_v37) đã sửa:** (a) R7 `_validate_canonical_urls` loại MỌI canonical thiếu URL + gán nhãn sai "redirect" → giờ chỉ loại DDG-redirect thật, giữ title-only paper; (b) chapter subtitle kết "and {term}" → "Transformer: ... and Transformer" → bỏ term khỏi subtitle + guard "X: X".
+- **Còn lại (cần run thêm):** #3 embed unify (re-tune floor 0.45), #4 citation-aware grounding (warn-first), #5 query anchoring (re-measure trên outline non-templated).
+
+---
+
 ### [2026-06-16] Audit + tối ưu tầng Verify; đính chính embed claim
 - **Bối cảnh:** Re-check công việc chuẩn hóa + duyệt cấu trúc Verify (nhiễu/lỗi thời); chuẩn hóa cả Claude-agent docs lẫn product.
 - **Phát hiện:**

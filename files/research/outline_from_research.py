@@ -629,29 +629,34 @@ def _semantic_fallback_outline(topic_profile, evidence_map: List[dict], n_ch: in
 
         # Chapter subtitle derived from chapter index + unique term (no bucket repetition)
         # Using 20 distinct subtitle templates so up to 20 chapters are all unique
+        # Subtitles do NOT reference the chapter term (it is already the title prefix),
+        # else ch_title becomes "Transformer: ... and Transformer" (the redundancy seen
+        # in validate_v37). 20 distinct subtitles so up to 20 chapters stay unique.
         chapter_subtitles = [
-            f"Origins, Core Principles, and {chapter_term_cap}",
-            f"Mechanisms, Architecture, and {chapter_term_cap}",
-            f"Training Paradigms and {chapter_term_cap}",
-            f"Scaling Laws, Efficiency, and {chapter_term_cap}",
-            f"Knowledge, Memory, and {chapter_term_cap}",
-            f"Reasoning, Planning, and {chapter_term_cap}",
-            f"Alignment, Safety, and {chapter_term_cap}",
-            f"Evaluation, Benchmarks, and {chapter_term_cap}",
-            f"Applications, Use Cases, and {chapter_term_cap}",
-            f"Frontiers, Open Problems, and {chapter_term_cap}",
-            f"Multimodal Extensions and {chapter_term_cap}",
-            f"Deployment, Production, and {chapter_term_cap}",
-            f"Fine-tuning, Adaptation, and {chapter_term_cap}",
-            f"Prompt Engineering and {chapter_term_cap}",
-            f"Retrieval-Augmented Generation and {chapter_term_cap}",
-            f"Chain-of-Thought and {chapter_term_cap}",
-            f"Tool Use, Agents, and {chapter_term_cap}",
-            f"Model Compression and {chapter_term_cap}",
-            f"Advanced Optimization and {chapter_term_cap}",
-            f"Future Directions and {chapter_term_cap}",
+            "Origins and Core Principles",
+            "Mechanisms and Architecture",
+            "Training Paradigms",
+            "Scaling Laws and Efficiency",
+            "Knowledge and Memory",
+            "Reasoning and Planning",
+            "Alignment and Safety",
+            "Evaluation and Benchmarks",
+            "Applications and Use Cases",
+            "Frontiers and Open Problems",
+            "Multimodal Extensions",
+            "Deployment and Production",
+            "Fine-tuning and Adaptation",
+            "Prompt Engineering",
+            "Retrieval-Augmented Generation",
+            "Chain-of-Thought",
+            "Tool Use and Agents",
+            "Model Compression",
+            "Advanced Optimization",
+            "Future Directions",
         ]
         ch_subtitle = chapter_subtitles[(i - 1) % len(chapter_subtitles)]
+        if ch_subtitle.lower() == chapter_term.lower():  # avoid "X: X"
+            ch_subtitle = chapter_subtitles[i % len(chapter_subtitles)]
         ch_title = f"{chapter_term_cap}: {ch_subtitle}"
 
         sections = []

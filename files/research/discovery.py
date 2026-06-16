@@ -35,17 +35,23 @@ def _validate_canonical_urls(papers: list) -> list:
     if not papers:
         return papers
     validated = []
+    dropped_redirect = 0
     for p in papers:
         url = p.get("url", "")
         title = p.get("title", "")
-        if not url or not title:
-            continue
-        if _DDG_REDIRECT_RE.search(url):
+        if not title:
+            continue  # a canonical paper with no title is unusable
+        # R7: only drop GENUINE DDG wrapper/redirect URLs. A canonical paper with a title
+        # but no/empty URL is still useful (coverage + canonical_seeds resolution) and is
+        # NOT a redirect -- KEEP it. (The old code dropped every no-URL paper and mislabeled
+        # them "wrapper/redirect", silently losing canonical coverage -- see validate_v37.)
+        if url and _DDG_REDIRECT_RE.search(url):
+            dropped_redirect += 1
             continue
         validated.append(p)
-    if len(validated) < len(papers):
+    if dropped_redirect:
         print(f"[DISCOVERY] R7 canonical filter: {len(papers)} -> {len(validated)} papers "
-              f"(removed {len(papers) - len(validated)} wrapper/redirect URLs)")
+              f"(removed {dropped_redirect} DDG redirect URLs)")
     return validated
 
 
