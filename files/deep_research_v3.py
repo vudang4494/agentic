@@ -221,9 +221,14 @@ def run_v3(topic, out_name=None, n_chapters=None, sections_per_chapter=None,
         except OutlineValidationError as e:
             print(f"\n[OUTLINE BLOCKED] {e}")
             print("[OUTLINE] Retrying with different parameters...")
+            # n_chapters/sections_per_chapter are None on a plain CLI run (defaults) -> resolve
+            # BEFORE the arithmetic, else `None // 2` raises TypeError and aborts the whole run on
+            # any blocked outline instead of retrying with a smaller scope.
+            _retry_nc = n_chapters if n_chapters else 4
+            _retry_spc = sections_per_chapter if sections_per_chapter else 3
             outline = generate_outline(topic_profile, unique,
-                                      n_chapters=max(2, n_chapters // 2),
-                                      sections_per_chapter=min(3, sections_per_chapter))
+                                      n_chapters=max(2, _retry_nc // 2),
+                                      sections_per_chapter=min(3, _retry_spc))
         print("[S1] Done in " + str(round(time.time() - t, 1)) + "s")
         outline_path.write_text(json.dumps(asdict(outline), indent=2, ensure_ascii=False))
 
