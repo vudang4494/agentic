@@ -44,38 +44,60 @@ _PREAMBLE = r"""\usepackage{amsmath}
 \providecommand{\symbb}{\mathbb}
 \providecommand{\symbf}{\mathbf}
 \providecommand{\symcal}{\mathcal}
+% non-base macros the local writer emits (dsfont/bbm/bm packages) -> map to base equivalents so
+% tectonic never hits an "Undefined control sequence" (the failure that forced the weasy fallback).
+\providecommand{\mathds}{\mathbb}
+\providecommand{\mathbbm}{\mathbb}
+\providecommand{\bm}{\boldsymbol}
 """
 
 
 def render_tectonic(clean_md_path: Path, output_pdf: Path) -> bool:
-    """Render via pandoc + tectonic."""
+    """Render via pandoc -> LaTeX -> tectonic, in TWO steps so we can pass tectonic's
+    `-Z continue-on-errors`: in a 250k-word LLM-generated book a single residual TeX error
+    (an undefined macro, a malformed \\frac) would otherwise abort the WHOLE render and drop us
+    to the math-blind weasyprint fallback. continue-on-errors keeps tectonic-quality math
+    everywhere and only mangles the few broken spots locally. Success = a PDF was produced
+    (tectonic may return non-zero yet still emit the PDF)."""
     header_path = clean_md_path.with_name("header.tex")
     header_path.write_text(_PREAMBLE, encoding="utf-8")
-    cmd = [
-        "pandoc", str(clean_md_path),
-        "-o", str(output_pdf),
-        "--pdf-engine=tectonic",
-        "-H", str(header_path),
-        "--toc", "--toc-depth=3",
-        "-V", "geometry:margin=1in",
-        "-V", "fontsize=11pt",
-        "-V", "papersize=a4",
-        "-V", "linkcolor=blue",
-        "-V", "urlcolor=blue",
-        "--metadata", "title=Large Language Models: A Comprehensive Handbook",
-    ]
-    r = subprocess.run(cmd, capture_output=True, text=True)
-    if r.returncode != 0:
-        # Persist the FULL stderr so a render failure is diagnosable (not just the tail).
-        log_path = clean_md_path.with_name("tectonic.err.log")
-        try:
-            log_path.write_text(r.stderr or "", encoding="utf-8")
-        except Exception:
-            pass
-        print(f"  [tectonic] rc={r.returncode}; full log -> {log_path}")
-        print(f"  [tectonic] {r.stderr[-1200:]}")
+    tex_path = output_pdf.with_suffix(".tex")  # -> book.tex, so tectonic emits book.pdf
+    # 1) markdown -> standalone LaTeX
+    r1 = subprocess.run(
+        ["pandoc", str(clean_md_path), "-o", str(tex_path), "--standalone", "--wrap=none",
+         "-H", str(header_path), "--toc", "--toc-depth=3",
+         "-V", "geometry:margin=1in", "-V", "fontsize=11pt", "-V", "papersize=a4",
+         "-V", "linkcolor=blue", "-V", "urlcolor=blue",
+         "--metadata", "title=Large Language Models: A Comprehensive Handbook"],
+        capture_output=True, text=True,
+    )
+    if r1.returncode != 0:
+        print(f"  [pandoc->tex] {r1.stderr[-500:]}")
         return False
-    return True
+    # Remove any stale PDF so the success check can't be fooled by a previous (e.g. weasy) render.
+    try:
+        output_pdf.unlink()
+    except FileNotFoundError:
+        pass
+    # 2) LaTeX -> PDF, continuing past severe errors
+    r2 = subprocess.run(
+        ["tectonic", "-Z", "continue-on-errors", "--outfmt", "pdf",
+         "--outdir", str(output_pdf.parent), str(tex_path)],
+        capture_output=True, text=True,
+    )
+    log_path = clean_md_path.with_name("tectonic.err.log")
+    try:
+        log_path.write_text(r2.stderr or "", encoding="utf-8")
+    except Exception:
+        pass
+    # Success is judged by the artifact, not the return code (continue-on-errors -> rc may be != 0).
+    if output_pdf.exists() and output_pdf.stat().st_size > 50_000:
+        if r2.returncode != 0:
+            print(f"  [tectonic] produced PDF with recoverable errors (rc={r2.returncode}); log -> {log_path}")
+        return True
+    print(f"  [tectonic] no PDF produced (rc={r2.returncode}); full log -> {log_path}")
+    print(f"  [tectonic] {r2.stderr[-1200:]}")
+    return False
 
 
 def render_weasy(clean_md_path: Path, output_pdf: Path) -> bool:

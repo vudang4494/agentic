@@ -12,6 +12,7 @@ from research.fetch import _mathml_to_latex, _html_to_text
 from research.notes import clean_citations
 from research.mathfix import (
     normalize_math, escape_unicode_math, validate_and_neutralize_math, _math_span_valid,
+    balance_inline_dollar,
 )
 
 _fail = 0
@@ -96,11 +97,33 @@ def test_mathfix_render_safety():
     check("pipeline keeps good display math", "softmax" in p and r"$\sqrt{2}$" in p, p)
 
 
+def test_mathfix_render_robustness():
+    # The full-book render fixes: raw % in math, stray inline $, undefined-macro neutralize.
+    print("Render robustness (raw %, stray $, macro-allowlist):")
+    # raw % inside math is a LaTeX comment -> would eat the rest of the formula; must be escaped.
+    o = normalize_math(r"$$\sigma=\sqrt{\frac{\sum(x% _i)}{E}}$$")
+    check("raw % in math escaped to \\%", r"\%" in o and "x\\% _i" in o.replace(" ", " "), o)
+    check("escaped % keeps formula closeable", o.count("{") == o.count("}"), o)
+    # a stray unpaired inline $ (price / dangling) -> escaped to literal \$ so it can't open math.
+    o = balance_inline_dollar("cost was $0.20 per call and $x$ is valid")
+    check("price $0.20 -> \\$0.20", r"\$0.20" in o, o)
+    check("valid $x$ pair preserved", "$x$" in o, o)
+    o = balance_inline_dollar(r"param $\delta$ and a dangling $ here")
+    check("dangling trailing $ escaped", o.count("$") - o.count(r"\$") == 2, o)  # only the $\delta$ pair live
+    # undefined macro (not in the tectonic allowlist) -> neutralized to literal code, not fed to TeX.
+    check("known macro span valid", _math_span_valid(r"\frac{a}{b}") and _math_span_valid(r"\mathbb{R}"))
+    check("undefined macro span invalid (neutralized)", not _math_span_valid(r"\frobnicate{x}"))
+    out = validate_and_neutralize_math(r"good $\frac{a}{b}$ bad $\frobnicate{x}$ tail")
+    check("undefined-macro span -> literal code", r"`$\frobnicate{x}$`" in out, out)
+    check("good span beside it preserved", r"$\frac{a}{b}$" in out, out)
+
+
 if __name__ == "__main__":
     test_extraction_angle_brackets()
     test_citation_math_safe()
     test_surrogate_guard()
     test_mathfix_render_safety()
+    test_mathfix_render_robustness()
     print()
     if _fail:
         print(f"RESULT: {_fail} check(s) FAILED")
