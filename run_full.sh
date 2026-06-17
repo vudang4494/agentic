@@ -112,10 +112,13 @@ fi
 # pipeline now emits and silently "skip", leaving a successful run with no book.pdf.
 if command -v pandoc > /dev/null 2>&1; then
     log "=== RENDER PDF (robust: mathfix + tectonic) ==="
-    if python3 "$SCRIPT_DIR/files/scripts/render_book.py" --run "$OUT_NAME" 2>&1 | tail -3; then
+    # NOTE: pipe to tail only truncates the log. Check ${PIPESTATUS[0]} (render_book.py's exit code),
+    # NOT the pipeline status (that would be tail's, which is ~always 0 and masks render failures).
+    python3 "$SCRIPT_DIR/files/scripts/render_book.py" --run "$OUT_NAME" 2>&1 | tail -3
+    if [ "${PIPESTATUS[0]}" -eq 0 ] && [ -f "$RUN_DIR/book.pdf" ]; then
         log "PDF: $RUN_DIR/book.pdf"
     else
-        log "PDF render skip"
+        log "PDF render FAILED (book.md is intact; re-run: python3 files/scripts/render_book.py --run $OUT_NAME)"
     fi
 fi
 
