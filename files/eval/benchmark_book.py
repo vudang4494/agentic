@@ -245,7 +245,7 @@ def evaluate(bench, log):
     def frac(pred):
         return round(sum(1 for r in rows if pred(r)) / n, 3) if n else 0.0
     # cite_precision is NOT in state.json -> parse from the run log if present.
-    cps = [float(x) for x in re.findall(r"cite_prec=([0-9.]+)", log or "")]
+    cps = [float(x) for x in re.findall(r"cite_prec=(\d+\.\d+)", log or "")]
     grd = [r["grounding"] for r in rows]
     grounding_inert = (len(set(round(g, 4) for g in grd)) <= 1) if grd else False
     return {
