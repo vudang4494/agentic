@@ -110,6 +110,13 @@ python3 files/deep_research_v3.py --topic "RLHF" --out-name rlhf_v4 \
 python3 files/eval/benchmark_book.py rlhf_v4
 ```
 
+Monitor a long run / inspect a finished one:
+```bash
+python3 files/monitor.py                      # live progress across runs
+python3 files/report.py files/output/runs/rlhf_v4   # per-section metrics from state.json
+python3 files/eval/smoke_test_p0.py --topic "Transformer" --canonical-ids "1706.03762"  # quick gate check
+```
+
 Each run lands in `files/output/runs/<out-name>/` (`book.{md,pdf}`, `book_eval_report.md`,
 `state.json`, `topic_profile.json`, `outline_profile.json`). Runs are **resume-safe** — re-running
 continues from `state.json` and never rewrites an accepted section.
@@ -135,6 +142,7 @@ continues from `state.json` and never rewrites an accepted section.
 files/
 ├── deep_research_v3.py         # orchestrator (LIVE) — run_v3()
 ├── deep_research.py            # legacy v2 (pre-planned outline; not the live path)
+├── monitor.py · report.py      # live progress across runs · per-section metrics from state.json
 ├── research/
 │   ├── discovery.py            # Stage 0 — TopicProfile + P0b canonical inject
 │   ├── outline_from_research.py# Stage 1 — chunked, evidence-driven outline
@@ -148,7 +156,8 @@ files/
 ├── eval/
 │   ├── benchmark_book.py       # BAER quality report
 │   ├── bench_hhem_discrimination.py · bench_math_split_bm25.py
-│   └── test_math_char_safety.py · test_verify_optim.py
+│   ├── test_math_char_safety.py · test_verify_optim.py
+│   └── smoke_test_p0.py         # quick P0a/b/c gate check (no full run)
 ├── scripts/render_book.py      # Stage 4 — pandoc + tectonic / weasyprint
 └── output/runs/<name>/         # per-run output (the committed example lives here)
 ```
