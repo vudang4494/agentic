@@ -173,6 +173,119 @@ Rules:
     )
 
 
+def _parse_json_obj(text: str):
+    """Best-effort parse of one JSON object from an LLM reply (strip prose, repair trailing commas
+    + unbalanced braces). Used by the chunked drafter where each blob is small."""
+    if not text or not text.strip():
+        return None
+    m = re.search(r"\{[\s\S]*\}", text)
+    s = m.group() if m else text
+    try:
+        return json.loads(s)
+    except json.JSONDecodeError:
+        s2 = re.sub(r",\s*([}\]])", r"\1", s)                 # trailing commas
+        s2 += "]" * max(0, s2.count("[") - s2.count("]"))      # close arrays
+        s2 += "}" * max(0, s2.count("{") - s2.count("}"))      # close objects
+        try:
+            return json.loads(s2)
+        except Exception:
+            return None
+
+
+def _draft_chapters(topic_profile, evidence_map, n_chapters, model):
+    """Stage A of chunked drafting: the CHAPTER skeleton only (small, valid JSON). The whole-book
+    single-shot prompt overflows num_predict at ~40+ sections and truncates -> invalid JSON ->
+    matrix fallback. Chapters first keeps each LLM call small."""
+    buckets = "; ".join(f"{i.get('bucket','')}({', '.join(i.get('keywords', [])[:4])})" for i in evidence_map)
+    must = getattr(topic_profile, "must_cover", [])
+    prompt = f"""You are a research-book architect. Propose EXACTLY {n_chapters} chapter titles for a technical book.
+Topic: {getattr(topic_profile, 'name', '')}
+Scope: {getattr(topic_profile, 'description', '')}
+Must-cover: {json.dumps(must, ensure_ascii=False)}
+Evidence themes: {buckets}
+
+Each chapter must be a SPECIFIC, UNIQUE facet grounded in the evidence/topic -- a real progression
+(origins -> mechanisms -> training -> systems -> evaluation -> safety -> applications -> frontiers).
+Do NOT reuse a generic prefix ("Foundations:", "Methods:") across chapters. Do NOT number them "Part N".
+Output ONLY JSON:
+{{"title":"...","subtitle":"...","chapters":[{{"n":1,"t":"Specific unique chapter title","theme":"one-line focus"}}]}}"""
+    raw = _ollama_chat(model, [{"role": "user", "content": prompt}], temperature=0.4,
+                       num_predict=1800, timeout=180.0)
+    return _parse_json_obj(raw)
+
+
+def _draft_chapter_sections(ch, all_titles, topic_profile, evidence_map, spp, model):
+    """Stage B: the sections for ONE chapter, grounded in the chapter's theme + evidence. Small JSON.
+    Each chapter's sections EMERGE from that chapter's focus instead of a fixed archetype template
+    applied across all chapters (which is what produced the matrix + the evidence-less P0a blocks)."""
+    others = "; ".join(t for t in all_titles if t and t != ch.get("t", ""))
+    buckets = "; ".join(f"{i.get('bucket','')}({', '.join(i.get('keywords', [])[:4])})" for i in evidence_map)
+    prompt = f"""Design EXACTLY {spp} sections for ONE chapter of a technical book.
+Chapter: "{ch.get('t','')}" -- focus: {ch.get('theme', ch.get('coverage_note',''))}
+Other chapters (do NOT duplicate their scope): {others}
+Topic: {getattr(topic_profile, 'name', '')}
+Evidence themes available: {buckets}
+
+Each section must be a DISTINCT sub-aspect of THIS chapter, grounded in the evidence -- a concrete
+angle the evidence can actually support, not a generic slot. Use VARIED, specific titles; do NOT title
+every section with the same template (no "X: Foundations and Motivation" / "Inside X: Formal Definitions"
+pattern). 'pr' is a concrete writing directive. Output ONLY JSON:
+{{"sections":[{{"n":1,"t":"Specific section title","pr":"writing directive","goal":"what it teaches","must_cover_terms":["..."],"section_type":"foundational|methods|math|systems|applications|frontiers"}}]}}"""
+    raw = _ollama_chat(model, [{"role": "user", "content": prompt}], temperature=0.45,
+                       num_predict=2200, timeout=180.0)
+    obj = _parse_json_obj(raw)
+    secs = (obj or {}).get("sections") if isinstance(obj, dict) else None
+    return secs if isinstance(secs, list) and secs else None
+
+
+def _evidence_sections_for_chapter(ch, evidence_map, spp):
+    """Per-chapter fallback (only if the LLM section call fails for THIS chapter) -- derive titles from
+    the chapter theme + distinct angles, NOT the global archetype pool, so one failed call can't
+    reintroduce a book-wide matrix."""
+    theme = ch.get("t", "Topic")
+    angles = ["Core Mechanisms", "Design and Trade-offs", "Practical Methods", "Evaluation",
+              "Failure Modes and Limitations", "Recent Advances", "Case Studies", "Open Problems",
+              "Theory", "Implementation", "Optimization", "Comparisons"]
+    out = []
+    for j in range(spp):
+        a = angles[j % len(angles)]
+        out.append({"n": j + 1, "t": f"{theme}: {a}",
+                    "pr": f"Explain {a.lower()} of {theme}, grounded in cited evidence.",
+                    "goal": f"{a} of {theme}", "must_cover_terms": [], "section_type": "methods"})
+    return out
+
+
+def draft_outline_chunked(topic_profile, evidence_map, n_chapters, sections_per_chapter, model):
+    """Reliable evidence-driven outline at scale: 1 LLM call for the chapter skeleton + 1 per chapter
+    for its sections. Each call is small enough to return valid JSON, and sections emerge from each
+    chapter's own evidence -- fixing the root cause of the matrix fallback (a 288-section JSON blob
+    overflowing num_predict). Returns a parsed outline dict, or None so the caller can fall back."""
+    skel = _draft_chapters(topic_profile, evidence_map, n_chapters, model)
+    chapters = (skel or {}).get("chapters") if isinstance(skel, dict) else None
+    if not isinstance(chapters, list) or not chapters:
+        return None
+    chapters = chapters[:n_chapters]
+    all_titles = [c.get("t", "") for c in chapters]
+    n_llm = 0
+    for ci, ch in enumerate(chapters, 1):
+        ch["n"] = ci
+        secs = _draft_chapter_sections(ch, all_titles, topic_profile, evidence_map, sections_per_chapter, model)
+        if secs:
+            n_llm += 1
+        else:
+            secs = _evidence_sections_for_chapter(ch, evidence_map, sections_per_chapter)
+        for si, s in enumerate(secs[:sections_per_chapter], 1):
+            s["n"] = si
+        ch["sections"] = secs[:sections_per_chapter]
+    print(f"[OUTLINE] chunked: {len(chapters)} chapters, {n_llm}/{len(chapters)} chapters got LLM sections")
+    return {
+        "title": (skel or {}).get("title") or getattr(topic_profile, "name", "Research Book"),
+        "subtitle": (skel or {}).get("subtitle", getattr(topic_profile, "subtitle", "")),
+        "chapters": chapters,
+        "coverage_gaps": [],
+    }
+
+
 def audit_outline(parsed: dict, topic_profile, evidence_map: List[dict]) -> dict:
     chapters = parsed.get("chapters", []) if isinstance(parsed, dict) else []
     chapter_titles = [str(ch.get("t", "")).strip() for ch in chapters]
@@ -773,49 +886,56 @@ def generate_outline(
     evidence_map = build_evidence_map(topic_profile, sources)
     print(f"[OUTLINE] Evidence buckets: {len(evidence_map)}")
 
-    result = ""
-    try:
-        result = draft_outline_from_buckets(
-            topic_profile,
-            evidence_map,
-            n_chapters,
-            sections_per_chapter,
-            model,
-        )
-    except Exception as e:
-        print(f"[OUTLINE] Model draft failed on {model}: {e}")
-
-    if not result.strip():
-        fallback = _semantic_fallback_outline(topic_profile, evidence_map, n_chapters, sections_per_chapter)
-        audit = audit_outline(fallback, topic_profile, evidence_map)
-        outline = OutlineProfile(
-            title=fallback.get("title", getattr(topic_profile, "name", "Research Book")),
-            subtitle=fallback.get("subtitle", ""),
-            chapters=fallback.get("chapters", []),
-            coverage_gaps=fallback.get("coverage_gaps", []),
-            evidence_map=evidence_map,
-            outline_audit=audit,
-            _raw=result,
-        )
-        _postprocess_outline(outline, topic_profile)
-        return outline
-
+    # PRIMARY: chunked drafting (chapter skeleton + per-chapter sections). Each LLM call is small
+    # enough to return VALID JSON, and sections emerge from each chapter's own evidence -> no matrix.
+    # This fixes the root cause of the matrix fallback: a whole-book 288-section JSON blob overflows
+    # num_predict, truncates, fails to parse, and drops to the archetype template.
     parsed = None
-    err_detail = ""
-    for _ in range(3):
+    try:
+        parsed = draft_outline_chunked(topic_profile, evidence_map, n_chapters, sections_per_chapter, model)
+    except Exception as e:
+        print(f"[OUTLINE] chunked draft failed: {e}")
+    from_chunked = parsed is not None
+
+    result = ""
+    if parsed is None:
+        # SECONDARY: legacy single-shot draft, then semantic fallback (the original chain).
         try:
-            if parsed is None:
+            result = draft_outline_from_buckets(
+                topic_profile, evidence_map, n_chapters, sections_per_chapter, model,
+            )
+        except Exception as e:
+            print(f"[OUTLINE] Model draft failed on {model}: {e}")
+
+        if not result.strip():
+            fallback = _semantic_fallback_outline(topic_profile, evidence_map, n_chapters, sections_per_chapter)
+            audit = audit_outline(fallback, topic_profile, evidence_map)
+            outline = OutlineProfile(
+                title=fallback.get("title", getattr(topic_profile, "name", "Research Book")),
+                subtitle=fallback.get("subtitle", ""),
+                chapters=fallback.get("chapters", []),
+                coverage_gaps=fallback.get("coverage_gaps", []),
+                evidence_map=evidence_map,
+                outline_audit=audit,
+                _raw=result,
+            )
+            _postprocess_outline(outline, topic_profile)
+            return outline
+
+        err_detail = ""
+        for _ in range(3):
+            try:
                 m = re.search(r"\{[\s\S]*\}", result)
                 parsed = json.loads(m.group()) if m else json.loads(result)
-            break
-        except json.JSONDecodeError as e:
-            err_detail = str(e)
-            result = result[:int(len(result) * 0.85)]
-    else:
-        print(f"[OUTLINE] JSON parse failed after retries: {err_detail}")
+                break
+            except json.JSONDecodeError as e:
+                err_detail = str(e)
+                result = result[:int(len(result) * 0.85)]
+        else:
+            print(f"[OUTLINE] JSON parse failed after retries: {err_detail}")
 
-    if parsed is None:
-        parsed = _semantic_fallback_outline(topic_profile, evidence_map, n_chapters, sections_per_chapter)
+        if parsed is None:
+            parsed = _semantic_fallback_outline(topic_profile, evidence_map, n_chapters, sections_per_chapter)
 
     outline_audit = audit_outline(parsed, topic_profile, evidence_map)
     
@@ -847,7 +967,13 @@ def generate_outline(
     # - LLM can fix via the 2-round retry loop below
     # - Fallback (last resort) always produces some overlaps from limited term pool
 
-    if not outline_audit.get("ok"):
+    if from_chunked and not outline_audit.get("ok"):
+        # Keep the chunked (evidence-driven) outline despite SOFT audit warnings (coherence / bucket
+        # coverage). The only alternative the legacy path offers is the semantic-fallback MATRIX --
+        # exactly what we are removing. Hard blocks (matrix / Part-N) already raised above, so only
+        # soft issues remain here, and a real outline with a coherence warning beats the template.
+        print(f"[OUTLINE] chunked outline kept despite soft audit issues: {outline_audit.get('issues')}")
+    elif not outline_audit.get("ok"):
         # Retry LLM with audit feedback before falling back
         print(f"[OUTLINE] Audit issues: {outline_audit['issues']}")
         print(f"[OUTLINE] Semantic overlap: {outline_audit.get('semantic_overlap_issues', [])}")
