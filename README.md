@@ -48,8 +48,6 @@ Headline numbers (BAER): 288 sections · ~258k words · **0 near-duplicate secti
 
 ## Pipeline
 
-![pipeline](pipeline.jpg)
-
 ```
 Topic ─▶ Discovery ─▶ Outline (from evidence) ─▶ Deep Investigation (per section) ─▶ Assemble ─▶ Render
 ```
