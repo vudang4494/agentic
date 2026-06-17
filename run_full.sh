@@ -107,13 +107,16 @@ except Exception as e:
 fi
 
 # ---- PDF render ----
+# Use the ROBUST renderer (research/mathfix math normalization + tectonic with -Z continue-on-errors,
+# weasyprint fallback). Plain pandoc here would choke on the LaTeX / undefined-macro / raw-% cases the
+# pipeline now emits and silently "skip", leaving a successful run with no book.pdf.
 if command -v pandoc > /dev/null 2>&1; then
-    log "=== RENDER PDF ==="
-    pandoc "$RUN_DIR/book.md" \
-        -o "$RUN_DIR/book.pdf" \
-        -V geometry:margin=1in \
-        -V fontsize=11pt \
-        2>/dev/null && log "PDF: $RUN_DIR/book.pdf" || log "PDF render skip"
+    log "=== RENDER PDF (robust: mathfix + tectonic) ==="
+    if python3 "$SCRIPT_DIR/files/scripts/render_book.py" --run "$OUT_NAME" 2>&1 | tail -3; then
+        log "PDF: $RUN_DIR/book.pdf"
+    else
+        log "PDF render skip"
+    fi
 fi
 
 log "=== DONE ==="

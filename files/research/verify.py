@@ -210,7 +210,14 @@ def _judge_batch(
             "verdict": verdict,
             "reason": str(item.get("reason", ""))[:200],
         })
-    return results
+    # FAIL-CLOSED: a truncated / short JSON array (model returned fewer objects than queued) must
+    # NOT let the unreturned citations skip the G2 gate. Averaging over only the returned scores
+    # would inflate cite_precision and let an unsupported section pass. Pad missing verdicts to
+    # no_evidence so EVERY queued citation contributes a score; ignore any extras.
+    while len(results) < len(queued):
+        results.append({"verdict": "no_evidence",
+                        "reason": "batch judge returned fewer items than queued", "_skipped": True})
+    return results[:len(queued)]
 
 
 # ============================================================================
