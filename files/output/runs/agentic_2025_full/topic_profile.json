@@ -1,0 +1,110 @@
+{
+  "name": "Agentic AI: From Theory to Autonomous Systems",
+  "subtitle": "Designing, Implementing, and Governing Next-Generation LLM Agents",
+  "description": "This profile covers the evolution of autonomous AI agents powered by Large Language Models (LLMs), focusing on core architectural patterns like tool use, multi-agent collaboration, and self-correction. It spans from foundational concepts to advanced deployment challenges in embodied, software engineering, and complex simulation environments.",
+  "scope": "comprehensive",
+  "key_concepts": [
+    "Autonomous Agents",
+    "LLM Reasoning & Acting Synergy (ReAct)",
+    "Tool Use & API Integration",
+    "Multi-Agent Conversation Frameworks",
+    "Embodied AI & Simulation",
+    "Self-Reflection & Iterative Improvement",
+    "Skill Composition & Modularization",
+    "Agent Provenance & Traceability",
+    "Long-Horizon Planning",
+    "Small Language Models (SLMs) for Agents"
+  ],
+  "initial_queries": [
+    "ReAct framework implementation details",
+    "Multi-agent collaboration patterns in LLM applications",
+    "LLM agents for embodied simulation and exploration",
+    "Verbal Reinforcement Learning for language agents",
+    "Designing modular skill sets for LLMs",
+    "Provenance tracking in autonomous AI workflows",
+    "AutoGen vs. other multi-agent frameworks",
+    "Energy efficiency of agentic issue resolution with SLMs"
+  ],
+  "canonical_papers": [
+    {
+      "title": "ReAct: Synergizing Reasoning and Acting in Language Models",
+      "url": "http://arxiv.org/abs/2210.03629v3",
+      "year": 2022
+    },
+    {
+      "title": "Voyager: An Open-Ended Embodied Agent with Large Language Models",
+      "url": "http://arxiv.org/abs/2305.16291v2",
+      "year": 2023
+    },
+    {
+      "title": "Toolformer: Language Models Can Teach Themselves to Use Tools",
+      "url": "http://arxiv.org/abs/2302.04761v1",
+      "year": 2023
+    },
+    {
+      "title": "Generative Agents: Interactive Simulacra of Human Behavior",
+      "url": "http://arxiv.org/abs/2304.03442v2",
+      "year": 2023
+    },
+    {
+      "title": "AutoGen: Enabling Next-Gen LLM Applications via Multi-Agent Conversation",
+      "url": "http://arxiv.org/abs/2308.08155v2",
+      "year": 2023
+    }
+  ],
+  "canonical_terms": [
+    "LLM Agents",
+    "ReAct",
+    "Tool Calling",
+    "Multi-Agent Systems",
+    "Embodied Agents",
+    "Generative Simulation",
+    "Self-Correction/Reflection",
+    "Skill Composition",
+    "Provenance Tracking",
+    "Autonomous Workflows"
+  ],
+  "must_cover": [
+    "Foundational Architectures (ReAct, Toolformer)",
+    "Multi-Agent Interaction Paradigms (AutoGen)",
+    "Embodiment and World Simulation (Voyager/Generative Agents)",
+    "Learning from Failure (Reflexion principles)",
+    "System Reliability & Governance (Provenance)",
+    "Modularity of Capabilities (Skill Libraries)"
+  ],
+  "out_of_scope": [
+    "General LLM Prompt Engineering (without agentic loop)",
+    "Specific Cybersecurity Incident Response (unless framed as an agent task)",
+    "Simple Chatbot Applications",
+    "Traditional Machine Learning Model Training (non-LLM based)"
+  ],
+  "seed_queries_by_axis": {
+    "definition": [
+      "What is the formal definition of an autonomous AI agent?",
+      "How do agents differ from simple prompt chains?"
+    ],
+    "canonical": [
+      "Comparing ReAct, Reflexion, and standard CoT prompting",
+      "Architectural blueprints for multi-agent systems using AutoGen"
+    ]
+  },
+  "estimated_sections": 12,
+  "sections_per_chapter": 8,
+  "canonical_arxiv_ids": [
+    "arxiv:2210.03629v3",
+    "arxiv:2305.16291v2",
+    "arxiv:2302.04761v1",
+    "arxiv:2304.03442v2",
+    "arxiv:2303.11366v4",
+    "arxiv:2308.08155v2"
+  ],
+  "protected_source_ids": [
+    "arxiv:2303.11366v4",
+    "arxiv:2302.04761v1",
+    "arxiv:2210.03629v3",
+    "arxiv:2305.16291v2",
+    "arxiv:2308.08155v2",
+    "arxiv:2304.03442v2"
+  ],
+  "_synthesis": "{\n  \"name\": \"Agentic AI: From Theory to Autonomous Systems\",\n  \"subtitle\": \"Designing, Implementing, and Governing Next-Generation LLM Agents\",\n  \"description\": \"This profile covers the evolution of autonomous AI agents powered by Large Language Models (LLMs), focusing on core architectural patterns like tool use, multi-agent collaboration, and self-correction. It spans from foundational concepts to advanced deployment challenges in embodied, software engineering, and complex simulation environments.\",\n  \"scope\": \"comprehensive\",\n  \"key_concepts\": [\n    \"Autonomous Agents\",\n    \"LLM Reasoning & Acting Synergy (ReAct)\",\n    \"Tool Use & API Integration\",\n    \"Multi-Agent Conversation Frameworks\",\n    \"Embodied AI & Simulation\",\n    \"Self-Reflection & Iterative Improvement\",\n    \"Skill Composition & Modularization\",\n    \"Agent Provenance & Traceability\",\n    \"Long-Horizon Planning\",\n    \"Small Language Models (SLMs) for Agents\"\n  ],\n  \"initial_queries\": [\n    \"ReAct framework implementation details\",\n    \"Multi-agent collaboration patterns in LLM applications\",\n    \"LLM agents for embodied simulation and exploration\",\n    \"Verbal Reinforcement Learning for language agents\",\n    \"Designing modular skill sets for LLMs\",\n    \"Provenance tracking in autonomous AI workflows\",\n    \"AutoGen vs. other multi-agent frameworks\",\n    \"Energy efficiency of agentic issue resolution with SLMs\"\n  ],\n  \"canonical_papers\": [\n    {\n      \"title\": \"ReAct: Synergizing Reasoning and Acting in Language Models\",\n      \"url\": \"http://arxiv.org/abs/2210.03629v3\",\n      \"year\": 2022\n    },\n    {\n      \"title\": \"Voyager: An Open-Ended Embodied Agent with Large Language Models\",\n      \"url\": \"http://arxiv.org/abs/2305.16291v2\",\n      \"year\": 2023\n    },\n    {\n      \"title\": \"Toolformer: Language Models Can Teach Themselves to Use Tools\",\n      \"url\": \"http://arxiv.org/abs/2302.04761v1\",\n      \"year\": 2023\n    },\n    {\n      \"title\": \"Generative Agents: Interactive Simulacra of Human Behavior\",\n      \"url\": \"http://arxiv.org/abs/2304.03442v2\",\n      \"year\": 2023\n    },\n    {\n      \"title\": \"AutoGen: Enabling Next-Gen LLM Applications via Multi-Agent Conversation\",\n      \"url\": \"http://arxiv.org/abs/2308.08155v2\",\n      \"year\": 2023\n    }\n  ],\n  \"canonical_terms\": [\n    \"LLM Agents\",\n    \"ReAct\",\n    \"Tool Calling\",\n    \"Multi-Agent Systems\",\n    \"Embodied Agents\",\n    \"Generative Simulation\",\n    \"Self-Correction/Reflection\",\n    \"Skill Composition\",\n    \"Provenance Tracking\",\n    \"Autonomous Workflows\"\n  ],\n  \"must_cover\": [\n    \"Foundational Architectures (ReAct, Toolformer)\",\n    \"Multi-Agent Interaction Paradigms (AutoGen)\",\n    \"Embodiment and World Simulation (Voyager/Generative Agents)\",\n    \"Learning from Failure (Reflexion principles)\",\n    \"System Reliability & Governance (Provenance)\",\n    \"Modularity of Capabilities (Skill Libraries)\"\n  ],\n  \"out_of_scope\": [\n    \"General LLM Prompt Engineering (without agentic loop)\",\n    \"Specific Cybersecurity Incident Response (unless framed as an agent task)\",\n    \"Simple Chatbot Applications\",\n    \"Traditional Machine Learning Model Training (non-LLM based)\"\n  ],\n  \"seed_queries_by_axis\": {\n    \"definition\": [\n      \"What is the formal definition of an autonomous AI agent?\",\n      \"How do agents differ from simple prompt chains?\"\n    ],\n    \"canonical\": [\n      \"Comparing ReAct, Reflexion, and standard CoT prompting\",\n      \"Architectural blueprints for multi-agent systems using AutoGen\"\n    ]\n  },\n  \"estimated_sections\": 12,\n  \"sections_per_chapter\": 8\n}"
+}
