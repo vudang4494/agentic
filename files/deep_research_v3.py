@@ -312,6 +312,9 @@ def run_v3(topic, out_name=None, n_chapters=None, sections_per_chapter=None,
     discovered = {}
     # P0c: track seen-count across all sections to penalize over-represented sources
     run_seen_counts = {}
+    # AGENTIC evidence-pool memory: accepted sections' on-topic sources, reused to rescue niche
+    # sections whose fresh retrieval is thin (completeness up, faithfulness preserved). Bounded.
+    run_source_pool = []
     if sections:
         for sec_data in sections.values():
             for src in sec_data.get("sources", []) or []:
@@ -395,6 +398,7 @@ def run_v3(topic, out_name=None, n_chapters=None, sections_per_chapter=None,
                     protected_source_ids=protected_ids,
                     run_seen_counts=run_seen_counts,
                     primary_floor=primary_floor,
+                    evidence_pool=run_source_pool,   # agentic: reuse sibling-section evidence
                 )
                 sections[key] = {
                     "title": pp_t,
@@ -409,6 +413,10 @@ def run_v3(topic, out_name=None, n_chapters=None, sections_per_chapter=None,
                     "cross_refs": result.cross_ref_count,
                 }
                 total_w += len(result.content.split())
+                # grow the agentic evidence pool with this section's real sources (most-recent kept)
+                run_source_pool.extend(getattr(result, "sources", []) or [])
+                if len(run_source_pool) > 120:
+                    del run_source_pool[:-120]
                 for c in result.new_concepts:
                     if c not in discovered:
                         discovered[c] = key

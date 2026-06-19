@@ -236,6 +236,10 @@ def investigate_section(
     run_seen_counts: dict = None,
     # Rank6: primary_floor reserves N of top-8 slots for arxiv/wikipedia primary sources
     primary_floor: int = 0,
+    # AGENTIC evidence-pool memory: on-topic Source objects already gathered by sibling sections this
+    # run. A niche section whose fresh queries return little is RESCUED by reusing these (the cosine
+    # prefilter still drops off-topic ones) -> completeness up WITHOUT sacrificing faithfulness.
+    evidence_pool: list = None,
 ) -> SectionResult:
     # P0c: run-level seen-count map -- penalizes over-represented sources across sections
     """
@@ -361,6 +365,19 @@ def investigate_section(
             if protected_sources:
                 print(f"  [R{round_n}] P0b: injected {len(protected_sources)} canonical papers")
                 raw_sources = protected_sources + raw_sources
+
+        # AGENTIC evidence-pool rescue: reuse on-topic sources gathered by sibling sections this run.
+        # The prefilter (cosine gate) below still drops anything off-topic, so every reused source the
+        # writer can cite is REAL + on-topic -> this lifts completeness (fewer "no sources" blocks for
+        # niche sub-topics) WITHOUT weakening faithfulness. Capped to bound prefilter cost.
+        if evidence_pool:
+            _seen = {(getattr(s, "id", "") or getattr(s, "url", "") or "") for s in raw_sources}
+            _reuse = [s for s in evidence_pool
+                      if (getattr(s, "id", "") or getattr(s, "url", "") or "") not in _seen]
+            if _reuse:
+                _reuse = _reuse[-80:]   # most-recent siblings (chapter proximity) -> likeliest on-topic
+                raw_sources = raw_sources + _reuse
+                print(f"  [R{round_n}] evidence-pool: +{len(_reuse)} reused on-topic candidate(s)", flush=True)
 
         if not raw_sources:
             print(f"  [R{round_n}] No sources gathered")
