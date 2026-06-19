@@ -210,6 +210,10 @@ def rank_rrf(sources: List[Source], section_prompt: str, top_k: int = 20,
               # P0c: penalize sources that have appeared in many prior sections this run
               seen_counts: dict = None,
               max_sections_seen: int = 50,
+              # Agentic evidence-pool rescue: IDs reused for a STARVED section -> exempt from the P0c
+              # diversity penalty (reusing a sibling source IS the rescue; penalizing it defeats it).
+              # These still pass the cosine prefilter, so faithfulness is unaffected.
+              p0c_exempt_ids: set = None,
               ) -> List[Source]:
     """Score and rank sources using Reciprocal Rank Fusion (RRF) of sparse (BM25) and dense (cosine) retrieval.
 
@@ -306,6 +310,7 @@ def rank_rrf(sources: List[Source], section_prompt: str, top_k: int = 20,
     # can still override. Primary quota is intentional (arxiv/wikipedia preference).
     seen_counts = seen_counts or {}
     protected_ids = protected_ids or set()
+    p0c_exempt_ids = p0c_exempt_ids or set()
     max_sections_seen = max(1, max_sections_seen)
     for i, s in enumerate(sources):
         url = (s.url or "").lower()
@@ -314,7 +319,7 @@ def rank_rrf(sources: List[Source], section_prompt: str, top_k: int = 20,
         # P0c: seen-count penalty (skip for protected canonical seeds)
         sid = getattr(s, "id", "") or getattr(s, "url", "") or ""
         seen_count = seen_counts.get(sid, 0)
-        if seen_count > 0 and sid not in protected_ids:
+        if seen_count > 0 and sid not in protected_ids and sid not in p0c_exempt_ids:
             fraction = min(1.0, seen_count / max_sections_seen)
             penalty = max(0.05, (1.0 - fraction) ** 2)
             rrf_scores[i] *= penalty
