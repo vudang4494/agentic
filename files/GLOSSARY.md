@@ -23,11 +23,12 @@
 |------|-------------|
 | **Hard Block** | Khi kiểm tra fail, DỪNG và báo lỗi. Không viết section. Đối lập với Soft Block. |
 | **Soft Block** | Khi kiểm tra fail, vẫn tiếp tục nhưng đánh dấu chất lượng giảm. |
-| **Domain Relevance Gate (P0a)** | Kiểm tra evidence pool đúng domain trước khi viết, qua `notes.check_evidence_domain()` = keyword-overlap + optional gemma judge (KHÔNG phải LLM-judge thuần). Threshold THẬT ≈ 0.40 (`deep_investigate.py:481`), KHÔNG phải 0.60. Accept-topic (writer) = 0.50. Ngưỡng chuẩn: RULES.md |
+| **Domain Relevance Gate (P0a)** | Kiểm tra evidence pool đúng domain trước khi viết, qua `notes.check_evidence_domain()` = keyword-overlap + optional gemma judge (KHÔNG phải LLM-judge thuần). Threshold THẬT ≈ 0.40 (`deep_investigate.py:524`), KHÔNG phải 0.60. Accept-topic (writer) = 0.50. Ngưỡng chuẩn: RULES.md |
 | **Evidence Gate (P0a/B)** | Trước writer: (1) pool không rỗng (else HARD BLOCK); (2) domain-relevance ≥ ev_threshold≈0.40. KHÔNG có gate "đủ terms" riêng. |
-| **Grounding Score** | Điểm hallucination detection (0-1), model HHEM v2. ⚠️ g=1.0 BÃO HÒA toàn bộ 280 section là **trên run v36** (gộp mega-premise); **G3 đã de-saturate** (per-source max HHEM + grounding_mean/unsupported_fraction, `faithfulness.py`) → nay continuous. Vẫn đừng dùng grounding một mình làm tín hiệu chất lượng. |
-| **Topic Relevance Score** | Điểm content đúng chủ đề (0-1). LIVE (v3): **G4 blend** 0.6·`answer_relevance` (gemma LOCAL judge) + 0.4·term-overlap heuristic (`verify.py:399-407`) + StageE floor 0.50. Quantized {0.5,0.75,1.0} chỉ là chữ ký pre-G4 (run v36). |
+| **Grounding Score** | Điểm HHEM v2 NLI (0-1). **G3 = ADVISORY/log-only**: re-tie `embed_tokens` phân biệt được cặp NLI sạch (`bench_hhem_discrimination.py` 100%) NHƯNG strict-NLI chấm ~0.05–0.10 trên prose synthesized dù faithful, ngược lại saturate 1.0 → **KHÔNG phải metric chất lượng**, không hard-block một mình. Faithfulness thật = G2 cite_precision; tín hiệu phân biệt LIVE = G4 topic. (g=1.0 bão hòa v36 là HHEM degenerate cũ, đã fix.) |
+| **Topic Relevance Score** | Điểm content đúng chủ đề (0-1). LIVE (v3): **G4 blend** 0.6·`answer_relevance` (gemma LOCAL judge) + 0.4·term-overlap heuristic (`verify.py:401-411`) + StageE floor 0.50. **Tín hiệu phân biệt chất lượng LIVE.** Quantized {0.5,0.75,1.0} chỉ là chữ ký pre-G4 (run v36). |
 | **Citation Count** | Số lần nguồn được trích dẫn trong text. Zero citation = section không có evidence |
+| **Verify signals (G2/G3/G4)** | **G2 cite_precision** = citation integrity per-`[N]` (gemma local; SATURATES ~1.0 trên 4-topic benchmark → non-discriminating ở đó). **G3 grounding** = HHEM NLI, **ADVISORY/log-only** (KHÔNG phải metric chất lượng). **G4 topic relevance** = blend judge, **tín hiệu phân biệt chất lượng LIVE duy nhất** trong benchmark. |
 
 ## C. Retrieval (Tìm kiếm nguồn)
 
@@ -39,7 +40,7 @@
 | **Cosine Similarity** | | Dense retrieval: tìm theo embedding vector similarity |
 | **Reciprocal Rank Fusion** | RRF | Gộp nhiều rankers (BM25 + Cosine) bằng công thức 1/(k+rank) |
 | **Reranker / Cross-Encoder** | RRK | Mô hình re-rank kết quả retrieval. Model: BAAI/bge-reranker-v2-m3 |
-| **Embedding Model** | | SPLIT: retrieval (notes.rank/prefilter) + query_router chạy `nomic-embed-text` lúc runtime; `bge-m3:latest` CHỈ ở verify-side (`verify.py:35`) + default embeddings.py. Hai model, hai path. |
+| **Embedding Model** | | **UNIFIED** `bge-m3:latest` (#3): retrieval (notes.rank/prefilter RRF), query_router, và verify-side đều dùng cùng 1 model — KHÔNG còn nomic runtime path. `config.py:34`, `notes.py:111`, `query_router.py:210`, `embeddings.py:8`, `verify.py:35`. (Trước split vì nomic cần prefix search_query/document mà code không truyền → asymmetric; 0 ref nomic sống, chỉ comment "was nomic".) |
 | **Primary Source** | | arxiv.org hoặc wikipedia -- nguồn đáng tin cậy |
 | **Secondary Source** | | Blog, medium, substack -- nguồn phụ |
 | **Grey Domain** | | Domain có thể kém tin cậy (đã được whitelist) |

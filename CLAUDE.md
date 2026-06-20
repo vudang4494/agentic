@@ -33,17 +33,17 @@ Prompt thô → Discovery (TopicProfile) → Outline (từ evidence)
 | 2a | Query Gen (QGN) | `research/query_gen.py` + `query_router.py` | LLM khi có `domain_context`, else archetype |
 | 2b | Search (RSR) | `research/search.py` | providers: arxiv, wikipedia, ddg (default); tavily chỉ khi `TAVILY_API_KEY` set |
 | 2c | Rerank (RRK) | `research/rerank.py` | `bge-reranker-v2-m3` (transformers, KHÔNG Ollama) |
-| 2d | Rank + Gate | `research/notes.py` | RRF(BM25+cosine) + **P0a** domain gate + **P0c** seen-penalty + prefilter |
+| 2d | Rank + Gate | `research/notes.py` | RRF(BM25+cosine) + **P0a** domain gate + **P0c** seen-penalty + prefilter + **evidence-pool rescue** (post-prefilter on-topic <5 → mượn sibling sources, P0c-EXEMPT, `deep_investigate.py:416,433`) |
 | 2e | Writer (WRT) | `deep_investigate.py` (inline) | `qwen3.6-35b:iq3` |
-| 2f | Grounding (VFY) | `research/faithfulness.py` | HHEM v2 |
-| 2g | Topic / Cross-ref | `research/verify.py` | topic = **G4** blend term-heuristic + `answer_relevance` gemma LOCAL (`verify.py:399-407`) + StageE floor; cross-ref = regex string match |
+| 2f | Grounding (VFY) | `research/faithfulness.py` | HHEM v2 — **ADVISORY/log-only**, không hard-block một mình |
+| 2g | Topic / Cross-ref | `research/verify.py` | topic = **G4** blend term-heuristic + `answer_relevance` gemma LOCAL (`verify.py:401-411`) + StageE floor; cross-ref = regex string match |
 | 3 | Assemble | `deep_research_v3.py` | book.md + math/heading hygiene (Stage F) |
 | 4 | Render `--render` | `files/scripts/render_book.py` | book.pdf / book.html |
 
 Module phụ trợ (load-bearing): `config.py` (hằng số), `canonical_seeds.py` (P0b seeds), `embeddings.py`, `fetch.py`, `planner.py`, `types.py`.
 
 **Verify layer — LIVE vs LEGACY (đừng sửa nhầm):**
-- **LIVE** (chạy trong `investigate_section`, `deep_investigate.py:~580-740`): `faithfulness.grounding_score` (HHEM, **G3** de-saturated) + `verify.topic_relevance_check` (**G4**: blend heuristic + `answer_relevance` gemma LOCAL) + `verify.verify_section` (**G2** citation-integrity, cite_precision ≥0.45 fail-open, `:686`) + `verify.verify_cross_references_v2` (regex đếm).
+- **LIVE** (chạy trong `investigate_section`, `deep_investigate.py:~660-745`): `faithfulness.grounding_score` (HHEM, **G3 ADVISORY/log-only** — re-tie phân biệt cặp NLI sạch, nhưng strict-NLI chấm ~0.05–0.10 trên prose synthesized dù faithful → KHÔNG phải tín hiệu chất lượng; faithfulness thật = G2) + `verify.topic_relevance_check` (**G4**: blend heuristic + `answer_relevance` gemma LOCAL — **tín hiệu phân biệt LIVE**) + `verify.verify_section` (**G2** citation-integrity, cite_precision ≥0.45, **fail-CLOSED→0.0** khi lỗi, `:745`) + `verify.verify_cross_references_v2` (regex đếm).
 - **LEGACY-only** (chỉ `deep_research.py`/scripts/eval gọi — ĐỪNG sửa như live): `verify_section_v2`, `crag_decision`, `strip_refine`, `scrub_unsupported_citations`. (`verify_section` + `answer_relevance` GIỜ dùng LIVE bởi G2/G4.)
 - Đổi accept/grounding → sửa `deep_investigate.py:606-740`, **KHÔNG** sửa `crag_decision`/`verify_section_v2` (no-op với run thật).
 - **Verifier ≠ Writer (bất biến — chống self-preference):** grounding = **HHEM**, topic/citation = **gemma** — model verify TÁCH khỏi writer (**Qwen**). ĐỪNG để Qwen tự chấm prose của chính nó (model tự duyệt văn mình → bias). Quyết định: 2026-06-16.
@@ -62,10 +62,10 @@ Module phụ trợ (load-bearing): `config.py` (hằng số), `canonical_seeds.p
 ## 5. Ngưỡng gate THẬT (code = chuẩn; chi tiết → `RULES.md`)
 | Gate | Giá trị thật (code) | File |
 |------|---------------------|------|
-| P0a domain gate | `ev_threshold = min(0.40, max(0.30, min_topic_relevance−0.10)) ≈ 0.40` — HARD BLOCK round cuối | `deep_investigate.py:481` |
-| Accept Section | grounding ≥ **0.70** AND topic ≥ **0.50** AND n_cites > 0 AND cross_refs đủ AND **cite_precision ≥ 0.45** (G2, fail-open) | `deep_investigate.py:681,694` |
-| StageE HARD BLOCK | grounding pass NHƯNG topic < 0.50 → block (grounding KHÔNG đủ một mình) | `deep_investigate.py:702` |
-| P0c penalty | `max(0.05, (1 − seen/max_seen)²)`; canonical **EXEMPT** | `notes.py:311` |
+| P0a domain gate | `ev_threshold = min(0.40, max(0.30, min_topic_relevance−0.10)) ≈ 0.40` — HARD BLOCK round cuối | `deep_investigate.py:524` |
+| Accept Section (clean) | topic ≥ **0.50** (G4) AND n_cites > 0 AND cross_refs đủ AND **cite_precision ≥ 0.45** (G2, **fail-CLOSED→0.0** khi lỗi) AND grounding ≥ 0.70 (**advisory** — round cuối thiếu grounding → ship `quality='degraded'`, KHÔNG hard-block một mình) | `deep_investigate.py:729,745,850` |
+| StageE HARD BLOCK | grounding pass NHƯNG topic < 0.50 → block (block do **topic**, grounding KHÔNG đủ một mình) | `deep_investigate.py:751` |
+| P0c penalty | `max(0.05, (1 − seen/max_seen)²)`; canonical + pool-rescued **EXEMPT** | `notes.py:324` |
 | Prefilter cosine | **0.48** (grey-domain 0.65) — Rank7: was 0.45 | `notes.py:109` |
 | Min words / Cross-ref | 120 từ / 2·1·0 theo số prior sections | `deep_investigate.py` |
 
@@ -73,7 +73,7 @@ Module phụ trợ (load-bearing): `config.py` (hằng số), `canonical_seeds.p
 
 ## 6. 8 Guardrails — tránh đi sai hướng product/process
 1. **Output goal > volume.** Đây là technical book đúng-topic, grounded, auditable — KHÔNG phải máy sinh chữ. Run 700 trang mà drift/lặp = **FAIL**. Đừng tối ưu section/word/completion trước topic purity & non-redundancy.
-2. **Grounding KHÔNG phải chất lượng.** Trên run **v36**: `g=1.0` toàn bộ 280 section (gộp mega-premise) — nay **G3 đã de-saturate** (per-source max HHEM, `faithfulness.py`). `topic_relevance` cũng KHÔNG còn pure heuristic — **G4 blend** term-heuristic + `answer_relevance` gemma LOCAL (`verify.py:399-407`); quantized {0.5,0.75,1.0} chỉ là chữ ký pre-G4 (v36). Vẫn: đừng green-light run chỉ vì grounding; cần validation run để re-baseline.
+2. **Grounding KHÔNG phải chất lượng.** Trên run **v36**: `g=1.0` toàn bộ 280 section (gộp mega-premise) — nay HHEM dùng per-source-max (`faithfulness.py`) NHƯNG grounding vẫn **ADVISORY/log-only**: strict-NLI ~0.05–0.10 trên prose faithful, ngược lại saturate → tín hiệu phân biệt LIVE = **G4 topic**, KHÔNG phải grounding. `topic_relevance` cũng KHÔNG còn pure heuristic — **G4 blend** term-heuristic + `answer_relevance` gemma LOCAL (`verify.py:401-411`); quantized {0.5,0.75,1.0} chỉ là chữ ký pre-G4 (v36). Vẫn: đừng green-light run chỉ vì grounding.
 3. **Outline EMERGE từ evidence — GIẾT matrix pattern.** Không pre-template chapters×concepts. Nếu `outline_audit` trả `ok=false` (matrix/coherence/overlap) → **sửa OUTLINE trước Stage 2**, không vá ở writer.
 4. **Fix ở GATE, không ở writer.** Drift / off-topic evidence / canonical thiếu / nguồn dominate phải chặn ở P0a/P0b/P0c/prefilter (`notes.py`, `deep_investigate.py`). Không cho writer "cứ viết rồi tính".
 5. **Canonical papers được PROTECT, không penalize.** `protected_source_ids` bypass cosine prefilter + EXEMPT khỏi P0c. Mọi thay đổi retrieval/dedup phải giữ exemption này (nếu mất → canonical recall sụp về 0).
@@ -97,4 +97,4 @@ pkill -f files/deep_research_v3.py       # dừng
 ```
 
 ## 8. Trạng thái hiện tại
-Xem `files/memory/short-memory.md`. **Base** = orchestrator `deep_research_v3.py` + research layer, gồm: verify G2/G3/G4 (tín hiệu phân biệt thật, LOCAL-only, **Verifier≠Writer**), outline anti-matrix (#1), embed `bge-m3` thống nhất (#3), anchoring an-toàn KHÔNG-mất-nguồn (#5), citation-aware grounding warn-first (#4), dedup G6. Đã validated + push. `llm_book_v36` là book CŨ (sinh bởi code trước cải tiến) — chỉ tham khảo lịch sử, KHÔNG phải trạng thái base.
+Xem `files/memory/short-memory.md`. **Base** = orchestrator `deep_research_v3.py` + research layer, gồm: verify G2 (citation integrity) + G4 (topic — **tín hiệu phân biệt LIVE**) + G3 (grounding HHEM, **ADVISORY**), LOCAL-only, **Verifier≠Writer**, outline anti-matrix (#1), embed `bge-m3` thống nhất (#3), anchoring an-toàn KHÔNG-mất-nguồn (#5), evidence-pool rescue (completeness), dedup G6. Đã validated + push. `llm_book_v36` là book CŨ (sinh bởi code trước cải tiến) — chỉ tham khảo lịch sử, KHÔNG phải trạng thái base.

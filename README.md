@@ -38,7 +38,7 @@ Headline numbers (BAER): 288 sections · ~258k words · **0 near-duplicate secti
 | **Writer** | `batiai/qwen3.6-35b:iq3` | prose + formulas + algorithms, grounded in cited evidence |
 | Embedding (retrieval + verify) | `bge-m3:latest` | unified dense retrieval / dedup / cosine prefilter |
 | Rerank | `BAAI/bge-reranker-v2-m3` | cross-encoder (transformers, not Ollama) |
-| Grounding | `vectara/hallucination_evaluation_model` (HHEM v2) | per-claim entailment |
+| Grounding | `vectara/hallucination_evaluation_model` (HHEM v2) | per-claim entailment (advisory signal — see note below) |
 
 > **Invariant — Verifier ≠ Writer:** the writer is **qwen**; grounding is scored by **HHEM** and
 > topic/citation by **gemma**. The writer never grades its own prose (no self-preference bias).
@@ -64,7 +64,7 @@ Topic ─▶ Discovery ─▶ Outline (from evidence) ─▶ Deep Investigation 
 - **P0a** domain gate — hard-blocks a section whose evidence is off-domain (≈0.40), instead of letting the writer drift.
 - **P0b** canonical inject / **P0c** seen-penalty — foundational papers are protected (exempt from prefilter + dedup); over-represented sources are penalized.
 - **Prefilter** — drop sources below cosine **0.48** to the section (grey domains 0.65); canonical exempt.
-- **Accept a section only if:** grounding ≥ **0.70** (G3, HHEM) **AND** topic ≥ **0.50** (G4, gemma) **AND** cite-precision ≥ **0.45** (G2, gemma) **AND** n_cites > 0 **AND** cross-refs satisfied — else **hard-block** (no drift shipped).
+- **Clean-accept a section when:** topic ≥ **0.50** (G4, gemma) **AND** cite-precision ≥ **0.45** (G2, gemma) **AND** n_cites > 0 **AND** cross-refs satisfied — plus grounding ≥ **0.70** (G3, HHEM) as an **advisory** conjunct that never blocks on its own (a section short only on grounding ships flagged `degraded`, not dropped). The real hard-blocks are off-domain evidence (**P0a**), topic-drift (**StageE**), and sub-120-word sections — so drift is blocked, not shipped.
 
 > Thresholds live in **code** (`deep_investigate.py`, `notes.py`, `config.py`), not docs — see [RULES.md](RULES.md) for the full table.
 
@@ -167,7 +167,7 @@ Operational doctrine: [CLAUDE.md](CLAUDE.md) (pipeline + invariants) · [RULES.m
 ---
 
 ## Notable fixes that make it auditable
-- **Grounding revived** — HHEM was a no-op under transformers 5.x (T5 `embed_tokens` loaded as zeros → constant ~0.502 for every pair). Fixed by re-tying embeddings in `_get_hhem` + a startup discrimination-assertion. No version pin.
+- **Grounding scorer revived (now advisory)** — HHEM was a no-op under transformers 5.x (T5 `embed_tokens` loaded as zeros → constant ~0.502 for every pair). Fixed by re-tying embeddings in `_get_hhem` + a startup discrimination-assertion (no version pin). It now discriminates clean NLI pairs, but strict-NLI under-scores synthesized prose (~0.05–0.10 even when faithful), so grounding is treated as an **advisory** signal — the enforced faithfulness check is citation-precision (G2) and the live quality signal is topic (G4).
 - **Outline emerges from evidence** — chunked drafting replaces the single giant-JSON call that overflowed the model and fell back to a templated topic×archetype matrix.
 - **Render never dies on one bad formula** — `mathfix` neutralizes broken LaTeX spans to literal, escapes raw `%`/stray `$`, bounds unbalanced-brace paragraphs, and is idempotent; tectonic renders a 250k-word book directly.
 - **No internal logs leak into the book**; raw `[N]` citations resolve to per-section references.
