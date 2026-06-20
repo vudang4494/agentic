@@ -366,23 +366,9 @@ def investigate_section(
                 print(f"  [R{round_n}] P0b: injected {len(protected_sources)} canonical papers")
                 raw_sources = protected_sources + raw_sources
 
-        # AGENTIC evidence-pool rescue (TARGETED): ONLY when fresh retrieval is THIN does the section
-        # reuse on-topic sources gathered by sibling sections this run. They still pass the cosine
-        # prefilter below (off-topic dropped -> faithful), and are P0c-EXEMPT in rank_rrf (else the
-        # reused source -- the whole point of the rescue -- gets down-ranked out of the top-k by the
-        # diversity penalty, since siblings already cited it). Lifts completeness for niche sub-topics
-        # WITHOUT weakening faithfulness; scoped to starved sections so well-covered ones are untouched.
-        _pool_rescue_ids = set()
-        if evidence_pool and len(raw_sources) < 10:
-            _seen = {(getattr(s, "id", "") or getattr(s, "url", "") or "") for s in raw_sources}
-            _reuse = [s for s in evidence_pool
-                      if (getattr(s, "id", "") or getattr(s, "url", "") or "") not in _seen][-80:]
-            if _reuse:
-                raw_sources = raw_sources + _reuse
-                _pool_rescue_ids = {(getattr(s, "id", "") or getattr(s, "url", "") or "") for s in _reuse}
-                print(f"  [R{round_n}] evidence-pool RESCUE: +{len(_reuse)} reused candidate(s) (fresh thin)", flush=True)
+        _pool_rescue_ids = set()   # populated by the post-prefilter evidence-pool rescue below
 
-        if not raw_sources:
+        if not raw_sources and not evidence_pool:
             print(f"  [R{round_n}] No sources gathered")
             if round_n < max_rounds:
                 current_hint = "No sources found. Try different query terms."
@@ -420,6 +406,24 @@ def investigate_section(
             embed_model=embed_model,
             protected_ids=protected_source_ids,
         )
+        # AGENTIC evidence-pool rescue (post-prefilter): the REAL block trigger is thin ON-TOPIC
+        # evidence -- few/no sources survive the cosine gate, whether because retrieval returned
+        # nothing OR returned only off-domain hits. When that happens, reuse on-topic sources gathered
+        # by sibling sections this run: run them through the SAME cosine prefilter (off-topic dropped
+        # -> faithful) and mark the survivors P0c-exempt so the reuse can actually reach the writer's
+        # top-k. Lifts completeness for niche sub-topics WITHOUT weakening faithfulness; only starved
+        # sections pay the extra prefilter, well-covered ones are untouched.
+        if evidence_pool and len(filtered) < 5:
+            _seen = {(getattr(s, "id", "") or getattr(s, "url", "") or "") for s in filtered}
+            _pool_kept = _notes.prefilter(
+                [s for s in evidence_pool
+                 if (getattr(s, "id", "") or getattr(s, "url", "") or "") not in _seen][-80:],
+                section_prompt, embed_model=embed_model, protected_ids=protected_source_ids,
+            )
+            if _pool_kept:
+                filtered = filtered + _pool_kept
+                _pool_rescue_ids = {(getattr(s, "id", "") or getattr(s, "url", "") or "") for s in _pool_kept}
+                print(f"  [R{round_n}] evidence-pool RESCUE: +{len(_pool_kept)} on-topic sibling source(s) (own evidence thin)", flush=True)
         ranked = _notes.rank_rrf(
             filtered if filtered else raw_sources,
             retrieval_query,
