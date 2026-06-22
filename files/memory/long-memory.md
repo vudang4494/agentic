@@ -11,6 +11,12 @@
 
 ## Session log (mới nhất trước)
 
+### [2026-06-22] P0 thực thi: decouple G2 + grounding log-only + fix P0c → lộ P0-2b
+- **Làm:** `deep_investigate.py` — bỏ grounding khỏi gate (G3 log-only); `gate_ok = n_cites>0 AND topic≥0.50 AND cross-ref`; `verify_section` (G2) chạy khi `n_cites>0 AND topic_ok` (bất kể grounding) → cite_precision đo thật; `cite_precision=None` khi không đo (log hết phát default 1.0); best-round **topic-first**; StageE chuyển **sau-loop** gate theo best-topic; P0c `if run_seen_counts is None` (`:304`). Reviewer độc lập: **GO, 0 blocking**.
+- **Validation `p0_validate2` (RLHF 1ch×4sec):** ✅ P0-1 G2 chạy thật cite_precision **0.30/0.367/0.374/0.410** (≠1.0); ✅ P0-3 run_seen_counts **0→23**; ❌ P0-2 quality "ok" = **0** — vì cite_precision (0.3-0.4) < min_cite_precision 0.45.
+- **Phát hiện P0-2b (NEW):** gemma `verify_section` judge prompt "**Be strict: direct match only, not topical overlap**" + `_VERDICT_SCORE` {supports 1.0, partial 0.5, no_evidence 0.3, unrelated/contra 0} → trên prose synthesized đa số citation chấm no_evidence/unrelated → cite_precision **floor ~0.3-0.4** (CÙNG bệnh strict-NLI như HHEM). Citations IN-range (không phải out-of-range). → P0 mới làm lỗi HIỆN ra (hết fake 1.0), chưa làm gate dùng được. **P0-2b = soften judge (paraphrase/implication) / dùng cosine liên tục / recalibrate + discrimination test.**
+- **Docs:** RULES/CLAUDE/short-memory/plan cập nhật post-P0 (G2 LIVE nhưng floor, P0-2b). Commit + PR.
+
 ### [2026-06-22] Đánh giá grounded (22-agent) → phát hiện verify post-writer INERT
 - **Bối cảnh:** đánh giá product có grounding thật (đọc code + benchmark + nội dung sách); mọi verification holds:true.
 - **Phát hiện then chốt (verified, tự re-check bằng số):** per-source-max grounding **không bao giờ chạm 0.70** (max 0.458; quality field: 0 "ok", mọi section "degraded" cả 4 run). Vì `base_ok` cần grounding≥0.70 → **base_ok LUÔN false** → (a) clean-accept không fire; (b) `verify_section` (G2) trong `if base_ok` **KHÔNG BAO GIỜ chạy** → `cite_precision=1.0` là DEFAULT init (BAER parse 93 dòng `cite_prec=1.000` từ retry-hint, gắn nhãn nhầm "G2 REAL"); (c) StageE topic-block (cần g≥0.70) **không fire**. → **Gate cứng SỐNG duy nhất = P0a domain-evidence (~0.40 pre-writer)**; mọi verify post-writer chỉ LOG. **SUPERSEDE "faithfulness thật = G2 cite_precision" ở entry 06-21** — G2 không chạy.

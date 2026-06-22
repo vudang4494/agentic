@@ -60,11 +60,12 @@ Topic ─▶ Discovery ─▶ Outline (from evidence) ─▶ Deep Investigation 
 | 3 | **Assemble** | — | `book.md` + math hygiene (single-source [`research/mathfix.py`](files/research/mathfix.py)) + per-section references |
 | 4 | **Render** (`--render`) | — | pandoc → **tectonic** (LaTeX, `-Z continue-on-errors`); WeasyPrint fallback |
 
-### The gates — what *actually* enforces (honest, verified on the 4-topic benchmark)
-- **P0a** domain gate — the **only live hard gate**: hard-blocks a section whose *evidence* is off-domain (≈0.40, **pre-writer**), instead of letting the writer drift. ~27% of sections block here.
-- **P0b** canonical inject / **P0c** seen-penalty — foundational papers are protected (exempt from prefilter + dedup); over-represented sources are penalized. *(P0c cross-section penalty currently no-ops within a single run — a known bug, see the upgrade plan.)*
+### The gates — what *actually* enforces (honest; P0 applied 2026-06-22)
+- **P0a** domain gate — the **primary live hard gate**: hard-blocks a section whose *evidence* is off-domain (≈0.40, **pre-writer**). ~27% of sections block here.
+- **P0b** canonical inject / **P0c** seen-penalty — foundational papers are protected (exempt from prefilter + dedup); over-represented sources penalized. *(P0c cross-section propagation was a single-run no-op — **fixed in P0**.)*
 - **Prefilter** — drop sources below cosine **0.48** to the section (grey domains 0.65); canonical exempt.
-- **Post-writer verify (grounding G3 / topic G4 / cite-precision G2) is currently LOG-ONLY, not enforced.** The intended clean-accept gate is wrapped behind `grounding ≥ 0.70`, but HHEM strict-NLI scores ~0.05–0.10 on synthesized prose (max observed 0.458), so that bar never clears — the citation check (G2) never runs and the reported `cite_precision = 1.0` is an un-measured default. Every section ships flagged `degraded`. **Making these post-writer gates real (decouple G2, re-baseline grounding) is the #1 item on the upgrade plan.** This is the product's most important known limitation, stated plainly rather than hidden.
+- **Post-writer verify (P0):** grounding (G3) is now **log-only/advisory** (removed from the gate — HHEM strict-NLI under-scores synthesized prose). **Topic (G4) is enforced** (clean-accept + a topic-drift block). **Citation precision (G2) now runs for real** (it was previously wrapped behind the dead grounding bar and never executed; `cite_precision = 1.0` used to be an un-measured default).
+- **⚠️ Known limitation (next: P0-2b):** the G2 citation judge is prompted for *strict direct-match*, so on synthesized prose it scores ~0.3–0.4 — below the 0.45 accept bar — so no section yet clean-accepts (all ship `degraded`). The judge needs softening to accept paraphrase/implication (or the threshold recalibrated) before the faithfulness gate is fully "green". Stated plainly rather than hidden.
 
 > Thresholds live in **code** (`deep_investigate.py`, `notes.py`, `config.py`), not docs — see [RULES.md](RULES.md) for the full table.
 

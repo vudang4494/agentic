@@ -296,9 +296,13 @@ def investigate_section(
     _best_round_tuple: tuple = (0.0, 0.0, 0)  # (grounding, topic_relevance, has_cites)
     all_concepts = []
     research_rounds = 0
+    accepted = False  # P0: True iff a round cleanly passed the live gates (quality='ok')
 
     # P0c: seen-count penalty -- sources that appeared in many prior sections get
-    run_seen_counts = run_seen_counts or {}
+    # P0-3 fix: `x or {}` rebinds when caller passes an empty dict (falsy) -> propagation
+    # back to the orchestrator was lost -> cross-section seen-penalty was a no-op in one run.
+    if run_seen_counts is None:
+        run_seen_counts = {}
     seen_counts = dict(run_seen_counts)  # copy so per-section mutations don't bleed
 
     current_hint = ""
@@ -688,7 +692,7 @@ def investigate_section(
             topic_relevance = 0.5
             topic_res = {"reason": "topic relevance failed"}
 
-        print(f"  [R{round_n}] Grounding: {grounding:.3f} in {time.time()-t_v:.1f}s")
+        print(f"  [R{round_n}] Grounding: {grounding:.3f} (advisory; min_grounding={min_grounding} NOT enforced -- P0) in {time.time()-t_v:.1f}s")
         print(f"  [R{round_n}] Topic relevance: {topic_relevance:.3f}")
         print(f"  [R{round_n}] Total time: {time.time()-t_r:.1f}s")
 
@@ -701,14 +705,15 @@ def investigate_section(
                 prior_source_ids.add(getattr(s, "url", ""))
 
         # --- Best round selection ---
-        # Score = (grounding, topic_relevance, has_citations).
-        # Tuple comparison is lexicographic: first grounding wins, then relevance,
-        # then presence of citations. This is the correct tie-breaking order.
+        # Score = (topic_relevance, grounding, has_citations).
+        # P0: topic (the LIVE signal) wins first; grounding is advisory tie-break only
+        # (was grounding-first, but grounding is now ~noise at 0-0.46, so it must not pick
+        # which degraded draft ships when no round cleanly accepts).
         def _round_tuple():
-            g = grounding
             t = topic_relevance
+            g = grounding
             c = 1 if n_cites > 0 else 0
-            return (g, t, c)
+            return (t, g, c)
         if best_score == 0.0 or _round_tuple() > _best_round_tuple:
             best_content = content
             best_score = grounding
@@ -724,37 +729,37 @@ def investigate_section(
 
         # G2 CITATION INTEGRITY: does each [N] actually support its own cited claim?
         # verify_section() = bge-m3 cosine prefilter + LOCAL gemma batch judge (never
-        # Claude/external). Run ONLY when the cheaper gates already pass, to avoid an
-        # extra judge call on rounds that will retry anyway. Fail-open on any error.
-        base_ok = (grounding >= min_grounding and n_cites > 0 and
-                   topic_relevance >= min_topic_relevance and has_min_cross_refs)
-        cite_precision = 1.0
-        if base_ok:
+        # Claude/external). P0 (2026-06-22): DECOUPLED from grounding -- run whenever the
+        # section has citations AND is on-topic, REGARDLESS of grounding. (Old gate put
+        # grounding>=0.70 inside base_ok, but per-source-max HHEM maxes ~0.46 on synthesized
+        # prose, so base_ok was never true and G2 NEVER ran -> cite_precision was a 1.0
+        # default. Grounding is now LOG-ONLY/advisory; the live faithfulness gate is this
+        # real per-[N] cite_precision.)
+        topic_ok = topic_relevance >= min_topic_relevance
+        cite_precision = None  # None = not measured this round (keeps the 1.0 default out of logs)
+        if n_cites > 0 and topic_ok:
             try:
                 cite_res = _verify.verify_section(content, ranked, model=judge_model)
                 cite_precision = float(cite_res.get("grounding", 1.0))
                 print(f"  [R{round_n}] Citation integrity (G2): {cite_precision:.3f}")
             except Exception as e:
-                # #4 fail-CLOSED (was fail-open to 1.0). verify_section is the only per-[N]
-                # correctness gate; on error do NOT auto-pass -- 0.0 means this round won't
-                # clean-accept (retries / ships best-effort, never hard-blocks).
+                # fail-CLOSED: on error do NOT auto-pass -- 0.0 means this round won't
+                # clean-accept (retries / ships best-effort).
                 print(f"  [R{round_n}] Citation integrity UNVERIFIED (fail-closed): {e}")
                 cite_precision = 0.0
 
-        # ACCEPT only when ALL gates pass
-        if base_ok and cite_precision >= min_cite_precision:
-            print(f"  [R{round_n}] ACCEPT: grounding={grounding:.3f}, topic={topic_relevance:.3f}, "
-                  f"cite_prec={cite_precision:.3f}, cross-refs={cross_refs_found}")
+        # ACCEPT (clean, quality='ok') when topic + cites + cross-refs + a REAL measured
+        # cite_precision all pass. Grounding is logged but is NOT a gate anymore (P0).
+        gate_ok = (n_cites > 0 and topic_ok and has_min_cross_refs)
+        if gate_ok and cite_precision is not None and cite_precision >= min_cite_precision:
+            accepted = True
+            print(f"  [R{round_n}] ACCEPT: topic={topic_relevance:.3f}, cite_prec={cite_precision:.3f}, "
+                  f"cross-refs={cross_refs_found} (grounding={grounding:.3f} advisory)")
             break
 
-        # Topic purity gate
-        if grounding >= min_grounding and topic_relevance < min_topic_relevance and n_cites > 0:
-            raise RuntimeError(
-                f"[StageE HARD BLOCK] Section '{spec.title}' blocked: "
-                f"grounding={grounding:.3f} >= {min_grounding} but "
-                f"topic_purity={topic_relevance:.3f} < {min_topic_relevance}. "
-                f"topic drift detected. DO NOT write."
-            )
+        # (StageE topic-drift hard block moved to AFTER the loop -- it gates on the BEST
+        #  round's topic, not the last round's, so last-round variance can't discard an
+        #  otherwise-on-topic draft.)
 
         # Retry for grounding / topic / citation issues
         if round_n < max_rounds:
@@ -767,9 +772,10 @@ def investigate_section(
             numeric_hint = (f" Replace numeric refs ({', '.join(numeric_refs[:3])}) with exact section TITLES."
                             if numeric_refs else "")
             cite_hint = (" Some citations do not support their claim -- attach the correct [N] to each fact."
-                         if cite_precision < min_cite_precision else "")
+                         if (cite_precision is not None and cite_precision < min_cite_precision) else "")
+            cite_str = f", cite_prec={cite_precision:.3f}" if cite_precision is not None else ""
             current_hint = (
-                f"Previous draft: grounding={grounding:.3f}, topic={topic_relevance:.3f}, cite_prec={cite_precision:.3f}. "
+                f"Previous draft: grounding={grounding:.3f} (advisory), topic={topic_relevance:.3f}{cite_str}. "
                 f"Focus on: {missing_terms or 'none'}. Avoid: {drift_terms or 'none'}. "
                 f"{weak_summary[:140] if weak_summary else 'cite more specific facts'}.{cite_hint}{numeric_hint}"
             )
@@ -794,6 +800,17 @@ def investigate_section(
                     f"RULES StageD: filler word count is not quality. "
                     f"DO NOT write thin sections."
                 )
+
+    # StageE TOPIC-DRIFT hard block (P0): no round cleanly accepted AND even the BEST round
+    # reads off-topic (best topic < min) -> drift -> block, don't ship. Gating on the best
+    # round's topic (not the last round's) avoids discarding an on-topic draft to last-round
+    # variance. Grounding is NOT part of this decision anymore (it is advisory/log-only).
+    if not accepted and best_topic_relevance < min_topic_relevance:
+        raise RuntimeError(
+            f"[StageE HARD BLOCK] Section '{spec.title}' blocked: "
+            f"best topic_purity={best_topic_relevance:.3f} < {min_topic_relevance}. "
+            f"topic drift detected. DO NOT write."
+        )
 
     # G6 (warn-first): flag near-duplicate sections via bge-m3 cosine vs prior bodies.
     # Soft signal ONLY -- logs, does NOT block (a blocking threshold needs calibration
@@ -847,6 +864,6 @@ def investigate_section(
         new_concepts=new_concepts,
         research_rounds=research_rounds,
         citation_markers=cite_markers,
-        quality="ok" if (best_score >= min_grounding and best_topic_relevance >= min_topic_relevance) else "degraded",
+        quality="ok" if accepted else "degraded",
         cross_ref_count=cross_refs_found,  # GATE-6: Cross-reference count
     )

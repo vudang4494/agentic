@@ -25,10 +25,10 @@
 | **Soft Block** | Khi kiểm tra fail, vẫn tiếp tục nhưng đánh dấu chất lượng giảm. |
 | **Domain Relevance Gate (P0a)** | Kiểm tra evidence pool đúng domain trước khi viết, qua `notes.check_evidence_domain()` = keyword-overlap + optional gemma judge (KHÔNG phải LLM-judge thuần). Threshold THẬT ≈ 0.40 (`deep_investigate.py:524`), KHÔNG phải 0.60. Accept-topic (writer) = 0.50. Ngưỡng chuẩn: RULES.md |
 | **Evidence Gate (P0a/B)** | Trước writer: (1) pool không rỗng (else HARD BLOCK); (2) domain-relevance ≥ ev_threshold≈0.40. KHÔNG có gate "đủ terms" riêng. |
-| **Grounding Score** | Điểm HHEM v2 NLI (0-1). **G3 = INERT**: re-tie `embed_tokens` phân biệt cặp NLI sạch (`bench_hhem_discrimination.py` 100%) NHƯNG strict-NLI chấm ~0.05–0.10 trên prose synthesized; per-source-max **max thực 0.458 < 0.70** → `base_ok` luôn false → grounding chỉ LOG, **KHÔNG hard-block**. (g=1.0 v36 là HHEM degenerate cũ, đã fix.) |
-| **Topic Relevance Score** | Điểm content đúng chủ đề (0-1). **G4 blend** 0.6·`answer_relevance` (gemma LOCAL) + 0.4·term-overlap (`verify.py:401-411`). Tín hiệu **duy nhất còn discriminate**, NHƯNG chỉ **LOG, KHÔNG enforce** (StageE cần grounding≥0.70 nên không fire; tương quan với P0a → topic≈accept). |
+| **Grounding Score** | Điểm HHEM v2 NLI (0-1). **G3 = log-only/advisory** (P0 2026-06-22: đã bỏ khỏi gate): strict-NLI ~0.05–0.10 trên prose synthesized → KHÔNG phải metric, không hard-block. (g=1.0 v36 là HHEM degenerate cũ, đã fix.) |
+| **Topic Relevance Score** | Điểm content đúng chủ đề (0-1). **G4 blend** 0.6·`answer_relevance` (gemma LOCAL) + 0.4·term-overlap (`verify.py:401-411`). **P0: ENFORCED** — điều kiện `gate_ok` (clean-accept) + StageE chặn best-topic<0.50. |
 | **Citation Count** | Số lần nguồn được trích dẫn trong text. Zero citation = section không có evidence |
-| **Verify signals (G2/G3/G4) — THỰC TRẠNG** | ⚠️ **Cả 3 hiện POST-writer là LOG-only, KHÔNG enforce** (gate cứng thật = P0a pre-writer). **G2 cite_precision** = `verify_section` per-`[N]` (gemma) **KHÔNG BAO GIỜ chạy** (kẹt sau `if base_ok` luôn false) → `cite_precision=1.0` là **DEFAULT init**, KHÔNG phải đo. **G3 grounding** = HHEM, **INERT** (max 0.458 < 0.70). **G4 topic** = chạy, discriminate, nhưng không enforce. Fix → `plan.md` §Upgrade P0. |
+| **Verify signals (G2/G3/G4) — POST-P0 (2026-06-22)** | Gate cứng SỐNG = **P0a pre-writer**. **G2 cite_precision** = `verify_section` per-`[N]` (gemma) **GIỜ CHẠY** (P0; clean-accept cần ≥0.45) → cite_precision **đo thật**, KHÔNG còn default 1.0. ⚠️ judge **strict-match** → floor ~0.3-0.4 < 0.45 → clean-accept=0 (cần **P0-2b** soften). **G3 grounding** = log-only/advisory. **G4 topic** = ENFORCED. → `plan.md` §Upgrade. |
 
 ## C. Retrieval (Tìm kiếm nguồn)
 

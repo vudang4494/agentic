@@ -20,16 +20,24 @@ Mỗi item: **Vấn đề (bằng chứng)** → **Fix (file:dòng)** → **Acce
 - **Vấn đề:** `verify_section` (G2 citation-vs-source) nằm trong `if base_ok:` (`deep_investigate.py:737`); `base_ok` cần grounding≥0.70 (`:729`) không bao giờ pass → G2 **không bao giờ chạy**, `cite_precision=1.0` là default (`:732`).
 - **Fix:** tách `gate_ok = (n_cites>0 AND topic≥min_topic AND has_min_cross_refs)` (bỏ grounding khỏi điều kiện cứng); chạy `verify_section` khi `gate_ok` (bất kể grounding); accept khi `gate_ok AND cite_precision≥min_cite_precision`. Giữ grounding log advisory.
 - **Acceptance:** re-run benchmark → `cite_precision_mean < 1.0` CÓ phân bố (không phải toàn 1.0); một số section fail G2 → retry/block; log có dòng "Citation integrity (G2)" thật.
+- **✅ DONE (2026-06-22, validation `p0_validate2` 4 sec):** G2 chạy thật, cite_precision đo được **0.30/0.367/0.374/0.410** (≠ default 1.0); citations in-range (max[N]≤n_sources); reviewer độc lập GO. `deep_investigate.py:737-748` (chạy khi `n_cites>0 AND topic_ok`).
 
 ### P0-2. Re-baseline / bỏ grounding khỏi `base_ok`
 - **Vấn đề:** per-source-max grounding max 0.458 < min_grounding 0.70 → 0/390 section "ok", 100% "degraded"; StageE (`:751`) cần g≥0.70 nên không bao giờ fire (topic-drift không bị chặn).
 - **Fix:** bỏ `grounding >= min_grounding` khỏi `base_ok`; chuyển grounding sang log thuần (cả `grounding` per-source-max lẫn `grounding_cited`). StageE đổi điều kiện chặn topic-drift độc lập grounding (topic<min_topic + n_cites>0 → block/retry).
 - **Acceptance:** quality field có lại "ok"; StageE fire trên topic-fail thật; không section nào ship "degraded" chỉ vì grounding.
+- **⚠️ PARTIAL (2026-06-22):** grounding ĐÃ log-only + bỏ khỏi `base_ok` ✅; best-round chọn topic-first ✅; StageE chuyển ra sau-loop gate theo best-topic ✅. NHƯNG **quality "ok" CHƯA đạt** (vẫn 0 "ok") — vì cite_precision (P0-1) floor ~0.3-0.4 < 0.45 → không clean-accept. Root cause ở **P0-2b** (judge strict-match), không phải grounding. `deep_investigate.py:716,808,860`.
+
+### P0-2b. ⚠️ NEW (từ P0 validation): G2 cite-judge strict-match → cite_precision floor ~0.3-0.4
+- **Vấn đề (verified):** `verify.py` judge prompt ghi "Be strict: 'supports' requires a **direct match**, not just topical overlap" + thang `_VERDICT_SCORE` {supports 1.0, partial 0.5, no_evidence 0.3, unrelated/contradicts 0}. Trên prose **synthesized/paraphrase**, gemma hiếm chấm "supports" → đa số no_evidence/unrelated → cite_precision floor **~0.30-0.41** (CÙNG bệnh strict-NLI như HHEM/G3). Citations in-range (không phải out-of-range artifact). Ngưỡng `min_cite_precision=0.45` → **0 clean-accept** → P0 mới chỉ làm lỗi HIỆN ra, chưa làm gate dùng được.
+- **Fix (3 lựa chọn — design fork về độ-strict-faithfulness):** (a) **soften judge** — "supports = evidence states OR clearly implies/paraphrases the claim" (bỏ "direct match only"), phù hợp prose synthesized; (b) **dùng cosine liên tục** (mean cos) thay verdict-bucket; (c) **recalibrate** `min_cite_precision` về dải discriminate thật. Khuyến nghị (a) + giữ discrimination test.
+- **Acceptance:** sau fix → cite_precision có spread rõ + clean-accept >0 ("ok" xuất hiện) trên section tốt, ĐỒNG THỜI vẫn fail section citation kém (discrimination test good-vs-injected-bad), không floor/saturate.
 
 ### P0-3. Fix bug aliasing P0c (seen-penalty no-op trong 1 run)
 - **Vấn đề:** `deep_investigate.py:301` `run_seen_counts = run_seen_counts or {}` — dict rỗng `{}` là falsy → rebind sang local mới; propagate-back (`:832`) ghi vào bản copy bị vứt. Hệ quả: P0c seen-penalty (`notes.py:322`) **không bao giờ fire cross-section** trong 1 run (state.json `run_seen_counts` len=0 dù 454 source). Một paper có thể dominate >50% mà không bị phạt.
 - **Fix:** `if run_seen_counts is None: run_seen_counts = {}` (giữ object identity của caller).
 - **Acceptance:** sau fresh run, `run_seen_counts` non-empty; grep log thấy P0c penalty fire; không source nào >50% sections.
+- **✅ DONE (2026-06-22):** `if run_seen_counts is None` (`deep_investigate.py:304`); validation: `run_seen_counts` len **0→23**, propagation về orchestrator OK.
 
 ## P1 — Cấu trúc sách & độ tin eval
 
