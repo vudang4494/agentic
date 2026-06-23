@@ -293,6 +293,11 @@ def investigate_section(
     best_sources = []
     best_evidence = ""
     best_topic_relevance = 0.0
+    # Metadata pinned to the SAME round as best_content (was returned from last-round locals,
+    # which mismatched best_content whenever best!=last round -- see accept-coupling bugfix).
+    best_n_cites = 0
+    best_cite_markers: list = []
+    best_cross_refs = 0
     _best_round_tuple: tuple = (0.0, 0.0, 0)  # (grounding, topic_relevance, has_cites)
     all_concepts = []
     research_rounds = 0
@@ -720,6 +725,9 @@ def investigate_section(
             best_topic_relevance = topic_relevance
             best_sources = ranked
             best_evidence = evidence_block
+            best_n_cites = n_cites
+            best_cite_markers = cite_markers
+            best_cross_refs = cross_refs_found
             _best_round_tuple = _round_tuple()
 
         # --- Accept gates ---
@@ -753,6 +761,19 @@ def investigate_section(
         gate_ok = (n_cites > 0 and topic_ok and has_min_cross_refs)
         if gate_ok and cite_precision is not None and cite_precision >= min_cite_precision:
             accepted = True
+            # BUGFIX (accept-coupling): best-round selection is TOPIC-FIRST, so the best-topic
+            # round may NOT be this accepting round -- and the function returns best_content.
+            # Without this override a section could ship an EARLIER, higher-topic round's body
+            # that FAILED this very cite_precision gate, mislabelled quality='ok'. Pin best_* to
+            # the round that actually passed G2 so the shipped body is the verified one. (n_cites /
+            # cite_markers / cross_refs_found are already this round's because we break here.)
+            best_content = content
+            best_sources = ranked
+            best_topic_relevance = topic_relevance
+            best_score = grounding
+            best_n_cites = n_cites
+            best_cite_markers = cite_markers
+            best_cross_refs = cross_refs_found
             print(f"  [R{round_n}] ACCEPT: topic={topic_relevance:.3f}, cite_prec={cite_precision:.3f}, "
                   f"cross-refs={cross_refs_found} (grounding={grounding:.3f} advisory)")
             break
@@ -860,10 +881,10 @@ def investigate_section(
         sources=best_sources,
         grounding_score=best_score,
         topic_relevance_score=best_topic_relevance,
-        n_citations=n_cites,
+        n_citations=best_n_cites,
         new_concepts=new_concepts,
         research_rounds=research_rounds,
-        citation_markers=cite_markers,
+        citation_markers=best_cite_markers,
         quality="ok" if accepted else "degraded",
-        cross_ref_count=cross_refs_found,  # GATE-6: Cross-reference count
+        cross_ref_count=best_cross_refs,  # GATE-6: Cross-reference count (pinned to best_content's round)
     )

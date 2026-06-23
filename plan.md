@@ -40,32 +40,48 @@ Mỗi item: **Vấn đề (bằng chứng)** → **Fix (file:dòng)** → **Acce
 - **Acceptance:** sau fresh run, `run_seen_counts` non-empty; grep log thấy P0c penalty fire; không source nào >50% sections.
 - **✅ DONE (2026-06-22):** `if run_seen_counts is None` (`deep_investigate.py:304`); validation: `run_seen_counts` len **0→23**, propagation về orchestrator OK.
 
+## P0.5 — Correctness fixes (phát hiện bởi verify đa-tầng 2026-06-23) ✅ DONE
+
+> Verify (10 finder + adversarial refute từng finding, 89 finding 0 bị bác) lộ **2 bug correctness** ngoài roadmap — đã fix.
+
+### P0.5-1. `bestround-ships-failing-body` — accept ship body đã TRƯỢT G2
+- **Vấn đề (reproduce):** best-round chọn **topic-first** (`:712-716`) nhưng accept `break` ở round có cite≥0.45; hàm return `best_content`. Khi best-topic-round ≠ accept-round → ship body round topic cao (đã trượt cite-gate) với `quality="ok"`. Bằng chứng persist: `p0_validate3` sec 1.2 (`ok`) content 19 markers vs `n_citations=15` → **4/14 section** content≠metadata.
+- **Fix (`deep_investigate.py`):** pin `best_*` (content+sources+topic+**n_cites+cite_markers+cross_refs**) vào ĐÚNG round (best cho degraded, accept cho accepted) — init `:297-300`, selection `:724-726`, accept-override `:760-766`, return dùng `best_n_cites/best_cite_markers/best_cross_refs`. → content & metadata luôn cùng 1 round; "ok" body luôn là round qua G2.
+- **Acceptance:** fresh run → markers(content) == n_citations mọi section (0 mismatch); "ok" body = round accept. (validation `p0_validate4` đang chạy.)
+
+### P0.5-2. `smoke-hollow-book` — assemble emit 70/84 heading rỗng
+- **Vấn đề:** smoke investigate 2 chapter nhưng `assemble_book` duyệt **full outline** → section vắng state.json (raw="") không match skip BLOCKED → emit `## heading` body rỗng. `p0_validate3/book.md`: 84 heading, **14 có body, 70 stub rỗng**.
+- **Fix (`deep_research_v3.py:131-154`):** `if key not in sections: continue`; gom `sec_lines` per-chapter, bỏ chapter rỗng (`if not sec_lines: continue`).
+- **Acceptance:** re-assemble `p0_validate3` → **14 heading, 14 body, 0 hollow** ✅ (đã verify).
+
 ## P1 — Cấu trúc sách & độ tin eval
 
-### P1-1. Matrix thành HARD gate (chống template ở scale)
-- **Vấn đề:** forced 24×12 → 269/269 heading rơi vào ~15 archetype skeleton (đúng matrix Guardrail 3 cấm). Detector hiện chỉ match prefix-bucket (`outline_from_research.py:430`) → mù với suffix-template; `MATRIX_PATTERN_BLOCK` chỉ fire khi >50 pattern → audit `ok:false` mà vẫn ship 605pg.
-- **Fix:** thay detector prefix bằng suffix/skeleton (Counter trên title-suffix + skeleton, như `benchmark_book.py:145`); hạ ngưỡng block xuống tỷ lệ (vd >40% section chia sẻ ≤15 skeleton) → reject outline TRƯỚC Stage 2.
-- **Acceptance:** outline templated → `ok:false` → **bị reject** (không ship); `matrix_suffix=[]` trên outline được accept.
+> ✅ **RE-AUDIT GROUNDED 2026-06-23 (5-agent, verify trực tiếp code + run thật).** Cả 5 item **CÒN THẬT** (không cái nào bị fix đã-ship hóa giải). Thứ tự thực thi đã xác nhận: **P1-3 → P1-1 → P1-4 → P1-2 → P1-5** (leverage = impact × readiness ÷ invariant-risk). Mỗi item dưới kèm STILL-REAL + bằng chứng + fix-site + impact/readiness.
 
-### P1-2. Paragraph/sentence dedup lúc assemble
-- **Vấn đề:** boilerplate câu lặp xuyên chương; Jaccard section-level (`near_dup_pairs=0`) không thấy. (Cũng có cite "Section X.Y" bịa.)
-- **Fix:** thêm pass dedup câu/embedding (bge-m3 cosine giữa câu mở/đóng các section) lúc assemble (`deep_research_v3.py`); resolve/loại "Section N.M" numeric refs về title thật.
-- **Acceptance:** đếm boilerplate trùng giảm; 0 numeric-ref bịa trong book.
+### P1-3. Math validation gate (chống eqn hỏng + LaTeX leak) — **[RANK 1] impact MED · readiness HIGH · risk 0**
+- **STILL-REAL (2 bug reproduce ngay trong phiên):** (a) **FALSE-NEGATIVE** — mẫu Bradley-Terry thiếu ngoặc `\frac{\exp(..)}{\exp(.. + \exp(..)}` (7 `(` vs 6 `)`) → `_math_span_valid`==True (brace balance OK, macro allowlisted, **KHÔNG có paren check**) → **ship math SAI** (`bench_rlhf/book.md:98`; tái diễn pool2×3, diffusion×1, agentic×4). (b) **FALSE-POSITIVE** — `mathfix.py:229` đếm substring `\left`/`\right` đụng `\leftarrow`/`\rightarrow` → math hợp lệ bị đẩy thành literal `$$..$$` trong backtick (rlhf 7 spans, agentic 21). **"$$-in-backticks leak" chính là output của neutralizer, KHÔNG phải writer leak.** `\coloneqq` thiếu trong `_MACRO_ALLOWLIST`.
+- **Fix-site:** `mathfix.py:222-234` (`_math_span_valid`): (1) thay substring `\left`/`\right` bằng whole-word regex `\\left(?![A-Za-z])`; (2) thêm paren-balance SAU khi strip `\(`,`\)` + token `\[A-Za-z]+`; (3) thêm `\coloneqq` + siblings vào allowlist `:182-219`. Regression: `test_math_char_safety.py:87-88`.
+- **Acceptance:** `_math_span_valid('r_i \leftarrow ...')`==True, `('a \rightarrow b')`==True, BT-thiếu-ngoặc==False; test suite cũ KHÔNG regress; book.md re-scan: BT neutralize, `\leftarrow` typeset lại. **DON'T:** đụng writer/verifier; nới brace-balance `:227` (đang đúng, unbalanced-brace=0 mọi nơi).
 
-### P1-3. Math validation gate (chống eqn hỏng + LaTeX leak)
-- **Vấn đề:** ship vào PDF: mẫu số Bradley-Terry thiếu ngoặc (`bench_rlhf/book.md:487,3706`), DPO loss leak ra literal `\$\$`+escaped braces trong backtick (`:510-512,529-531`). mathfix hiện cho qua.
-- **Fix:** thêm vào `mathfix.py` check: balance paren/brace trong display-math + reject `$`/`$$` lồng trong backtick/escaped → neutralize hoặc flag retry.
-- **Acceptance:** defect đã biết không còn ship; test doc với các defect này pass qua trạng thái neutralized.
+### P1-1. Matrix thành HARD gate (chống template ở scale) — **[RANK 2] impact HIGH · readiness HIGH · 1 tripwire**
+- **STILL-REAL (chunked outline KHÔNG chữa suffix-matrix):** `audit_outline` chỉ **prefix-only** `startswith(f"{bucket}:")` trên 6-item `_STRUCTURAL_BUCKETS` (`outline_from_research.py:427-433`), không có suffix check; block chỉ fire >50 pattern (`:456`). Bằng chứng run: **`p0_validate3` (tôi vừa chạy)** = 84 sec, 12 ch × **cùng 7 suffix** ('Core Mechanisms'×4, 'Design and Trade-offs'×4, 'Practical Methods'×4, 'Evaluation'×4...), audit chỉ flag `['coherence_low']`, **0 matrix flag**. `agentic_2025_full` 288 sec cũng ship suffix-matrix. **Gốc:** `_evidence_sections_for_chapter` fallback phát `f"{theme}: {angles[j]}"` từ list `angles` cố định 12 mục (`:245-254`), lặp y hệt mọi chapter khi per-chapter LLM trả None (`:237-238`).
+- **Fix-site:** `outline_from_research.py:417-457` — port suffix-detector `benchmark_book.py:145-146` (`Counter(t.split(':')[-1])`, ngưỡng ≥3/suffix qua nhiều chapter) vào `audit_outline` + condition `MATRIX_PATTERN_BLOCK` theo tỷ lệ; phụ: list `angles` `:245-254`.
+- **Acceptance:** outline suffix-matrix → reject/retry TRƯỚC Stage 2. **TRIPWIRE (outline-emerges):** retry phải regen qua **chunked LLM evidence-path**, KHÔNG snap về `_semantic_fallback_outline` (`:810-828`, bản thân là suffix-matrix generator). Tune ngưỡng để domain-term hợp lệ ('Evaluation' là topic thật) không false-positive.
 
-### P1-4. Near-miss rescue (0.35–0.40) thay vì drop cứng
-- **Vấn đề:** 71% block ở dải near-miss 0.30–0.40 ("đúng domain, thiếu framing hẹp", trung bình chỉ thiếu 0.08); ~17.5 section/sách bị mất coverage recoverable.
-- **Fix:** với evidence-rel ∈ [0.35,0.40), trigger **re-query nhắm trúng** term-framing còn thiếu (từ reason "lacks specific X" của gate) trước khi hard-drop; nếu vẫn thiếu → ship "degraded/advisory" thay vì drop.
-- **Acceptance:** một phần near-miss block được rescue; block-rate giảm mà faithfulness (cite_precision đo thật sau P0-1) không tụt.
+### P1-4. Near-miss rescue (0.35–0.40) thay vì drop cứng — **[RANK 3] impact HIGH · readiness MED (cần validation run)**
+- **STILL-REAL:** `ev_topic_rel` tính 1 lần (`deep_investigate.py:514`), nhánh duy nhất `if ev_topic_rel < ev_threshold` (≈0.40, `:528`), round cuối raise RuntimeError vô điều kiện (`:546-552`); **0 nhánh re-query**. Evidence-pool rescue (`:420`) trigger trên `len(filtered)<5` (thin-pool, score-agnostic, CHẠY TRƯỚC gate) → KHÔNG cứu near-miss-score. Run data (7 sách, 159 block): **73% (116) ở dải 0.30-0.40**, avg 0.357, lệch trung bình chỉ **0.043**; ~16.4 section/sách mất oan.
+- **Fix-site:** `deep_investigate.py:529-552` — chèn 1 round re-query nhắm `must_cover` + re-gate TRƯỚC khi raise (tái dùng query_gen+search+check_evidence_domain).
+- **Acceptance:** một phần near-miss được rescue, block-rate giảm mà faithfulness (cite_prec) không tụt. **TRIPWIRE (Guardrail 6):** re-retrieve/re-gate THẬT, **KHÔNG hạ `ev_threshold`** (27% true-off-domain <0.30 vẫn phải drop); giữ hard-block làm fallback cuối. Phải có **validation run** chứng minh re-query nâng pool 0.357 → >0.40 (lý do readiness MED).
 
-### P1-5. Held-out judge độc lập (phá vòng tròn eval)
-- **Vấn đề:** BAER "semantic signals" (topic, ref-on-topic) là re-read phán quyết của chính pipeline (`topic_pass ≡ accept_rate` mọi run); 0 ground-truth ngoài; 0 đo correctness/coherence.
-- **Fix:** script eval dùng **model KHÁC HỌ** (hoặc ~20 section gold-set người gán nhãn) chấm correctness/coherence trên sample, KHÔNG đọc lại state.json.
-- **Acceptance:** có 1 số chất lượng độc lập, decorrelated với accept_rate; report kèm số này.
+### P1-2. Paragraph/sentence dedup lúc assemble — **[RANK 4] impact MED · readiness HIGH · polish (tension fix-at-gate)**
+- **STILL-REAL:** assemble (`deep_research_v3.py:121-192`) chỉ dedup heading-title (`:164-167`), **0 dedup câu/đoạn**. Empirical: `bench_rlhf_pool2/book.md` (80k từ) 1 câu lặp **17× xuyên 4 chapter** (9-12), 1 câu khác 12×, 17 câu lặp ≥2× (kể cả sau normalize số). Section-Jaccard mù (`near_dup_pairs=0`, max 0.06). Numeric-ref bịa "Section 2.1: ..." CHỈ ở `agentic_2025_full` (lines 13,75; 0 heading khớp) — hẹp, không phải mọi sách.
+- **Fix-site:** `deep_research_v3.py:155` (dedup pass sau join, trước normalize_math) + scrub numeric-ref ở `_sanitize_section_content` `:55-69`.
+- **Acceptance:** đếm câu boilerplate trùng giảm; 0 numeric-ref bịa. **TRIPWIRE (Verifier≠Writer):** **deletion-only** câu trùng exact/near-exact, **KHÔNG đụng occurrence đầu**, KHÔNG orphan `[N]` cite, KHÔNG rewrite prose (đây là presentation-scrub như log-strip sẵn có); bge-m3 cosine phải LOCAL.
+
+### P1-5. Held-out judge độc lập (phá vòng tròn eval) — **[RANK 5] impact HIGH · readiness MED · BLOCKED (cần model)**
+- **STILL-REAL (tautological):** BAER topic (`benchmark_book.py:108` đọc `topic_relevance` pipeline ghi từ G4) + ref-on-topic (`:176-179` đọc `src.relevance` = `notes.rank()` cosine, **CÙNG scorer** với prefilter/P0a). `topic_pass ≡ accept_rate` về cấu trúc (cùng ngưỡng 0.50). **0 judge độc lập** trong `eval/` (`benchmark_book.py:7` "does NOT call any model"). `paper_eval.py` dùng gemma+qwen (cùng họ) và KHÔNG wire vào BAER.
+- **Fix-site:** `benchmark_book.py:241` (pass judge độc lập trên sample accepted sections) + `aggregate_benchmark.py:25-36` SIGNALS.
+- **Acceptance:** 1 số chất lượng decorrelated với accept_rate (kappa/agreement vs G4). **BLOCKER:** phải chọn+pull 1 model LOCAL **khác họ** (KHÔNG gemma-G4, KHÔNG qwen-writer) trong Ollama trước khi code; cô lập thành pass optional để giữ determinism "no-model" của BAER. Eval-side only — không cải thiện sách trực tiếp.
 
 ## P2 — Logic agentic sâu hơn (xây năng lực, không chỉ chứng minh)
 
@@ -80,7 +96,13 @@ Mỗi item: **Vấn đề (bằng chứng)** → **Fix (file:dòng)** → **Acce
 - **Acceptance:** citation ở dòng định nghĩa/equation trỏ primary arxiv ID (đo % primary-cite trên equation lines).
 
 ## Thứ tự đề xuất
-**P0 ✅ DONE** — faithfulness từ ảo thành thật + sửa P0c (đòn bẩy lớn nhất, chạm cả Faithfulness lẫn Eval). **Kế tiếp: P1-5 + P1-1** (eval độc lập + chống matrix để re-baseline trung thực), rồi P1 còn lại, cuối cùng **P2** (năng lực agentic). Mỗi P1 item phải có validation run đo Acceptance trước khi tin.
+**P0 ✅ DONE** (faithfulness ảo→thật + P0c). **P1 (re-audit grounded 2026-06-23) thứ tự = P1-3 → P1-1 → P1-4 → P1-2 → P1-5:**
+1. **P1-3 math** trước — zero-risk, 2 bug reproduce được trong phiên, pure-Python + test harness có sẵn, không đụng writer/verifier.
+2. **P1-1 matrix** — impact ngang P1-3 (giết suffix-matrix Guardrail 3) nhưng có 1 tripwire outline-invariant (retry phải qua LLM-path, không fallback template) → làm sau fix mechanical an toàn.
+3. **P1-4 near-miss** — impact cao (~16 sec/sách mất ở mép gate) nhưng readiness MED: cần validation run chứng minh re-query nâng pool >0.40 (không ship mù).
+4. **P1-2 dedup** — thật & visible nhưng là post-writer cosmetic scrub (tension fix-at-gate) → polish, deletion-only.
+5. **P1-5 held-out judge** — chiến lược nhất (chỉ nó bắt được G4 false-positive) nhưng BLOCKED trên việc chọn model LOCAL khác-họ; eval-side only → sequence cuối.
+Mỗi P1 item phải có validation run đo Acceptance trước khi tin. Sau P1 → **P2** (citation-graph 2nd-hop, primary-source routing).
 
 ---
 

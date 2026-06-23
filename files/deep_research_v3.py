@@ -131,27 +131,39 @@ def assemble_book(outline, sections, output_path):
     for ch in outline.get("chapters", []):
         _cn = str(ch.get("n", 0))
         _ct = ch.get("t", "")
-        lines.append("# " + _cn + ". " + _ct)
-        lines.append("")
+        sec_lines = []
         for sec in ch.get("sections", []):
             _sn = str(sec.get("n", 0))
             _st = sec.get("t", "")
             key = _cn + "." + _sn
+            # BUGFIX (smoke/partial hollow book): a section absent from state.json was never
+            # investigated (smoke truncates to chapters[:2], or an interrupted run). assemble
+            # used to iterate the FULL outline and emit a '## ' heading with an empty body for
+            # every such section -> a smoke book shipped 70/84 empty heading stubs. Skip them.
+            if key not in sections:
+                continue
             sec_data = sections.get(key, {})
             raw = sec_data.get("content", "") or ""
             # Omit a P0a-blocked section entirely (heading + body): its stored "content" is the
             # internal rejection log, which must not ship in the book.
             if sec_data.get("quality") == "BLOCKED" or raw.lstrip().startswith("[BLOCKED"):
                 continue
-            lines.append("## " + _sn + ". " + _st)
-            lines.append("")
+            sec_lines.append("## " + _sn + ". " + _st)
+            sec_lines.append("")
             content = _sanitize_section_content(raw)
-            lines.append(content)
+            sec_lines.append(content)
             refs = _section_references(content, sec_data.get("sources", []) or [])
             if refs:
-                lines.append("")
-                lines.extend(refs)
-            lines.append("")
+                sec_lines.append("")
+                sec_lines.extend(refs)
+            sec_lines.append("")
+        # Skip a chapter that shipped no sections (all un-investigated / blocked) so we don't
+        # emit a bare '# N. Title' chapter heading with nothing under it.
+        if not sec_lines:
+            continue
+        lines.append("# " + _cn + ". " + _ct)
+        lines.append("")
+        lines.extend(sec_lines)
     assembled = "\n".join(lines)
 
     # Rank9/10: final math normalization safety net across the whole assembled doc
