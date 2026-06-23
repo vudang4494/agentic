@@ -28,7 +28,7 @@
 | **Grounding Score** | Điểm HHEM v2 NLI (0-1). **G3 = log-only/advisory** (P0 2026-06-22: đã bỏ khỏi gate): strict-NLI ~0.05–0.10 trên prose synthesized → KHÔNG phải metric, không hard-block. (g=1.0 v36 là HHEM degenerate cũ, đã fix.) |
 | **Topic Relevance Score** | Điểm content đúng chủ đề (0-1). **G4 blend** 0.6·`answer_relevance` (gemma LOCAL) + 0.4·term-overlap (`verify.py:401-411`). **P0: ENFORCED** — điều kiện `gate_ok` (clean-accept) + StageE chặn best-topic<0.50. |
 | **Citation Count** | Số lần nguồn được trích dẫn trong text. Zero citation = section không có evidence |
-| **Verify signals (G2/G3/G4) — POST-P0 (2026-06-22)** | Gate cứng SỐNG = **P0a pre-writer**. **G2 cite_precision** = `verify_section` per-`[N]` (gemma) **GIỜ CHẠY** (P0; clean-accept cần ≥0.45) → cite_precision **đo thật**, KHÔNG còn default 1.0. ⚠️ judge **strict-match** → floor ~0.3-0.4 < 0.45 → clean-accept=0 (cần **P0-2b** soften). **G3 grounding** = log-only/advisory. **G4 topic** = ENFORCED. → `plan.md` §Upgrade. |
+| **Verify signals (G2/G3/G4) — POST-P0+P0-2b (2026-06-23)** | Gate cứng SỐNG = **P0a pre-writer + G2 cite_prec≥0.45**. **G2 cite_precision** = `verify_section` per-`[N]` (gemma) **GATE SỐNG** → cite_precision **đo thật** (KHÔNG default 1.0). **P0-2b:** judge prompt **soften** (paraphrase=supports, contradicts/unrelated giữ strict) → prose faithful đo ~0.48 ≥0.45 → **ACCEPT (`quality="ok"`)**; weak floor → degraded. Discrimination `bench_cite_discrimination.py`: GOOD 0.72 vs BAD 0.18/0.20. **G3 grounding** = log-only/advisory. **G4 topic** = ENFORCED. → `plan.md` §Upgrade (kế = P1). |
 
 ## C. Retrieval (Tìm kiếm nguồn)
 

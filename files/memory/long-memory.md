@@ -11,6 +11,13 @@
 
 ## Session log (mới nhất trước)
 
+### [2026-06-23] P0-2b thực thi: soften cite-judge → faithfulness gate "xanh"
+- **Làm:** `verify.py:47-75` (JUDGE_SYS + JUDGE_BATCH_SYS) — thay dòng "**Be strict: direct match only, not topical overlap**" bằng "judge by MEANING: `supports` = evidence states/implies/**faithfully paraphrases** claim; topical-overlap-no-support KHÔNG phải supports; contradicts/unrelated giữ strict". `_VERDICT_SCORE` (no_evidence 0.3) + `min_cite_precision=0.45` **GIỮ NGUYÊN** (change tối thiểu — không hạ mù).
+- **Guard mới:** `files/eval/bench_cite_discrimination.py` gọi THẬT `verify.verify_section` trên labeled sections (GOOD paraphrase / BAD_unrelated / BAD_contradict) → assert GOOD≥0.45 ∧ gap≥0.30. Kết quả: **GOOD 0.72 (PASS) · BAD_unrelated 0.18 · BAD_contradict 0.20 · gap +0.54/+0.52**. Judge discriminate thật, KHÔNG rubber-stamp (chống "nới-để-qua" thành 1.0-giả lần 2).
+- **Validation `p0_validate3` (RLHF smoke, prose THẬT):** cite_prec spread **0.275/0.321/0.411/0.481/0.487** (≠ 1.0, ≠ floored-constant); faithful section ACCEPT `quality="ok"` cite_prec **0.481/0.487**; round dưới gate (0.275-0.411) bị **retry** (loop re-research đẩy 0.321→0.487 mới qua). Gate 0.45 cắt sạch accept/retry → **gate SỐNG, discriminate**. (arxiv timeout suốt run — degrade graceful qua wiki/ddg.)
+- **Kết:** P0-2 chuyển PARTIAL→DONE (quality "ok" giờ đạt); faithfulness gate hết INERT/fake-1.0 → SỐNG. **Bước kế = P1** (matrix HARD gate, paragraph-dedup, math-validation, near-miss rescue, held-out judge). *Follow-up nhỏ:* persist cite_precision accept-round vào state.json (field=None dù accept; BAER đọc log nên không vỡ).
+- **Docs:** RULES/CLAUDE/GLOSSARY/README/short+long-memory/plan + HF card sync post-P0-2b. Commit + PR.
+
 ### [2026-06-22] P0 thực thi: decouple G2 + grounding log-only + fix P0c → lộ P0-2b
 - **Làm:** `deep_investigate.py` — bỏ grounding khỏi gate (G3 log-only); `gate_ok = n_cites>0 AND topic≥0.50 AND cross-ref`; `verify_section` (G2) chạy khi `n_cites>0 AND topic_ok` (bất kể grounding) → cite_precision đo thật; `cite_precision=None` khi không đo (log hết phát default 1.0); best-round **topic-first**; StageE chuyển **sau-loop** gate theo best-topic; P0c `if run_seen_counts is None` (`:304`). Reviewer độc lập: **GO, 0 blocking**.
 - **Validation `p0_validate2` (RLHF 1ch×4sec):** ✅ P0-1 G2 chạy thật cite_precision **0.30/0.367/0.374/0.410** (≠1.0); ✅ P0-3 run_seen_counts **0→23**; ❌ P0-2 quality "ok" = **0** — vì cite_precision (0.3-0.4) < min_cite_precision 0.45.

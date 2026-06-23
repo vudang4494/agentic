@@ -56,7 +56,11 @@ JUDGE_SYS = (
     "  contradicts  -- evidence says the opposite\n"
     "  unrelated    -- evidence is on a different topic\n"
     "  no_evidence  -- the evidence text is empty or too generic to judge\n"
-    "Be strict: 'supports' requires a direct match, not just topical overlap."
+    "Judge by MEANING, not exact wording: mark 'supports' when the evidence states, implies, or "
+    "faithfully paraphrases the claim -- the surface words may differ. Reserve 'partial' for a "
+    "claim only half-covered by the evidence, 'unrelated' for evidence about a different subject, "
+    "and 'contradicts' for evidence asserting the opposite. Topical overlap with no claim-level "
+    "support is NOT 'supports'. A faithful paraphrase IS 'supports'."
 )
 
 # ---- Batch judge (Stage A: N citations → 1 call) ----
@@ -71,7 +75,11 @@ JUDGE_BATCH_SYS = (
     "  contradicts  -- evidence says the opposite\n"
     "  unrelated    -- evidence is on a different topic\n"
     "  no_evidence  -- the evidence text is empty or too generic to judge\n"
-    "Be strict: 'supports' requires a direct match, not just topical overlap."
+    "Judge by MEANING, not exact wording: mark 'supports' when the evidence states, implies, or "
+    "faithfully paraphrases the claim -- the surface words may differ. Reserve 'partial' for a "
+    "claim only half-covered by the evidence, 'unrelated' for evidence about a different subject, "
+    "and 'contradicts' for evidence asserting the opposite. Topical overlap with no claim-level "
+    "support is NOT 'supports'. A faithful paraphrase IS 'supports'."
 )
 
 _THINK_RE = re.compile(r"<THINK>.*?</THINK>", re.DOTALL | re.IGNORECASE)

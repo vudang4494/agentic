@@ -2,7 +2,7 @@
 
 **Purpose:** Evaluate and evolve a truly prompt-emergent Deep Research pipeline where structure, chapters, subchapters, and section content arise from raw prompt + discovered evidence, not from pre-scripted topic templates.
 
-**Status:** P3a/b/c SHIPPED. **Ưu tiên hiện tại = §Upgrade Roadmap (2026-06-22, ngay dưới)** — đánh giá grounded phát hiện verify post-writer INERT (faithfulness rỗng); P0 = decouple G2 + re-baseline grounding + fix P0c aliasing.
+**Status:** P3a/b/c SHIPPED. **P0 + P0-2b ✅ DONE (2026-06-23)** — faithfulness gate (G2) từ INERT/fake-1.0 → SỐNG: decouple G2 + grounding log-only + P0c aliasing fixed + **cite-judge soften** (faithful prose ACCEPT, discriminate GOOD 0.72 vs BAD 0.18/0.20). **Ưu tiên kế = P1** (§Upgrade dưới: matrix HARD gate, paragraph-dedup, math-validation, near-miss rescue, held-out judge).
 
 ---
 
@@ -26,12 +26,13 @@ Mỗi item: **Vấn đề (bằng chứng)** → **Fix (file:dòng)** → **Acce
 - **Vấn đề:** per-source-max grounding max 0.458 < min_grounding 0.70 → 0/390 section "ok", 100% "degraded"; StageE (`:751`) cần g≥0.70 nên không bao giờ fire (topic-drift không bị chặn).
 - **Fix:** bỏ `grounding >= min_grounding` khỏi `base_ok`; chuyển grounding sang log thuần (cả `grounding` per-source-max lẫn `grounding_cited`). StageE đổi điều kiện chặn topic-drift độc lập grounding (topic<min_topic + n_cites>0 → block/retry).
 - **Acceptance:** quality field có lại "ok"; StageE fire trên topic-fail thật; không section nào ship "degraded" chỉ vì grounding.
-- **⚠️ PARTIAL (2026-06-22):** grounding ĐÃ log-only + bỏ khỏi `base_ok` ✅; best-round chọn topic-first ✅; StageE chuyển ra sau-loop gate theo best-topic ✅. NHƯNG **quality "ok" CHƯA đạt** (vẫn 0 "ok") — vì cite_precision (P0-1) floor ~0.3-0.4 < 0.45 → không clean-accept. Root cause ở **P0-2b** (judge strict-match), không phải grounding. `deep_investigate.py:716,808,860`.
+- **✅ DONE (2026-06-23, sau P0-2b):** grounding log-only + bỏ khỏi `base_ok` ✅; best-round topic-first ✅; StageE sau-loop theo best-topic ✅; **quality "ok" GIỜ ĐẠT** (sau khi P0-2b soften judge → cite_precision faithful prose ≥0.45). `deep_investigate.py:712-716,804-813,867`.
 
 ### P0-2b. ⚠️ NEW (từ P0 validation): G2 cite-judge strict-match → cite_precision floor ~0.3-0.4
 - **Vấn đề (verified):** `verify.py` judge prompt ghi "Be strict: 'supports' requires a **direct match**, not just topical overlap" + thang `_VERDICT_SCORE` {supports 1.0, partial 0.5, no_evidence 0.3, unrelated/contradicts 0}. Trên prose **synthesized/paraphrase**, gemma hiếm chấm "supports" → đa số no_evidence/unrelated → cite_precision floor **~0.30-0.41** (CÙNG bệnh strict-NLI như HHEM/G3). Citations in-range (không phải out-of-range artifact). Ngưỡng `min_cite_precision=0.45` → **0 clean-accept** → P0 mới chỉ làm lỗi HIỆN ra, chưa làm gate dùng được.
 - **Fix (3 lựa chọn — design fork về độ-strict-faithfulness):** (a) **soften judge** — "supports = evidence states OR clearly implies/paraphrases the claim" (bỏ "direct match only"), phù hợp prose synthesized; (b) **dùng cosine liên tục** (mean cos) thay verdict-bucket; (c) **recalibrate** `min_cite_precision` về dải discriminate thật. Khuyến nghị (a) + giữ discrimination test.
 - **Acceptance:** sau fix → cite_precision có spread rõ + clean-accept >0 ("ok" xuất hiện) trên section tốt, ĐỒNG THỜI vẫn fail section citation kém (discrimination test good-vs-injected-bad), không floor/saturate.
+- **✅ DONE (2026-06-23, chọn (a) soften judge + giữ discrimination test):** sửa `verify.py:47-75` — `supports` = "evidence states/implies/**faithfully paraphrases** the claim" (bỏ "direct match only, not topical overlap"); contradicts/unrelated giữ strict; `_VERDICT_SCORE` + `min_cite_precision=0.45` GIỮ NGUYÊN (không hạ mù). **Discrimination test mới** `files/eval/bench_cite_discrimination.py` (gọi thật `verify.verify_section`): GOOD=**0.72** (PASS gate) vs BAD_unrelated=**0.18** / BAD_contradict=**0.20** (gap +0.54/+0.52 ≫ 0.30). **Smoke RLHF thật** (`p0_validate3`): faithful section ACCEPT `quality="ok"` cite_prec **0.481**; section yếu floor (R1 0.321→R3 0.487 mới qua, hoặc <0.45 → degraded) → gate SỐNG, discriminate, KHÔNG rubber-stamp. *Follow-up nhỏ (không thuộc P0-2b):* persist `cite_precision` accept-round vào state.json (hiện field=None dù accept; BAER đọc từ log nên không vỡ).
 
 ### P0-3. Fix bug aliasing P0c (seen-penalty no-op trong 1 run)
 - **Vấn đề:** `deep_investigate.py:301` `run_seen_counts = run_seen_counts or {}` — dict rỗng `{}` là falsy → rebind sang local mới; propagate-back (`:832`) ghi vào bản copy bị vứt. Hệ quả: P0c seen-penalty (`notes.py:322`) **không bao giờ fire cross-section** trong 1 run (state.json `run_seen_counts` len=0 dù 454 source). Một paper có thể dominate >50% mà không bị phạt.
@@ -79,7 +80,7 @@ Mỗi item: **Vấn đề (bằng chứng)** → **Fix (file:dòng)** → **Acce
 - **Acceptance:** citation ở dòng định nghĩa/equation trỏ primary arxiv ID (đo % primary-cite trên equation lines).
 
 ## Thứ tự đề xuất
-**P0 trước (1 sprint)** — biến faithfulness từ ảo thành thật + sửa P0c; đây là đòn bẩy lớn nhất (chạm cả Faithfulness C− lẫn Eval C+). Sau đó **P1-5 + P1-1** (eval độc lập + chống matrix để re-baseline trung thực), rồi P1 còn lại, cuối cùng **P2** (năng lực agentic). Mỗi P0/P1 item phải có validation run đo Acceptance trước khi tin.
+**P0 ✅ DONE** — faithfulness từ ảo thành thật + sửa P0c (đòn bẩy lớn nhất, chạm cả Faithfulness lẫn Eval). **Kế tiếp: P1-5 + P1-1** (eval độc lập + chống matrix để re-baseline trung thực), rồi P1 còn lại, cuối cùng **P2** (năng lực agentic). Mỗi P1 item phải có validation run đo Acceptance trước khi tin.
 
 ---
 

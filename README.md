@@ -64,8 +64,8 @@ Topic ─▶ Discovery ─▶ Outline (from evidence) ─▶ Deep Investigation 
 - **P0a** domain gate — the **primary live hard gate**: hard-blocks a section whose *evidence* is off-domain (≈0.40, **pre-writer**). ~27% of sections block here.
 - **P0b** canonical inject / **P0c** seen-penalty — foundational papers are protected (exempt from prefilter + dedup); over-represented sources penalized. *(P0c cross-section propagation was a single-run no-op — **fixed in P0**.)*
 - **Prefilter** — drop sources below cosine **0.48** to the section (grey domains 0.65); canonical exempt.
-- **Post-writer verify (P0):** grounding (G3) is now **log-only/advisory** (removed from the gate — HHEM strict-NLI under-scores synthesized prose). **Topic (G4) is enforced** (clean-accept + a topic-drift block). **Citation precision (G2) now runs for real** (it was previously wrapped behind the dead grounding bar and never executed; `cite_precision = 1.0` used to be an un-measured default).
-- **⚠️ Known limitation (next: P0-2b):** the G2 citation judge is prompted for *strict direct-match*, so on synthesized prose it scores ~0.3–0.4 — below the 0.45 accept bar — so no section yet clean-accepts (all ship `degraded`). The judge needs softening to accept paraphrase/implication (or the threshold recalibrated) before the faithfulness gate is fully "green". Stated plainly rather than hidden.
+- **Post-writer verify (P0 + P0-2b):** grounding (G3) is now **log-only/advisory** (removed from the gate — HHEM strict-NLI under-scores synthesized prose). **Topic (G4) is enforced** (clean-accept + a topic-drift block). **Citation precision (G2) is now a live gate** — it runs for real (it was previously wrapped behind a dead grounding bar; `cite_precision = 1.0` used to be an un-measured default) **and the judge was softened (P0-2b) to credit faithful paraphrase/implication**, so on real writer prose a faithful section clears the 0.45 bar (~0.48 observed) and clean-accepts (`quality="ok"`), while a weak/off-source section still floors below it (`degraded`).
+- **The judge discriminates, it does not rubber-stamp:** a guard benchmark (`files/eval/bench_cite_discrimination.py`) confirms a faithful section scores **0.72** while off-topic and contradicting citations score **0.18 / 0.20** (gap +0.5) — so softening the prompt restored signal without collapsing back to a fake 1.0.
 
 > Thresholds live in **code** (`deep_investigate.py`, `notes.py`, `config.py`), not docs — see [RULES.md](RULES.md) for the full table.
 
@@ -81,7 +81,8 @@ python3 files/eval/benchmark_book.py <run-name>   # -> book_eval_report.md + boo
 
 **B**enchmark (pages/words/citations) · **A**nalyze (cross-section redundancy, anti-matrix, reference
 on-topic %, coverage, technical-depth %) · **E**val (gates labelled **real vs inert**) · **R**eport.
-Calls no model → same run always yields the same report. Companion probes:
+Calls no model → same run always yields the same report. Companion probes (these DO call the local
+judge): `bench_cite_discrimination.py` (G2 citation-judge health — faithful vs off-source/contradicting),
 `bench_hhem_discrimination.py` (grounding scorer health), `bench_math_split_bm25.py` (math/BM25 safety).
 
 ---
@@ -156,6 +157,7 @@ files/
 │   ├── embeddings.py · fetch.py · config.py · canonical_seeds.py · types.py
 ├── eval/
 │   ├── benchmark_book.py       # BAER quality report
+│   ├── bench_cite_discrimination.py # G2 citation-judge health (faithful vs off-source)
 │   ├── bench_hhem_discrimination.py · bench_math_split_bm25.py
 │   ├── test_math_char_safety.py · test_verify_optim.py
 │   └── smoke_test_p0.py         # quick P0a/b/c gate check (no full run)
