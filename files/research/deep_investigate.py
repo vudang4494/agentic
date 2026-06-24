@@ -486,7 +486,8 @@ def investigate_section(
         # #2 EVIDENCE DEPTH: pull more full-text from MORE sources so the writer actually
         # sees the papers' methods/equations to reproduce (was top-2 @ 350w -> too thin for
         # formulas/algorithms). Adds info, never removes.
-        ranked = _notes.enrich_top_sources(ranked, top_n=4, max_words_per=550)
+        ranked = _notes.enrich_top_sources(ranked, top_n=4, max_words_per=550,
+                                           section_prompt=section_prompt, embed_model=embed_model)
         evidence_ok, evidence_reason = _evidence_adequate(spec, ranked)
 
         if not evidence_ok:

@@ -331,14 +331,57 @@ def rank_rrf(sources: List[Source], section_prompt: str, top_k: int = 20,
     return _apply_primary_quota(scored, top_k, primary_floor, protected_ids)
 
 
+def _best_passage(body: str, query: str, max_words: int, embed_model: str) -> str:
+    """Return the ~max_words-word window of `body` whose embedding is closest to `query`.
+
+    Claim-aware excerpt selection: a long source body is mostly irrelevant to any one
+    section, so a generic HEAD slice often misses the specific fact a `[N]` cites -> the
+    judge sees 'evidence too generic' (no_evidence) and the cite_precision floors. Picking
+    the window nearest the section's claims gives both the writer and the judge the passage
+    that actually states the fact. Falls back to the head window on short body / embed failure.
+    """
+    words = body.split()
+    if len(words) <= max_words:
+        return body
+    step = max(1, max_words // 2)  # 50% overlap so a fact straddling a boundary isn't split
+    windows: List[str] = []
+    start = 0
+    while start < len(words):
+        w = words[start:start + max_words]
+        if start > 0 and len(w) < max(40, max_words // 4):
+            break  # drop a tiny trailing remnant
+        windows.append(" ".join(w))
+        if start + max_words >= len(words):
+            break
+        start += step
+    if len(windows) <= 1:
+        return windows[0] if windows else body
+    try:
+        vecs = embed([query] + windows, model=embed_model)
+        if len(vecs) == len(windows) + 1:
+            qv = vecs[0]
+            best_i = max(range(len(windows)), key=lambda i: cosine(qv, vecs[i + 1]))
+            return windows[best_i]
+    except Exception as e:
+        print(f"[research/notes] passage-select failed: {e}", flush=True)
+    return windows[0]  # head fallback
+
+
 def enrich_top_sources(sources: List[Source], top_n: int = 2,
-                       max_words_per: int = 350) -> List[Source]:
+                       max_words_per: int = 350, section_prompt: str = None,
+                       embed_model: str = "bge-m3:latest") -> List[Source]:
     """Fetch full text for the top-N highest-relevance sources and replace their
     short search excerpt with a longer extracted body (up to max_words_per).
 
     Rationale: search APIs return 80-word excerpts which are too thin for the
-    writer to quote specifics. Pulling the top-2 sources' full text gives the
-    writer 600-700 words of real evidence (vs. ~160 words across all sources).
+    writer to quote specifics. Pulling the top sources' full text gives the
+    writer real evidence (vs. ~160 words across all sources).
+
+    When `section_prompt` is given, the kept excerpt is the CLAIM-AWARE best passage
+    (the max_words_per-word window of a larger fetched body that is closest to the
+    section's claims), not a generic head slice -- this is what feeds both the writer
+    and the `[N]` judge, so it directly lifts cite_precision on faithful prose. Without
+    section_prompt it keeps the legacy head-slice behaviour (backward compatible).
 
     Mutates sources in-place AND returns them (chainable). Failures degrade
     silently -- the original short excerpt is kept if full-text fetch fails.
@@ -347,10 +390,18 @@ def enrich_top_sources(sources: List[Source], top_n: int = 2,
         return sources
     for s in sources[:top_n]:
         try:
-            body = fetch_full_text(s.url, max_words=max_words_per)
+            # Fetch MORE than we keep so claim-aware selection has material to choose from.
+            fetch_words = max(max_words_per * 4, 1600) if section_prompt else max_words_per
+            body = fetch_full_text(s.url, max_words=fetch_words)
         except Exception as e:
             print(f"[research/notes] enrich failed for {s.url}: {e}", flush=True)
             body = ""
+        if not body:
+            continue
+        if section_prompt:
+            body = _best_passage(body, section_prompt, max_words_per, embed_model)
+        else:
+            body = " ".join(body.split()[:max_words_per])
         if body and len(body) > len(s.excerpt or ""):
             s.excerpt = body
     return sources

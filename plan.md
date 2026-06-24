@@ -61,7 +61,13 @@ Mỗi item: **Vấn đề (bằng chứng)** → **Fix (file:dòng)** → **Acce
 - **Fix (`verify.py`, gate-side, LOCAL-only):** (1) parser thu **TẤT CẢ** object (`_JSON_ARRAY_RE.finditer` đa-mảng + fallback `re.finditer(r'\{...\}')` bare-object) `:199-220`; (2) **chunk queued ~6 + 1 retry/chunk** `:330-345`; (3) `DEFAULT_TIMEOUT 60→150` `:25`; (4) `_extract_claim` giữ câu **CUỐI** trước marker `:97-110`; (5) **`AUTO_SUPPORT_COS 0.75→0.90`** `:33` (paraphrase 0.75-0.90 phải qua judge — bỏ false auto-support inflate, +0.0 với GOOD nhưng −với BAD).
 - **Acceptance ✅:** Discrimination `bench_cite_discrimination.py` **GOOD 0.72→1.00 vs BAD 0.18/0.20→0.06/0.00 (gap +0.94/+1.00)** — bất đối xứng, BAD đi XUỐNG → KHÔNG rubber-stamp. Reproduce prose thật `p0_validate4`: faithful bị floor giả (1.1→0.500, 2.7→0.468) **ACCEPT thật**; weak (no_evidence-dominant) vẫn <0.45.
 - **DON'T (verified harmful):** hạ `min_cite_precision`, bump `no_evidence` 0.3, đụng `AUTO_UNRELATED_COS`, soften judge thêm, yếu fail-closed pad, để writer tự chấm.
-- **Residual #1 sau khi đo trung thực = retrieval/excerpt quality** (verdict no_evidence-dominant: excerpt là LaTeX-dump giữa-paper / page-chrome / snippet mỏng không chứa fact của `[N]`) → **bước kế: claim-aware excerpt selection** (`fetch.py`/`notes.py` — chọn passage gần claim nhất, không slice giữa-paper). Medium. Guard: claim-excerpt cosine tăng + discrimination giữ.
+- **Residual #1 = retrieval/excerpt quality** (verdict no_evidence-dominant: excerpt là head-slice/LaTeX-dump không chứa fact của `[N]`).
+
+## P0.7 — Claim-aware excerpt selection (2026-06-24) ✅ DONE
+> Gốc no_evidence: `enrich_top_sources` thay excerpt bằng **550 từ ĐẦU** của full-text (`fetch_full_text` head-slice / math-window), không phải passage gần claim → judge thấy "generic" → no_evidence.
+- **Fix (`notes.py`):** thêm `_best_passage(body, query, max_words, embed_model)` — fetch body DÀI hơn (≥1600 từ) → chia window chồng lấp 50% → trả **window cosine cao nhất với `section_prompt`** (argmax, bge-m3). `enrich_top_sources` nhận thêm `section_prompt`/`embed_model` (optional → legacy head-slice giữ nguyên, backward-compat cho `deep_research.py`/`regen_broken.py`). Call site live `deep_investigate.py:489` truyền `section_prompt`+`embed_model`.
+- **Acceptance:** unit test `_best_passage` PASS (chọn đúng window chứa fact, head-slice trượt); excerpt-query cosine tăng by-construction (argmax). End-to-end cite_prec lift → đo ở fresh run. Guard: discrimination KHÔNG đổi (#3 không đụng judge).
+- **Lưu ý:** excerpt tốt hơn giúp CẢ writer (ground chặt hơn) LẪN judge (thấy passage đúng) → double win. arxiv down → benefit chủ yếu trên wiki/ddg (re-fetchable).
 
 ## P1 — Cấu trúc sách & độ tin eval
 
