@@ -23,7 +23,7 @@ Prompt thô → Discovery (TopicProfile) → Outline (từ evidence)
 ```
 
 ## 3. Pipeline THẬT (orchestrator + 12 stage)
-> Bản đồ kiến trúc tầng-cao (cấu trúc CHUẨN, map 4-tier canonical): `agentic-deep-research-architecture.md §A`. File này (§3) = chi tiết code-level/ngưỡng (nguồn sự thật vận hành).
+> Bản đồ kiến trúc tầng-cao (cấu trúc CHUẨN, map 4-tier canonical): `agentic-deep-research-architecture.md Phần A`. File này (mục 3) = chi tiết code-level/ngưỡng (nguồn sự thật vận hành).
 - **Orchestrator LIVE:** `files/deep_research_v3.py :: run_v3()`. Launcher: `run_full.sh`.
 - **Legacy v2 (ĐỪNG sửa như đang live):** `files/deep_research.py` (140KB, outline pre-fixed) + `runner.py` + `run.sh` + `watch.sh`. Vẫn được import bởi `monitor.py` / `eval/run_eval.py` → còn sống nhưng KHÔNG phải đường chính.
 - Resume qua run-dir `files/output/runs/<name>/{topic_profile,outline_profile,state}.json` — **không bao giờ viết lại Section đã có trong `state.json`.**
@@ -72,7 +72,7 @@ Module phụ trợ (load-bearing): `config.py` (hằng số), `canonical_seeds.p
 | Prefilter cosine | **0.48** (grey-domain 0.65) — Rank7: was 0.45 | `notes.py:109` |
 | Min words / Cross-ref | 120 từ / 2·1·0 theo số prior sections | `deep_investigate.py` |
 
-> ✅ **P0 + P0-2b ĐÃ APPLY (2026-06-22 → 2026-06-23):** grounding bỏ khỏi gate (log-only); G2 `verify_section` CHẠY (cite_precision đo thật); P0c aliasing fixed (0→23); StageE chặn best-topic sau-loop; best-round topic-first. **P0-2b:** cite-judge prompt soften (`verify.py:47-75`, paraphrase=supports, contradicts/unrelated giữ strict) → trên prose THẬT faithful section đo **cite_prec 0.481 > 0.45 → ACCEPT (`quality="ok"` > 0)**, weak floor (0.411 → degraded). Discrimination test `bench_cite_discrimination.py`: GOOD 0.72 vs BAD 0.18/0.20 (gap +0.5) → judge discriminate thật, KHÔNG rubber-stamp. `min_cite_precision=0.45` + `no_evidence=0.3` GIỮ. → `plan.md` §Upgrade (kế = P1).
+> ✅ **P0 + P0-2b ĐÃ APPLY (2026-06-22 → 2026-06-23):** grounding bỏ khỏi gate (log-only); G2 `verify_section` CHẠY (cite_precision đo thật); P0c aliasing fixed (0→23); StageE chặn best-topic sau-loop; best-round topic-first. **P0-2b:** cite-judge prompt soften (`verify.py:47-75`, paraphrase=supports, contradicts/unrelated giữ strict) → trên prose THẬT faithful section đo **cite_prec 0.481 > 0.45 → ACCEPT (`quality="ok"` > 0)**, weak floor (0.411 → degraded). Discrimination test `bench_cite_discrimination.py`: GOOD 0.72 vs BAD 0.18/0.20 (gap +0.5) → judge discriminate thật, KHÔNG rubber-stamp. `min_cite_precision=0.45` + `no_evidence=0.3` GIỮ. → `plan.md` mục Upgrade (kế = P1).
 
 ⚠️ Các số `0.80 grounding`, `0.80 topic_purity`, `jaccard 0.30/0.70` trong tài liệu cũ là **ASPIRATIONAL (target), KHÔNG được enforce**. Đừng trích chúng làm hành vi thật.
 
@@ -85,7 +85,7 @@ Module phụ trợ (load-bearing): `config.py` (hằng số), `canonical_seeds.p
 6. **Enforce reference relevance theo SECTION.** Canonical recall cao che giấu sourcing kém per-section (~45% ref off-topic ở v36). Siết prefilter/domain gate; không accept section chỉ vì có ≥6 citation.
 7. **Ngưỡng sống trong CODE, doc là advisory.** Đừng quote số trong doc làm fact — đọc `config.py` / `deep_investigate.py` / `notes.py` / `verify.py`. *Lưu ý:* `product_quality_verifiers.py` là eval-time-only, KHÔNG chạy trong pipeline; đừng coi GATE-0..6 trong đó là đang bảo vệ run.
 8. **Một nguồn sự thật pipeline.** Orchestrator = `deep_research_v3.py`; mọi stage logic = `files/research/*.py`. `files/deep_research.py` là legacy v2 — đừng sửa nó như đang live. Memory gọn (short ≤50 dòng, long <200).
-9. **Cải thiện ở AGENTIC LOOP, KHÔNG train model.** Lever chất lượng = retrieval/verify/revise-loop/prompt/evidence-selection — KHÔNG fine-tune model & KHÔNG build dataset (giữ topic-agnostic, prompt-robust, auditable). Bottleneck (writer grounding) → verify-revise loop (feed G2 per-`[N]` verdict ngược writer), không phải weight. (Xem §2.)
+9. **Cải thiện ở AGENTIC LOOP, KHÔNG train model.** Lever chất lượng = retrieval/verify/revise-loop/prompt/evidence-selection — KHÔNG fine-tune model & KHÔNG build dataset (giữ topic-agnostic, prompt-robust, auditable). Bottleneck (writer grounding) → verify-revise loop (feed G2 per-`[N]` verdict ngược writer), không phải weight. (Xem mục 2.)
 
 ## 7. Lệnh thường dùng
 ```bash
@@ -103,4 +103,4 @@ pkill -f files/deep_research_v3.py       # dừng
 ```
 
 ## 8. Trạng thái hiện tại
-Xem `files/memory/short-memory.md`. **Base** = orchestrator `deep_research_v3.py` + research layer, gồm: LOCAL-only, **Verifier≠Writer** (model tách thật), outline anti-matrix (#1), embed `bge-m3` thống nhất (#3), anchoring an-toàn KHÔNG-mất-nguồn (#5), evidence-pool rescue (completeness), render tectonic robust. **P0 + P0-2b (2026-06-22 → 2026-06-23) ĐÃ APPLY:** grounding bỏ khỏi gate (advisory), G2 `verify_section` chạy thật, P0c aliasing fixed; G4 topic ENFORCED. **P0-2b:** cite-judge soften (paraphrase=supports) → faithfulness gate giờ **"xanh"**: trên prose RLHF thật, faithful section ACCEPT (`quality="ok"`, cite_prec ~0.48), weak floor (degraded); discrimination test GOOD 0.72 vs BAD 0.18/0.20 (không rubber-stamp). Bước kế = **P1** (matrix HARD gate, paragraph-dedup, math-validation, near-miss rescue, held-out judge). Roadmap → `plan.md` §Upgrade. `llm_book_v36` là book CŨ — tham khảo lịch sử.
+Xem `files/memory/short-memory.md`. **Base** = orchestrator `deep_research_v3.py` + research layer, gồm: LOCAL-only, **Verifier≠Writer** (model tách thật), outline anti-matrix (#1), embed `bge-m3` thống nhất (#3), anchoring an-toàn KHÔNG-mất-nguồn (#5), evidence-pool rescue (completeness), render tectonic robust. **P0 + P0-2b (2026-06-22 → 2026-06-23) ĐÃ APPLY:** grounding bỏ khỏi gate (advisory), G2 `verify_section` chạy thật, P0c aliasing fixed; G4 topic ENFORCED. **P0-2b:** cite-judge soften (paraphrase=supports) → faithfulness gate giờ **"xanh"**: trên prose RLHF thật, faithful section ACCEPT (`quality="ok"`, cite_prec ~0.48), weak floor (degraded); discrimination test GOOD 0.72 vs BAD 0.18/0.20 (không rubber-stamp). Bước kế = **P1** (matrix HARD gate, paragraph-dedup, math-validation, near-miss rescue, held-out judge). Roadmap → `plan.md` mục Upgrade. `llm_book_v36` là book CŨ — tham khảo lịch sử.

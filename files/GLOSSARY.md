@@ -23,13 +23,13 @@
 |------|-------------|
 | **Hard Block** | Khi kiểm tra fail, DỪNG và báo lỗi. Không viết section. Đối lập với Soft Block. |
 | **Soft Block** | Khi kiểm tra fail, vẫn tiếp tục nhưng đánh dấu chất lượng giảm. |
-| **Orchestration-layer improvement (doctrine)** | Cải thiện chất lượng ở tầng **orchestration/inference** (retrieval/verify/revise-loop/prompt/evidence-selection) — **KHÔNG fine-tune model, KHÔNG build dataset** (giữ topic-agnostic, prompt-robust, auditable). Bottleneck writer-grounding → verify-revise loop. Xem `CLAUDE.md §2`. |
+| **Orchestration-layer improvement (doctrine)** | Cải thiện chất lượng ở tầng **orchestration/inference** (retrieval/verify/revise-loop/prompt/evidence-selection) — **KHÔNG fine-tune model, KHÔNG build dataset** (giữ topic-agnostic, prompt-robust, auditable). Bottleneck writer-grounding → verify-revise loop. Xem `CLAUDE.md mục 2`. |
 | **Domain Relevance Gate (P0a)** | Kiểm tra evidence pool đúng domain trước khi viết, qua `notes.check_evidence_domain()` = keyword-overlap + optional gemma judge (KHÔNG phải LLM-judge thuần). Threshold THẬT ≈ 0.40 (`deep_investigate.py:524`), KHÔNG phải 0.60. Accept-topic (writer) = 0.50. Ngưỡng chuẩn: RULES.md |
 | **Evidence Gate (P0a/B)** | Trước writer: (1) pool không rỗng (else HARD BLOCK); (2) domain-relevance ≥ ev_threshold≈0.40. KHÔNG có gate "đủ terms" riêng. |
 | **Grounding Score** | Điểm HHEM v2 NLI (0-1). **G3 = log-only/advisory** (P0 2026-06-22: đã bỏ khỏi gate): strict-NLI ~0.05–0.10 trên prose synthesized → KHÔNG phải metric, không hard-block. (g=1.0 v36 là HHEM degenerate cũ, đã fix.) |
 | **Topic Relevance Score** | Điểm content đúng chủ đề (0-1). **G4 blend** 0.6·`answer_relevance` (gemma LOCAL) + 0.4·term-overlap (`verify.py:401-411`). **P0: ENFORCED** — điều kiện `gate_ok` (clean-accept) + StageE chặn best-topic<0.50. |
 | **Citation Count** | Số lần nguồn được trích dẫn trong text. Zero citation = section không có evidence |
-| **Verify signals (G2/G3/G4) — POST-P0+P0-2b (2026-06-23)** | Gate cứng SỐNG = **P0a pre-writer + G2 cite_prec≥0.45**. **G2 cite_precision** = `verify_section` per-`[N]` (gemma) **GATE SỐNG** → cite_precision **đo thật** (KHÔNG default 1.0). **P0-2b:** judge prompt **soften** (paraphrase=supports, contradicts/unrelated giữ strict) → prose faithful đo ~0.48 ≥0.45 → **ACCEPT (`quality="ok"`)**; weak floor → degraded. Discrimination `bench_cite_discrimination.py`: GOOD 0.72 vs BAD 0.18/0.20. **G3 grounding** = log-only/advisory. **G4 topic** = ENFORCED. → `plan.md` §Upgrade (kế = P1). |
+| **Verify signals (G2/G3/G4) — POST-P0+P0-2b (2026-06-23)** | Gate cứng SỐNG = **P0a pre-writer + G2 cite_prec≥0.45**. **G2 cite_precision** = `verify_section` per-`[N]` (gemma) **GATE SỐNG** → cite_precision **đo thật** (KHÔNG default 1.0). **P0-2b:** judge prompt **soften** (paraphrase=supports, contradicts/unrelated giữ strict) → prose faithful đo ~0.48 ≥0.45 → **ACCEPT (`quality="ok"`)**; weak floor → degraded. Discrimination `bench_cite_discrimination.py`: GOOD 0.72 vs BAD 0.18/0.20. **G3 grounding** = log-only/advisory. **G4 topic** = ENFORCED. → `plan.md` mục Upgrade (kế = P1). |
 
 ## C. Retrieval (Tìm kiếm nguồn)
 

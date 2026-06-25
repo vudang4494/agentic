@@ -2,11 +2,11 @@
 
 **Purpose:** Evaluate and evolve a truly prompt-emergent Deep Research pipeline where structure, chapters, subchapters, and section content arise from raw prompt + discovered evidence, not from pre-scripted topic templates.
 
-**Status:** P3a/b/c SHIPPED. **P0 + P0-2b ✅ DONE (2026-06-23)** — faithfulness gate (G2) từ INERT/fake-1.0 → SỐNG: decouple G2 + grounding log-only + P0c aliasing fixed + **cite-judge soften** (faithful prose ACCEPT, discriminate GOOD 0.72 vs BAD 0.18/0.20). **Ưu tiên kế = P1** (§Upgrade dưới: matrix HARD gate, paragraph-dedup, math-validation, near-miss rescue, held-out judge).
+**Status:** P3a/b/c SHIPPED. **P0 + P0-2b ✅ DONE (2026-06-23)** — faithfulness gate (G2) từ INERT/fake-1.0 → SỐNG: decouple G2 + grounding log-only + P0c aliasing fixed + **cite-judge soften** (faithful prose ACCEPT, discriminate GOOD 0.72 vs BAD 0.18/0.20). **Ưu tiên kế = P1** (mục Upgrade dưới: matrix HARD gate, paragraph-dedup, math-validation, near-miss rescue, held-out judge).
 
 ---
 
-# §Upgrade Roadmap (2026-06-22, eval-driven) — ƯU TIÊN CAO NHẤT
+# Upgrade Roadmap (2026-06-22, eval-driven) — ƯU TIÊN CAO NHẤT
 
 > Nguồn: đánh giá grounded 22-agent (đọc code + benchmark + nội dung sách thật), mọi finding adversarial-verify `holds:true`. Điểm tổng product hiện tại **C+/B−**. Roadmap này sửa đúng các điểm yếu đã verify. **Bất biến giữ nguyên:** LOCAL-only · Verifier≠Writer · fix-ở-GATE-không-ở-writer · outline emerge-from-evidence.
 
@@ -71,7 +71,7 @@ Mỗi item: **Vấn đề (bằng chứng)** → **Fix (file:dòng)** → **Acce
 
 ## P1.5 — Verify-revise loop: fix writer-grounding AGENTIC (KHÔNG train) — **[NEXT, lever đúng-bản-chất]**
 
-> Lever đúng-bản-chất-agentic (xem doctrine `CLAUDE.md §2`/`§6.9`). Residual cuối = **writer grounding** (smoke arxiv+tavily = 40% accept / 0-6% block, NHƯNG ~60% vẫn `degraded`, cite_prec 0.25–0.44 dù retrieval+excerpt đã tốt). Fix ở LOOP, không weight.
+> Lever đúng-bản-chất-agentic (xem doctrine `CLAUDE.md mục 2`/`mục 6.9`). Residual cuối = **writer grounding** (smoke arxiv+tavily = 40% accept / 0-6% block, NHƯNG ~60% vẫn `degraded`, cite_prec 0.25–0.44 dù retrieval+excerpt đã tốt). Fix ở LOOP, không weight.
 - **Vấn đề:** pipeline đã có 3-round retry + G2 chấm **per-`[N]`** (`verify.verify_section` trả `verdicts:[{n,verdict,reason}]`), nhưng degraded section đi hết 3 round vẫn floor → **feedback chưa dùng sắc**: retry-hint hiện gom chung (`weak_summary`), không chỉ writer ĐÚNG citation nào hỏng + vì sao.
 - **Fix (`deep_investigate.py` retry-hint, gate-side):** lấy `cite_res["verdicts"]` (đã có sẵn) → dựng hint **per-citation**: *"[5] no_evidence — excerpt không nêu X → đổi nguồn HOẶC bỏ claim; [8] unrelated — citation sai → thay"*. Round sau writer revise ĐÚNG chỗ trượt (surgical), không viết lại mù.
 - **Acceptance:** % degraded → ok tăng (near-miss 0.40-0.44 vượt 0.45 sau revise có-hướng); discrimination giữ (không nới gate).

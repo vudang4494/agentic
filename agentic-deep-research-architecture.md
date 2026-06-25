@@ -1,7 +1,7 @@
 # Kiến trúc Hệ thống Agentic Deep Research
 
 > **File 2 phần:**
-> **A · CẤU TRÚC CHUẨN của PRODUCT** (authoritative — đồng bộ với `CLAUDE.md §3` + code `files/research/*.py`).
+> **A · CẤU TRÚC CHUẨN của PRODUCT** (authoritative — đồng bộ với `CLAUDE.md mục 3` + code `files/research/*.py`).
 > **B · Bối cảnh ngành** (field-survey 2024→2026, **reference** — KHÔNG phải spec của product).
 > Khi 2 phần khác nhau: **A thắng cho product; B chỉ để tham chiếu landscape.**
 
@@ -11,9 +11,9 @@
 
 **Trường phái:** **Orchestration-workflow (School A)** — pipeline **deterministic · gated · auditable**. KHÔNG ReAct-tự-do, KHÔNG multi-agent. Mỗi quyết định nằm ở 1 **gate kiểm tra được** (đúng doctrine auditability) — đây là lựa chọn có chủ đích, đánh đổi "agentic-freedom" lấy **kiểm soát + audit**.
 
-**Doctrine (bất biến):** cải thiện ở tầng **orchestration/inference** (retrieval · verify · revise-loop · prompt · evidence-selection) — **KHÔNG train model, KHÔNG build dataset**. (→ `CLAUDE.md §2`)
+**Doctrine (bất biến):** cải thiện ở tầng **orchestration/inference** (retrieval · verify · revise-loop · prompt · evidence-selection) — **KHÔNG train model, KHÔNG build dataset**. (→ `CLAUDE.md mục 2`)
 
-### Pipeline 5-stage (map về 4-tier canonical §B.1)
+### Pipeline 5-stage (map về 4-tier canonical Phần B.1)
 
 ```
 [S0 Discovery] ──Scoping──▶ [S1 Outline] ──Orchestration──▶ [S2 Investigation] ──Execution(lặp)──▶ [S3 Assemble] ──Synthesis──▶ [S4 Render]
@@ -31,13 +31,13 @@
 | **4 Synthesis + Citation** | S2 verify (inline) + S3 Assemble | **INLINE verify-revise** (G2 per-`[N]` → writer), KHÔNG separate post-hoc citation pass |
 
 ### Đặc trưng kiến trúc chuẩn (bất biến)
-- **Context model = per-section + `state.json`** → KHÔNG có 1 trajectory dài → **né context-saturation** (vấn đề §B.4); resume-safe · never-rewrite-accepted.
+- **Context model = per-section + `state.json`** → KHÔNG có 1 trajectory dài → **né context-saturation** (vấn đề Phần B.4); resume-safe · never-rewrite-accepted.
 - **Verifier ≠ Writer:** grounding=HHEM · topic/cite=gemma · writer=qwen — model verify TÁCH khỏi writer (chống self-preference).
 - **Gate cứng sống:** P0a domain (pre-writer ~0.40) · **G2 cite_prec ≥ 0.45** · StageD word-count · StageE topic-drift.
-- **Tầng-4 faithfulness = inline verify-revise** (roadmap P1.5): feed G2 per-`[N]` verdict ngược writer để sửa đúng citation hỏng. *Gap đã biết:* **chưa có URL-resolvability check** (mảnh tầng-4 duy nhất còn thiếu so với §B.8).
+- **Tầng-4 faithfulness = inline verify-revise** (roadmap P1.5): feed G2 per-`[N]` verdict ngược writer để sửa đúng citation hỏng. *Gap đã biết:* **chưa có URL-resolvability check** (mảnh tầng-4 duy nhất còn thiếu so với Phần B.8).
 - **LOCAL-only:** mọi model chạy cục bộ (Ollama `localhost:11434` + transformers).
 
-> Chi tiết code-level (12 sub-stage · file:line · ngưỡng thật) → **`CLAUDE.md §3` + `RULES.md`** (nguồn sự thật vận hành). File này = **bản đồ kiến trúc chuẩn** (tầng cao).
+> Chi tiết code-level (12 sub-stage · file:line · ngưỡng thật) → **`CLAUDE.md mục 3` + `RULES.md`** (nguồn sự thật vận hành). File này = **bản đồ kiến trúc chuẩn** (tầng cao).
 
 ---
 
@@ -45,7 +45,7 @@
 
 > **Marker nguồn:** `[src]` = trích từ paper/blog gốc · `[2nd]` = nguồn thứ cấp/tổng hợp · `[guess]` = suy luận, chưa kiểm chứng độc lập.
 > Mọi số self-reported của model 2026 (MiroThinker-1.7, Kimi K2.5, Qwen3.5/3.6) → xem mục **Caveats**.
-> **Lưu ý:** phần này khảo sát LANDSCAPE để tham chiếu; các khuyến nghị model/stack ở đây **KHÔNG override** §A.
+> **Lưu ý:** phần này khảo sát LANDSCAPE để tham chiếu; các khuyến nghị model/stack ở đây **KHÔNG override** Phần A.
 
 ---
 
@@ -243,7 +243,7 @@ flowchart TB
 | **DeerFlow** (ByteDance) | hierarchical supervisor → Researcher/Coder/Reporter | LangGraph + sandbox; 2.0 progressive skills | multi-provider | MIT |
 | **WebThinker** | LRM-native: Deep Web Explorer + Think-Search-Draft | interleaved drafting; iterative online DPO; NeurIPS 2025 | QwQ-32B | open |
 | **Search-R1** | 1 model, RL co-optimize reasoning+retrieval | special token search/answer; **+41% (7B), +20% (3B) over RAG** `[src]` | Qwen2.5, Llama3.2 | open |
-| **Tongyi DeepResearch** | end-to-end agentic RL (mid + post-training) | 30.5B total / **3.3B active**; SOTA (xem §6) | Qwen3-30B-A3B | open |
+| **Tongyi DeepResearch** | end-to-end agentic RL (mid + post-training) | 30.5B total / **3.3B active**; SOTA (xem mục 6) | Qwen3-30B-A3B | open |
 | **MiroThinker v1.0/1.7** | interaction scaling | **256K ctx, tới 600 tool call/task** | 8B/30B/72B | open |
 | **Kimi-Researcher** | end-to-end agentic RL | 70+ query/trajectory; fully async rollout; turn-level partial rollout | Kimi internal | closed |
 

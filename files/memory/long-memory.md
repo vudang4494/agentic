@@ -12,7 +12,7 @@
 ## Session log (mới nhất trước)
 
 ### [2026-06-25] DOCTRINE chốt: cải thiện AGENTIC (orchestration/inference), KHÔNG train — + P0.5–0.8 + clean-run
-- **DOCTRINE (user affirmed, BẤT BIẾN):** Agentic Deep Research lên chất lượng ở tầng **orchestration/inference** (retrieval/verify/revise-loop/prompt/evidence-select), **KHÔNG train model & KHÔNG build dataset** (giữ topic-agnostic, prompt-robust, auditable). Codify: `CLAUDE.md §2/§6.9`, `RULES #8 + Product-FAIL #7`, `plan.md P1.5`.
+- **DOCTRINE (user affirmed, BẤT BIẾN):** Agentic Deep Research lên chất lượng ở tầng **orchestration/inference** (retrieval/verify/revise-loop/prompt/evidence-select), **KHÔNG train model & KHÔNG build dataset** (giữ topic-agnostic, prompt-robust, auditable). Codify: `CLAUDE.md mục 2/mục 6.9`, `RULES #8 + Product-FAIL #7`, `plan.md P1.5`.
 - **Lever cuối = P1.5 verify-revise loop:** feed G2 per-`[N]` verdict (đã có `cite_res["verdicts"]`) ngược writer làm retry-hint surgical → revise đúng citation hỏng. KHÔNG weight.
 - **Correctness/measurement fixes session này (PR #13-17):** P0.5 bestround-ships-failing-body + smoke-hollow-book (`quality="ok"` + completeness tin được); P0.6 G2 batch-judge parser (gemma emit 1-array/dòng → fail-closed pad floor giả; fix → discrimination GOOD 0.72→1.00 vs BAD→0.06/0.00); P0.7 claim-aware excerpt (`_best_passage` argmax cosine); P0.8 `.env` auto-load (tavily im lặng OFF → giờ ON, effective providers gồm tavily).
 - **Clean-accept THẬT (đo qua nhiều run):** 7% (false floor) → 25-32% (arxiv-down) → **40% written / 0-6% block** (smoke arxiv+tavily+canonical+all-fix). Retrieval lever (tavily+arxiv) cắt block 21%→6%. Trần còn lại = writer-grounding → P1.5 (agentic, không train).
@@ -34,7 +34,7 @@
 - **Bối cảnh:** đánh giá product có grounding thật (đọc code + benchmark + nội dung sách); mọi verification holds:true.
 - **Phát hiện then chốt (verified, tự re-check bằng số):** per-source-max grounding **không bao giờ chạm 0.70** (max 0.458; quality field: 0 "ok", mọi section "degraded" cả 4 run). Vì `base_ok` cần grounding≥0.70 → **base_ok LUÔN false** → (a) clean-accept không fire; (b) `verify_section` (G2) trong `if base_ok` **KHÔNG BAO GIỜ chạy** → `cite_precision=1.0` là DEFAULT init (BAER parse 93 dòng `cite_prec=1.000` từ retry-hint, gắn nhãn nhầm "G2 REAL"); (c) StageE topic-block (cần g≥0.70) **không fire**. → **Gate cứng SỐNG duy nhất = P0a domain-evidence (~0.40 pre-writer)**; mọi verify post-writer chỉ LOG. **SUPERSEDE "faithfulness thật = G2 cite_precision" ở entry 06-21** — G2 không chạy.
 - **Điểm (harsh, evidence-based):** tổng **C+/B−**. Faithfulness C− · Eval C+ (vòng tròn: topic≡accept, 0 ground-truth) · Architecture B− (render/resume tốt; bug P0c aliasing no-op) · sách-RLHF B− (toán DPO đúng nhưng eqn malformed + LaTeX leak) · sách-605pg C+ (matrix 269/269 forced scale) · novelty B−.
-- **Thay đổi:** clean toàn bộ docs (RULES/CLAUDE/GLOSSARY/README + memory) về đúng "verify post-writer INERT, P0a là gate sống" + viết §Upgrade roadmap vào `plan.md`.
+- **Thay đổi:** clean toàn bộ docs (RULES/CLAUDE/GLOSSARY/README + memory) về đúng "verify post-writer INERT, P0a là gate sống" + viết mục Upgrade roadmap vào `plan.md`.
 - **Bằng chứng:** grounding max 0.458, `bench_rlhf.log` 93×`cite_prec=1.000`, `benchmark_book.py:248`, `deep_investigate.py:729` base_ok, `:301` `run_seen_counts = x or {}` aliasing.
 
 ---
@@ -95,7 +95,7 @@
 
 ### [2026-06-08] 7-run comprehensive eval + scoring rubric
 - **Bối cảnh:** Sau 7 topics v3, cần phân loại run nào benchmark-được.
-- **Phát hiện:** g=1.0 + topic=1.0 mọi run; arxiv recall **0%** (foundational papers không retrieve); paper `2510.22344` (FAIR-RAG) dominate 50-75% mọi run; rlhf_v3 §1.1=143w toàn RAG (evidence gate fail); diffusion_v3 3 zero-cite section; boilerplate tăng theo size.
+- **Phát hiện:** g=1.0 + topic=1.0 mọi run; arxiv recall **0%** (foundational papers không retrieve); paper `2510.22344` (FAIR-RAG) dominate 50-75% mọi run; rlhf_v3 mục 1.1=143w toàn RAG (evidence gate fail); diffusion_v3 3 zero-cite section; boilerplate tăng theo size.
 - **Thay đổi:** `eval_v3_runs.py` + rubric 5 tiêu chí. Scoring: A=rag/longctx/agentic; B=transformer/llm_agentic_2026; C=rlhf/diffusion.
 - **Còn lại:** fix P0a/P0b/P0c rồi rerun rlhf+diffusion. Báo cáo: `eval/reports/eval_v3_runs_20260608.md`.
 
