@@ -1,0 +1,8 @@
+httpx
+pyyaml  # used by eval/ research-quality harness
+
+# Stage 2+ research layer
+FlagEmbedding>=1.2.0  # FlagReranker for bge-reranker-v2-m3
+transformers>=4.40.0  # HHEM + cross-encoder
+torch>=2.0.0           # MPS support on Apple Silicon
+sentence-transformers>=3.0.0  # cross-encoder reranker (via FlagEmbedding)

@@ -1,0 +1,99 @@
+# Topic config for "Google Omni Models and Development to 2026-2027"
+# Run: python3 pipeline/deep_research_v3.py --topic "Mô hình Omni Google" --out-name omni_v1 --no-smoke
+# Benchmark: python3 eval/run_eval.py --topic omni --skip-pipeline
+
+topic: "Google Omni Models and Development to 2026-2027"
+difficulty: hard
+n_chapters: 12
+n_passes: 10
+
+# === GOLD SOURCES ===========================================================
+# Canonical papers that should appear in the research
+
+must_cite:
+  # Gemini / Google DeepMind multimodal
+  - arxiv: "2312.11805"
+    title: "Gemini: A Family of Highly Capable Multimodal Models"
+    aliases: ["Gemini", "Gemini Ultra", "Gemini Pro", "Gemini Flash", "Google DeepMind multimodal"]
+  # Flamingo (early Google multimodal)
+  - arxiv: "2204.14198"
+    title: "Flamingo: a Visual Language Model for Few-Shot Learning"
+    aliases: ["Flamingo", "DeepMind multimodal few-shot"]
+  # PaLM-E (Google robot multimodal)
+  - arxiv: "2303.03378"
+    title: "PaLM-E: An Embodied Multimodal Language Model"
+    aliases: ["PaLM-E", "embodied AI", "robot multimodal"]
+  # PaLM 2
+  - arxiv: "2305.13245"
+    title: "PaLM 2 Technical Report"
+    aliases: ["PaLM 2", "PaLM2", "Google language model 2023"]
+  # Gemma
+  - arxiv: "2403.07895"
+    title: "Gemma: Open Models Based on Gemini Research and Technology"
+    aliases: ["Gemma", "Gemma 2B", "Gemma 7B", "Google open models"]
+  # Gemini API
+  - arxiv: "2403.05530"
+    title: "The Gemini API"
+    aliases: ["Gemini API", "Google AI Studio", "Vertex AI Gemini"]
+
+should_cite:
+  # Vision Transformer
+  - arxiv: "2010.11929"
+    title: "An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale"
+    aliases: ["ViT", "Vision Transformer", "Dosovitskiy"]
+  # CLIP
+  - arxiv: "2103.00020"
+    title: "Learning Transferable Visual Models From Natural Language Supervision"
+    aliases: ["CLIP", "contrastive language-image", "OpenAI"]
+  # GPT-4V
+  - arxiv: "2309.17421"
+    title: "GPT-4V(ision) System Card"
+    aliases: ["GPT-4V", "GPT-4 Vision", "OpenAI multimodal"]
+  # LLaVA
+  - arxiv: "2304.08485"
+    title: "LLaVA: Large Language and Vision Assistant"
+    aliases: ["LLaVA", "vision-language model", "Multimodal LLM"]
+  # Gemini Nano
+  - arxiv: "2401.02412"
+    title: "Gemma: Open Models Based on Gemini Research and Technology"
+    aliases: ["Gemma Nano", "on-device AI", "Google edge AI"]
+
+forbidden_domains:
+  - medium.com
+  - substack.com
+  - towardsdatascience.com
+  - reddit.com
+  - x.com
+  - twitter.com
+  - youtube.com
+  - github.com
+  - blog.tensorflow.google
+  - hackernoon.com
+
+expected_subtopics:
+  - Gemini Ultra
+  - Gemini Pro
+  - Gemini Flash
+  - Gemma
+  - Multimodal
+  - Vision Language Model
+  - PaLM-E
+  - Google DeepMind
+  - 2025
+  - 2026
+  - 2027
+  - Frontier Model
+
+# === BENCHMARK THRESHOLDS ===================================================
+
+thresholds:
+  must_cite_recall_min: 0.50        # At least 50% of must-cite papers found
+  should_cite_recall_min: 0.30      # At least 30% of should-cite papers found
+  grounding_mean_min: 0.60           # Average grounding score
+  zero_cite_section_max: 2           # Max sections with zero citations
+  loop_section_pct_max: 0.10         # Max 10% looping sections
+  research_round_2_rate_max: 0.50    # Max 50% sections needing round 2
+  forbidden_domain_hits_max: 0        # Zero forbidden domain hits
+  subtopic_coverage_min: 0.50        # 50% of expected subtopics covered
+  median_words_min: 200              # At least 200 words per section
+  median_words_max: 2000             # At most 2000 words per section
