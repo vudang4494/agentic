@@ -17,6 +17,42 @@ from pathlib import Path
 ROOT = Path(__file__).parent.parent.resolve()
 sys.path.insert(0, str(ROOT))
 
+
+def _load_dotenv():
+    """Load 'KEY=val' / 'export KEY=val' lines from .env into os.environ (no overwrite, no
+    dependency). search.py reads provider keys (TAVILY_API_KEY, TAVILY_ENABLED, BRAVE_API_KEY)
+    from os.environ; without this the .env keys are SILENTLY ignored and tavily/brave stay OFF
+    even when present -- which is why runs fell back to arxiv/wiki/ddg only. CLI env still wins."""
+    import os
+    seen = set()
+    for env_path in (Path.cwd() / ".env", ROOT / ".env"):
+        try:
+            if not env_path.is_file():
+                continue
+            rp = str(env_path.resolve())
+        except Exception:
+            continue
+        if rp in seen:
+            continue
+        seen.add(rp)
+        try:
+            for line in env_path.read_text(encoding="utf-8").splitlines():
+                line = line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                if line.startswith("export "):
+                    line = line[7:]
+                k, _, v = line.partition("=")
+                k = k.strip()
+                v = v.strip().strip('"').strip("'")
+                if k and k not in os.environ:
+                    os.environ[k] = v
+        except Exception:
+            continue
+
+
+_load_dotenv()
+
 from research.discovery import discover_topic, TopicProfile
 from research.outline_from_research import generate_outline, OutlineProfile, OutlineValidationError
 from research.deep_investigate import investigate_section
