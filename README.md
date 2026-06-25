@@ -26,10 +26,10 @@ leaves a trace; weights don't).
 
 A real end-to-end result is committed so you can judge it by the output, not the claims:
 
-**[`files/output/runs/agentic_2025_full/`](files/output/runs/agentic_2025_full/)**
-- [`book.pdf`](files/output/runs/agentic_2025_full/book.pdf) — **605 pages**, tectonic-typeset math, per-section references.
-- [`book_eval_report.md`](files/output/runs/agentic_2025_full/book_eval_report.md) — the **BAER** transparent quality report (deterministic, reproducible).
-- [`README.md`](files/output/runs/agentic_2025_full/README.md) — how it was generated + honest caveats.
+**[`output/runs/agentic_2025_full/`](output/runs/agentic_2025_full/)**
+- [`book.pdf`](output/runs/agentic_2025_full/book.pdf) — **605 pages**, tectonic-typeset math, per-section references.
+- [`book_eval_report.md`](output/runs/agentic_2025_full/book_eval_report.md) — the **BAER** transparent quality report (deterministic, reproducible).
+- [`README.md`](output/runs/agentic_2025_full/README.md) — how it was generated + honest caveats.
 
 Headline numbers (BAER): 288 sections · ~258k words · **0 near-duplicate sections** · **90% of sections carry a formula** · coverage 6/6 must-cover + 10/10 canonical terms · references 78.5% on-topic.
 
@@ -62,7 +62,7 @@ Topic ─▶ Discovery ─▶ Outline (from evidence) ─▶ Deep Investigation 
 | 0 | **Discovery** | gemma4:e4b | scoping queries → `TopicProfile` (canonical terms, must-cover, out-of-scope) + **P0b** canonical-paper injection |
 | 1 | **Outline** | gemma4:e4b | **chunked** drafting — chapter skeleton, then per-chapter sections that *emerge from that chapter's evidence* (kills the archetype "matrix") |
 | 2 | **Deep Investigation** (loop, per section) | ↓ | query-gen → search (arXiv/Wikipedia/DDG) → cosine **prefilter** → RRF rank + cross-encoder rerank → **gates** → write → **verify** |
-| 3 | **Assemble** | — | `book.md` + math hygiene (single-source [`research/mathfix.py`](files/research/mathfix.py)) + per-section references |
+| 3 | **Assemble** | — | `book.md` + math hygiene (single-source [`research/mathfix.py`](research/mathfix.py)) + per-section references |
 | 4 | **Render** (`--render`) | — | pandoc → **tectonic** (LaTeX, `-Z continue-on-errors`); WeasyPrint fallback |
 
 ### The gates — what *actually* enforces (honest; P0 applied 2026-06-22)
@@ -70,7 +70,7 @@ Topic ─▶ Discovery ─▶ Outline (from evidence) ─▶ Deep Investigation 
 - **P0b** canonical inject / **P0c** seen-penalty — foundational papers are protected (exempt from prefilter + dedup); over-represented sources penalized. *(P0c cross-section propagation was a single-run no-op — **fixed in P0**.)*
 - **Prefilter** — drop sources below cosine **0.48** to the section (grey domains 0.65); canonical exempt.
 - **Post-writer verify (P0 + P0-2b):** grounding (G3) is now **log-only/advisory** (removed from the gate — HHEM strict-NLI under-scores synthesized prose). **Topic (G4) is enforced** (clean-accept + a topic-drift block). **Citation precision (G2) is now a live gate** — it runs for real (it was previously wrapped behind a dead grounding bar; `cite_precision = 1.0` used to be an un-measured default) **and the judge was softened (P0-2b) to credit faithful paraphrase/implication**, so on real writer prose a faithful section clears the 0.45 bar (~0.48 observed) and clean-accepts (`quality="ok"`), while a weak/off-source section still floors below it (`degraded`).
-- **The judge discriminates, it does not rubber-stamp:** a guard benchmark (`files/eval/bench_cite_discrimination.py`) confirms a faithful section scores **0.72** while off-topic and contradicting citations score **0.18 / 0.20** (gap +0.5) — so softening the prompt restored signal without collapsing back to a fake 1.0.
+- **The judge discriminates, it does not rubber-stamp:** a guard benchmark (`eval/bench_cite_discrimination.py`) confirms a faithful section scores **0.72** while off-topic and contradicting citations score **0.18 / 0.20** (gap +0.5) — so softening the prompt restored signal without collapsing back to a fake 1.0.
 
 > Thresholds live in **code** (`deep_investigate.py`, `notes.py`, `config.py`), not docs — see [RULES.md](RULES.md) for the full table.
 
@@ -81,7 +81,7 @@ Topic ─▶ Discovery ─▶ Outline (from evidence) ─▶ Deep Investigation 
 Judge any finished run by numbers, not adjectives:
 
 ```bash
-python3 files/eval/benchmark_book.py <run-name>   # -> book_eval_report.md + book_eval.json
+python3 eval/benchmark_book.py <run-name>   # -> book_eval_report.md + book_eval.json
 ```
 
 **B**enchmark (pages/words/citations) · **A**nalyze (cross-section redundancy, anti-matrix, reference
@@ -102,29 +102,29 @@ ollama pull batiai/qwen3.6-35b:iq3
 ollama pull bge-m3:latest
 
 # 2. Python deps + render toolchain
-pip install -r files/requirements.txt
+pip install -r requirements.txt
 brew install pandoc tectonic          # tectonic = paper-quality LaTeX PDF
 
 # 3. (optional) extra web search — degrades gracefully without
 cp .env.example .env                  # add TAVILY_API_KEY if you have one
 
 # 4. Run (smoke = first 2 chapters; --no-smoke = full book)
-python3 files/deep_research_v3.py --topic "RLHF" --out-name rlhf_v4 \
+python3 pipeline/deep_research_v3.py --topic "RLHF" --out-name rlhf_v4 \
   --canonical-arxiv-ids "2203.02155,2305.18290,1706.03762" --no-smoke --render
 #   or: ./run_full.sh
 
 # 5. Evaluate the result
-python3 files/eval/benchmark_book.py rlhf_v4
+python3 eval/benchmark_book.py rlhf_v4
 ```
 
 Monitor a long run / inspect a finished one:
 ```bash
-python3 files/monitor.py                      # live progress across runs
-python3 files/report.py files/output/runs/rlhf_v4   # per-section metrics from state.json
-python3 files/eval/smoke_test_p0.py --topic "Transformer" --canonical-ids "1706.03762"  # quick gate check
+python3 tools/monitor.py                      # live progress across runs
+python3 tools/report.py output/runs/rlhf_v4   # per-section metrics from state.json
+python3 eval/smoke_test_p0.py --topic "Transformer" --canonical-ids "1706.03762"  # quick gate check
 ```
 
-Each run lands in `files/output/runs/<out-name>/` (`book.{md,pdf}`, `book_eval_report.md`,
+Each run lands in `output/runs/<out-name>/` (`book.{md,pdf}`, `book_eval_report.md`,
 `state.json`, `topic_profile.json`, `outline_profile.json`). Runs are **resume-safe** — re-running
 continues from `state.json` and never rewrites an accepted section.
 
@@ -146,31 +146,36 @@ continues from `state.json` and never rewrites an accepted section.
 ## Repo layout
 
 ```
-files/
-├── deep_research_v3.py         # orchestrator (LIVE) — run_v3()
-├── deep_research.py            # legacy v2 (pre-planned outline; not the live path)
-├── monitor.py · report.py      # live progress across runs · per-section metrics from state.json
-├── research/
-│   ├── discovery.py            # Stage 0 — TopicProfile + P0b canonical inject
-│   ├── outline_from_research.py# Stage 1 — chunked, evidence-driven outline
-│   ├── deep_investigate.py     # Stage 2 — per-section research/gate/write/verify loop
+AgentDeepLearning/
+├── pipeline/deep_research_v3.py    # orchestrator (LIVE) — run_v3()
+├── research/                       # stage layer (relative-import package; canonical 4-tier)
+│   ├── discovery.py                # Stage 0 — TopicProfile + P0b canonical inject
+│   ├── outline_from_research.py    # Stage 1 — chunked, evidence-driven outline
+│   ├── deep_investigate.py         # Stage 2 — per-section research/gate/write/verify loop
 │   ├── query_gen.py · query_router.py · search.py · rerank.py
-│   ├── notes.py                # RRF rank + P0a/P0c gates + prefilter + math-safe BM25
-│   ├── faithfulness.py         # G3 grounding (HHEM)
-│   ├── verify.py               # G4 topic + G2 citation (gemma), cross-ref
-│   ├── mathfix.py              # single-source math/LaTeX normalization (render-safe)
+│   ├── notes.py                    # RRF rank + P0a/P0c gates + prefilter + math-safe BM25
+│   ├── faithfulness.py             # G3 grounding (HHEM, advisory)
+│   ├── verify.py                   # G4 topic + G2 citation (gemma), cross-ref
+│   ├── mathfix.py                  # single-source math/LaTeX normalization (render-safe)
 │   ├── embeddings.py · fetch.py · config.py · canonical_seeds.py · types.py
-├── eval/
-│   ├── benchmark_book.py       # BAER quality report
-│   ├── bench_cite_discrimination.py # G2 citation-judge health (faithful vs off-source)
+│   └── cache/                      # URL-fetch cache (gitignored, regenerated on demand)
+├── eval/                           # quality harness
+│   ├── benchmark_book.py           # BAER quality report
+│   ├── bench_cite_discrimination.py# G2 citation-judge health (faithful vs off-source)
 │   ├── bench_hhem_discrimination.py · bench_math_split_bm25.py
-│   ├── test_math_char_safety.py · test_verify_optim.py
-│   └── smoke_test_p0.py         # quick P0a/b/c gate check (no full run)
-├── scripts/render_book.py      # Stage 4 — pandoc + tectonic / weasyprint
-└── output/runs/<name>/         # per-run output (the committed example lives here)
+│   ├── test_math_char_safety.py · test_verify_optim.py · smoke_test_p0.py
+│   └── archive/                    # retired one-off eval scripts
+├── scripts/render_book.py          # Stage 4 — pandoc + tectonic / weasyprint
+├── tools/                          # monitor.py · report.py · mcp_server.py · modelfiles/
+├── legacy/                         # v2 stack — deep_research.py · runner.py · run.sh · watch.sh
+├── docs/                           # RULES.md · plan.md · architecture · GLOSSARY.md · archive/
+├── memory/                         # short-memory.md · long-memory.md
+├── output/runs/<name>/             # per-run output (gitignored; committed example: agentic_2025_full)
+├── run_full.sh                     # LIVE launcher
+└── CLAUDE.md · README.md · requirements.txt
 ```
 
-Operational doctrine: [CLAUDE.md](CLAUDE.md) (pipeline + invariants) · [RULES.md](RULES.md) (gate/threshold table) · [files/GLOSSARY.md](files/GLOSSARY.md) (terms).
+Operational doctrine: [CLAUDE.md](CLAUDE.md) (pipeline + invariants) · [docs/RULES.md](docs/RULES.md) (gate/threshold table) · [docs/GLOSSARY.md](docs/GLOSSARY.md) (terms).
 
 ---
 

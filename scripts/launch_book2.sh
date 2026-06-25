@@ -17,4 +17,4 @@ fi
 export DEEP_RESEARCH_REVIEW=1
 export DEEP_RESEARCH_OUT_NAME=book2
 # No --topic -> uses the hardcoded 96-section LLM outline for apples-to-apples comparison
-exec python3 files/runner.py
+exec python3 legacy/runner.py

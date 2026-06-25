@@ -35,7 +35,7 @@ die() { echo "ERROR: $*" >&2; exit 1; }
 # ---- Validate ----
 [ -n "$TOPIC" ] || die "TOPIC chua dat. Dung: TOPIC=\"RLHF\" ./run_full.sh"
 
-RUN_DIR="$SCRIPT_DIR/files/output/runs/$OUT_NAME"
+RUN_DIR="$SCRIPT_DIR/output/runs/$OUT_NAME"
 
 # ---- Pre-flight checks ----
 log "=== PRE-FLIGHT CHECKS ==="
@@ -73,7 +73,7 @@ mkdir -p "$RUN_DIR"
 # ---- Stage 0+1+2: Discovery + Outline + Investigate ----
 log "=== PIPELINE: DISCOVERY -> OUTLINE -> INVESTIGATE -> ASSEMBLE ==="
 
-python3 files/deep_research_v3.py \
+python3 pipeline/deep_research_v3.py \
     --topic "$TOPIC" \
     --out-name "$OUT_NAME" \
     --max-rounds "$N_ROUNDS" \
@@ -114,11 +114,11 @@ if command -v pandoc > /dev/null 2>&1; then
     log "=== RENDER PDF (robust: mathfix + tectonic) ==="
     # NOTE: pipe to tail only truncates the log. Check ${PIPESTATUS[0]} (render_book.py's exit code),
     # NOT the pipeline status (that would be tail's, which is ~always 0 and masks render failures).
-    python3 "$SCRIPT_DIR/files/scripts/render_book.py" --run "$OUT_NAME" 2>&1 | tail -3
+    python3 "$SCRIPT_DIR/scripts/render_book.py" --run "$OUT_NAME" 2>&1 | tail -3
     if [ "${PIPESTATUS[0]}" -eq 0 ] && [ -f "$RUN_DIR/book.pdf" ]; then
         log "PDF: $RUN_DIR/book.pdf"
     else
-        log "PDF render FAILED (book.md is intact; re-run: python3 files/scripts/render_book.py --run $OUT_NAME)"
+        log "PDF render FAILED (book.md is intact; re-run: python3 scripts/render_book.py --run $OUT_NAME)"
     fi
 fi
 
