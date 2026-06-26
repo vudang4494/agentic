@@ -217,6 +217,29 @@ def discover_topic(
                 print(f"[DISCOVERY] Gather warn: {axis}:{q[:40]} -> {e}")
             time.sleep(0.3)
 
+    # --- Step 2b: seed-grounded canonical auto-injection (P0b self-injection) ---
+    # Even WITHOUT --canonical-arxiv-ids, ground canonical anchors in the curated
+    # SEED_MAP: resolve well-known methods named in the topic+evidence digest to their
+    # real arxiv IDs and force-fetch them, so canonical_papers are arxiv-verified rather
+    # than gemma free-text guesses. Topic-agnostic (SEED_MAP is a fixed alias->id registry);
+    # fires only when a known method is actually mentioned, so no-op for unknown domains.
+    try:
+        from . import canonical_seeds as _seeds
+        _already = set(canonical_arxiv_ids or [])
+        _digest = topic + " " + " ".join(
+            ((getattr(s, "title", "") or "") + " " + (getattr(s, "excerpt", "") or ""))
+            for s in all_sources[:20])
+        _seed_ids = [a for a in _seeds.resolve_seeds(_digest, max_seeds=4) if a not in _already]
+        if _seed_ids:
+            _seed_src = _search.arxiv_by_id(_seed_ids)
+            for s in _seed_src:
+                canonical_ids_found.append(getattr(s, "id", ""))
+            injected_sources.extend(_seed_src)
+            print(f"[DISCOVERY] P0b seed-grounded auto-inject {len(_seed_src)} canonical "
+                  f"papers from SEED_MAP: {_seed_ids}")
+    except Exception as e:
+        print(f"[DISCOVERY] seed-grounding skipped: {e}")
+
     # --- Step 3: Inject canonical sources into pool ---
     # Canonical sources are prepended so they appear first in dedup (seen set starts empty).
     # They will be marked as protected_ids in investigation so they survive the cosine gate.

@@ -33,9 +33,11 @@ from .types import Source
 # ---- Knobs (override via research/__init__.py or env) ----
 TOP_K_RETRIEVE = 20   # candidates before reranking
 TOP_K_FINAL = 8       # kept after reranking
-RELEVANCE_FLOOR = 0.001   # [CALIBRATE] drop only clearly off-topic (score ~= 0)
-# Calibrate: start at 0.25 (lower tertile of score distribution),
-# then tune based on precision@k on a labeled (query, doc, relevant) set.
+RELEVANCE_FLOOR = 0.25   # [CALIBRATE] cross-encoder is now a real relevance GATE, not rank-only.
+# 0.25 = the docstring-prescribed start (lower tertile of bge-reranker score dist).
+# Safety: rerank() never hard-starves a section -- if fewer than min_keep docs clear
+# the floor, the top min_keep are rescued regardless, so an on-topic-but-low-scoring
+# section still gets evidence. Tune via precision@k on a labeled (query, doc, relevant) set.
 
 RERANKER_MODEL = "BAAI/bge-reranker-v2-m3"
 RERANKER_DEVICE = "cpu"   # Apple Silicon MPS can be tried if torch.backends.mps available
@@ -124,7 +126,7 @@ def _attach_score(obj, score: float):
         setattr(obj, "rerank_score", float(score))
 
 
-def rerank(query: str, docs: list, top_k: int = TOP_K_FINAL) -> list:
+def rerank(query: str, docs: list, top_k: int = TOP_K_FINAL, min_keep: int = 3) -> list:
     """Score candidate docs by relevance to query using cross-encoder.
 
     Args:
@@ -148,13 +150,25 @@ def rerank(query: str, docs: list, top_k: int = TOP_K_FINAL) -> list:
     scored = list(zip(docs, scores))
     scored.sort(key=lambda x: x[1], reverse=True)
 
-    # Gate, attach score, return top_k (preserves Source type)
+    # Gate to RELEVANCE_FLOOR (cross-encoder as a real filter), cap at top_k.
     result = []
     for doc, score in scored:
         if score >= RELEVANCE_FLOOR:
             _attach_score(doc, score)
             result.append(doc)
             if len(result) >= top_k:
+                break
+
+    # Rescue: never hard-starve a section. If fewer than min_keep cleared the
+    # floor, keep the top min_keep highest-scored docs regardless (identity-based
+    # skip so a strict floor can't drop an on-topic-but-low-scoring section to 0).
+    if len(result) < min_keep:
+        for doc, score in scored[:min_keep]:
+            if any(doc is r for r in result):
+                continue
+            _attach_score(doc, score)
+            result.append(doc)
+            if len(result) >= min_keep:
                 break
 
     return result

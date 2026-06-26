@@ -556,11 +556,73 @@ def _postprocess_outline(outline, topic_profile) -> None:
             sec.setdefault("depends_on", [])
             sec.setdefault("section_type", "methods")
 
+    # Cross-chapter semantic relate + near-dup differentiation (bge-m3). Runs AFTER
+    # title-exact dedup above; catches sections that overlap in MEANING (not title)
+    # and wires depends_on edges for narrative coherence. Differentiates rather than
+    # drops, so the book keeps its section count (page target) while shedding repeats.
+    _relate_and_differentiate_sections(outline, topic_profile)
+
     n_out_chapters = len(outline.chapters)
     n_out_sections = sum(len(ch.get("sections", [])) for ch in outline.chapters)
     print(f"[OUTLINE] Generated: {n_out_chapters} chapters, {n_out_sections} sections")
     print(f"[OUTLINE] Coverage gaps: {outline.coverage_gaps}")
     print(f"[OUTLINE] Audit: {outline.outline_audit}")
+
+
+def _relate_and_differentiate_sections(outline, topic_profile,
+                                       dup_cos: float = 0.83, dep_cos: float = 0.65) -> None:
+    """Cross-chapter semantic pass (bge-m3) over every section in reading order.
+    For section i, compare its (title + goal) embedding to ALL earlier sections j<i:
+      - cosine >= dup_cos -> NEAR-DUPLICATE. Do NOT drop it (that shrinks the book);
+        inject a differentiation directive so it covers the COMPLEMENTARY angle, add
+        the earlier title to avoid_terms, and record _near_dup_of for downstream.
+      - cosine >= dep_cos -> RELATED. Record the closest earlier section in depends_on
+        so the writer can build on prerequisites (narrative coherence/progression).
+    Best-effort: any embed failure leaves the outline unchanged (warn-only). Thresholds
+    are tunable constants here (orchestration-layer, topic-agnostic)."""
+    try:
+        from .embeddings import embed, cosine
+        flat = []  # (earlier-title, sec-dict, "title. goal")
+        for ch in outline.chapters:
+            for sec in ch.get("sections", []):
+                t = (sec.get("t", "") or "").strip()
+                g = (sec.get("goal", "") or sec.get("pr", "") or "").strip()
+                flat.append((t, sec, f"{t}. {g}"[:400]))
+        if len(flat) < 2:
+            return
+        vecs = embed([f for _, _, f in flat], model="bge-m3:latest")
+        if not vecs or len(vecs) != len(flat):
+            print("[OUTLINE] relate/dedup skipped: embed unavailable")
+            return
+        n_dup, n_dep = 0, 0
+        for i in range(1, len(flat)):
+            best_j, best_c = -1, -1.0
+            for j in range(i):
+                c = cosine(vecs[i], vecs[j])
+                if c > best_c:
+                    best_c, best_j = c, j
+            if best_j < 0:
+                continue
+            jtitle = flat[best_j][0]
+            isec = flat[i][1]
+            if best_c >= dep_cos and jtitle:
+                dep = isec.setdefault("depends_on", [])
+                if jtitle not in dep:
+                    dep.append(jtitle)
+                    n_dep += 1
+            if best_c >= dup_cos and jtitle:
+                isec["_near_dup_of"] = jtitle
+                isec["goal"] = (isec.get("goal", "") or "") + (
+                    f" IMPORTANT: an earlier section already covers '{jtitle}'. Do NOT restate it -- "
+                    f"write only the COMPLEMENTARY angle unique to this section and reference the earlier "
+                    f"section instead of repeating its material.")
+                av = isec.setdefault("avoid_terms", [])
+                if jtitle not in av:
+                    av.append(jtitle)
+                n_dup += 1
+        print(f"[OUTLINE] cross-chapter relate: {n_dep} depends_on edges, {n_dup} near-dup sections differentiated")
+    except Exception as e:
+        print(f"[OUTLINE] relate/dedup skipped: {e}")
 
 
 def _semantic_fallback_outline(topic_profile, evidence_map: List[dict], n_ch: int, spp: int) -> dict:

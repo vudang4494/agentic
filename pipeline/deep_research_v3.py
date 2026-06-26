@@ -241,7 +241,7 @@ def assemble_book(outline, sections, output_path):
 
 
 def run_v3(topic, out_name=None, n_chapters=None, sections_per_chapter=None,
-           providers=("arxiv", "wikipedia", "ddg"), max_rounds=2,
+           providers=_PROVIDERS_DEFAULT, max_rounds=2,
            render=False, smoke=True,
            # P0b: canonical arxiv IDs to force-inject into discovery (e.g. from gold yaml)
            canonical_arxiv_ids=None):
@@ -424,8 +424,8 @@ def run_v3(topic, out_name=None, n_chapters=None, sections_per_chapter=None,
             # Rank13: primary_floor ensures arxiv/wikipedia fill ≥N of top-8 slots
             primary_floor = _PRIMARY_FLOOR if _RESEARCH_AVAILABLE else 0
 
-            try:
-                result = investigate_section(
+            def _invoke(_max_rounds, _providers):
+                return investigate_section(
                     section_prompt=pp_pr,
                     chapter_title=ch_t,
                     section_title=pp_t,
@@ -440,14 +440,44 @@ def run_v3(topic, out_name=None, n_chapters=None, sections_per_chapter=None,
                         for k in sorted(sections.keys())
                     ],
                     prior_concepts=prior_concepts,
-                    providers=providers,
-                    max_rounds=max_rounds,
+                    providers=_providers,
+                    max_rounds=_max_rounds,
                     section_meta=sec,
                     protected_source_ids=protected_ids,
                     run_seen_counts=run_seen_counts,
                     primary_floor=primary_floor,
                     evidence_pool=run_source_pool,   # agentic: reuse sibling-section evidence
                 )
+
+            result = None
+            try:
+                result = _invoke(max_rounds, providers)
+            except RuntimeError as e:
+                # #5 outer-loop ReAct re-dispatch: a blocked section is a LOST PAGE. Before
+                # stubbing [BLOCKED], retry ONCE with a widened re-search (more rounds + the
+                # full provider set) so the orchestrator pushes for real content, not a stub.
+                _wider = tuple(dict.fromkeys(tuple(providers) + tuple(_PROVIDERS_DEFAULT)))
+                print(f"  [S2] section blocked ({str(e)[:80]}); ReAct re-dispatch "
+                      f"(max_rounds={max_rounds + 2}, providers={_wider})...")
+                try:
+                    result = _invoke(max_rounds + 2, _wider)
+                    print("  [S2] ReAct re-dispatch RECOVERED the section")
+                except RuntimeError as e2:
+                    print(f"  [S2] BLOCKED after re-dispatch: {e2}")
+                    sections[key] = {
+                        "title": pp_t,
+                        "content": f"[BLOCKED: {e2}]",
+                        "sources": [],
+                        "grounding": 0.0,
+                        "topic_relevance": 0.0,
+                        "n_citations": 0,
+                        "new_concepts": [],
+                        "quality": "BLOCKED",
+                        "cross_refs": 0,
+                        "block_reason": str(e2),
+                    }
+
+            if result is not None:
                 sections[key] = {
                     "title": pp_t,
                     "content": result.content,
@@ -472,20 +502,6 @@ def run_v3(topic, out_name=None, n_chapters=None, sections_per_chapter=None,
                       + str(round(result.grounding_score, 3)) + " | cites="
                       + str(result.n_citations) + " | xrefs=" + str(result.cross_ref_count)
                       + " | new_concepts=" + str(len(result.new_concepts)))
-            except RuntimeError as e:
-                print(f"  [S2] BLOCKED: {e}")
-                sections[key] = {
-                    "title": pp_t,
-                    "content": f"[BLOCKED: {e}]",
-                    "sources": [],
-                    "grounding": 0.0,
-                    "topic_relevance": 0.0,
-                    "n_citations": 0,
-                    "new_concepts": [],
-                    "quality": "BLOCKED",
-                    "cross_refs": 0,
-                    "block_reason": str(e),
-                }
             tp_data = asdict(topic_profile) if 'topic_profile' in dir() and topic_profile else {}
             state_path.write_text(
                 json.dumps({"topic": topic,

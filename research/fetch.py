@@ -27,7 +27,7 @@ def _cache_path(url: str) -> Path:
     return CACHE_DIR / f"{h}.json"
 
 
-def fetch(url: str, accept: Optional[str] = None, force: bool = False) -> Optional[dict]:
+def fetch(url: str, accept: Optional[str] = None, force: bool = False, timeout: float = 10.0) -> Optional[dict]:
     """Fetch URL, returning {url, status, content, fetched_at, headers}.
 
     Reads from cache unless force=True. Returns None on network failure with no
@@ -46,7 +46,7 @@ def fetch(url: str, accept: Optional[str] = None, force: bool = False) -> Option
         headers["Accept"] = accept
 
     try:
-        with httpx.Client(timeout=10.0, follow_redirects=True) as c:
+        with httpx.Client(timeout=timeout, follow_redirects=True) as c:
             r = c.get(url, headers=headers)
         record = {
             "url": url,

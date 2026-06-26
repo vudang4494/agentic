@@ -33,6 +33,8 @@ _project_root = Path(__file__).parent.parent
 if str(_project_root) not in _sys.path:
     _sys.path.insert(0, str(_project_root))
 
+from .config import PROVIDERS_DEFAULT  # single source of truth for the default provider set (incl tavily)
+
 
 @dataclass
 class SectionSpec:
@@ -159,7 +161,8 @@ def _evidence_adequate(spec: SectionSpec, ranked_sources: List) -> tuple:
 
 def _build_writer_prompt(spec: SectionSpec, chapter_title: str, topic_context: str,
                          context_block: str, evidence_block: str,
-                         prior_sections: List[dict] = None) -> str:
+                         prior_sections: List[dict] = None,
+                         prev_draft: str = "", fix_list: str = "") -> str:
     prior_sections = prior_sections or []
     
     # Build cross-reference hint from prior sections
@@ -172,8 +175,24 @@ def _build_writer_prompt(spec: SectionSpec, chapter_title: str, topic_context: s
     must_cover = ", ".join(spec.must_cover_terms) if spec.must_cover_terms else "(none)"
     avoid_terms = ", ".join(spec.avoid_terms) if spec.avoid_terms else "(none)"
     deps = ", ".join(spec.prior_dependencies) if spec.prior_dependencies else "(none)"
-    
-    return f"""Chapter: {chapter_title}
+
+    # #4 REVISE MODE: when a prior draft failed G2 citation-integrity, hand it back with the
+    # per-[N] fix list so the writer SURGICALLY repairs the flagged citations instead of
+    # regenerating from scratch (preserves the correct prose; only the bad [N] change).
+    revise_block = ""
+    if prev_draft:
+        revise_block = (
+            "\n\nREVISE MODE (highest priority): Below is your PREVIOUS draft of THIS section. "
+            "Keep every correct sentence VERBATIM; change ONLY what the FIX LIST flags. Do NOT "
+            "re-introduce the topic, do NOT shorten unflagged paragraphs, do NOT drop correct "
+            "citations or cross-references. Output the FULL revised section (not a diff).\n"
+            "FIX LIST -- these citations do not support their claim; reattach the correct [N] "
+            "from the EVIDENCE or restate the claim to match what its source actually says:\n"
+            f"{fix_list}\n"
+            f"--- PREVIOUS DRAFT (revise this) ---\n{prev_draft}\n--- END PREVIOUS DRAFT ---\n"
+        )
+
+    return revise_block + f"""Chapter: {chapter_title}
 Section: {spec.title}
 Topic context: {topic_context}
 Section type: {spec.section_type}
@@ -218,7 +237,7 @@ def investigate_section(
     topic_context: str = "",       # Topic description + key concepts
     prior_sections: List[dict] = None,  # [{title, content}] for cross-ref
     prior_concepts: List[str] = None,     # concepts already covered elsewhere
-    providers: tuple = ("arxiv", "wikipedia", "ddg"),
+    providers: tuple = PROVIDERS_DEFAULT,  # incl tavily; was ("arxiv","wikipedia","ddg") -> silently dropped tavily
     embed_model: str = "bge-m3:latest",  # #3 unify retrieval embed with verify-side
     reranker_model: str = "BAAI/bge-reranker-v2-m3",
     writer_model: str = "batiai/qwen3.6-35b:iq3",  # WRT: stable writer on this machine
@@ -228,6 +247,7 @@ def investigate_section(
     min_topic_relevance: float = 0.50,
     min_cross_refs: int = 2,  # 1.2-style retry: if only 1 prior section, can accept 1 ref
     min_cite_precision: float = 0.45,  # G2: avg per-[N] citation support (local gemma verify_section); fail-open
+    dedup_cosine_max: float = 0.85,  # G6: round body >= this bge-m3 cosine to a prior section = near-dup -> no clean-accept + differentiate-retry + paragraph trim
     concept_callback: Optional[Callable] = None,
     section_meta: Optional[dict] = None,
     # P0b: canonical source IDs injected at discovery stage -- these survive cosine gate
@@ -298,7 +318,7 @@ def investigate_section(
     best_n_cites = 0
     best_cite_markers: list = []
     best_cross_refs = 0
-    _best_round_tuple: tuple = (0.0, 0.0, 0)  # (grounding, topic_relevance, has_cites)
+    _best_round_tuple: tuple = (0, 0.0, 0.0, 0)  # (not_near_dup, topic, grounding, has_cites)
     all_concepts = []
     research_rounds = 0
     accepted = False  # P0: True iff a round cleanly passed the live gates (quality='ok')
@@ -311,6 +331,11 @@ def investigate_section(
     seen_counts = dict(run_seen_counts)  # copy so per-section mutations don't bleed
 
     current_hint = ""
+    # #4 verify-revise: carry the prior failed draft + per-[N] fix list into the NEXT round's
+    # writer prompt so a citation failure is SURGICALLY revised (keep correct sentences, fix the
+    # flagged [N]) instead of only re-researching from scratch (CLAUDE.md doctrine mc.2).
+    revise_draft = ""
+    revise_fixlist = ""
     # Track prior queries/sources across rounds to detect wasted re-search
     prior_query_sigs: set = set()
     prior_source_ids: set = set()
@@ -584,8 +609,11 @@ def investigate_section(
         t_w = time.time()
         writer_prompt = _build_writer_prompt(
             spec, chapter_title, topic_context, context_block, evidence_block,
-            prior_sections=prior_sections
+            prior_sections=prior_sections,
+            prev_draft=revise_draft, fix_list=revise_fixlist,  # #4: surgical citation-revise from prior round
         )
+        # consume the revise payload: it applies to THIS attempt only (a fresh fail re-arms it below)
+        revise_draft, revise_fixlist = "", ""
 
         content = _ollama_chat(
             writer_model,
@@ -710,16 +738,40 @@ def investigate_section(
             elif getattr(s, "url", ""):
                 prior_source_ids.add(getattr(s, "url", ""))
 
+        # --- G6 in-loop dedup: is THIS round's body a near-duplicate of a prior section? ---
+        # bge-m3 cosine of this body vs the last 12 prior bodies (one embed call). Drives
+        # (a) clean-accept BLOCK, (b) best-round ranking (dup rounds rank below non-dup),
+        # (c) a differentiation-retry hint. This is the enforcement the old warn-only G6 lacked.
+        round_dup_cos, round_dup_who = 0.0, ""
+        if prior_sections:
+            try:
+                from .embeddings import embed as _dd_embed, cosine as _dd_cos
+                _dd_prior = prior_sections[-12:]
+                _dd_txt = [content[:1500]] + [(ps.get("content", "") or "")[:1500] for ps in _dd_prior]
+                _dd_vec = _dd_embed(_dd_txt, model="bge-m3:latest")
+                if _dd_vec and len(_dd_vec) == len(_dd_txt):
+                    for _k in range(len(_dd_prior)):
+                        _c = _dd_cos(_dd_vec[0], _dd_vec[_k + 1])
+                        if _c > round_dup_cos:
+                            round_dup_cos, round_dup_who = _c, _dd_prior[_k].get("title", "")
+            except Exception as _e:
+                print(f"  [R{round_n}] dedup check skipped: {_e}")
+        is_near_dup = round_dup_cos >= dedup_cosine_max
+        if is_near_dup:
+            print(f"  [R{round_n}] [G6 NEAR-DUP] ~{round_dup_cos:.2f} cosine to prior '{round_dup_who[:50]}' "
+                  f"(>= {dedup_cosine_max}; blocks clean-accept, will differentiate-retry)")
+
         # --- Best round selection ---
         # Score = (topic_relevance, grounding, has_citations).
         # P0: topic (the LIVE signal) wins first; grounding is advisory tie-break only
         # (was grounding-first, but grounding is now ~noise at 0-0.46, so it must not pick
         # which degraded draft ships when no round cleanly accepts).
         def _round_tuple():
+            nd = 0 if is_near_dup else 1   # non-duplicate rounds always rank above near-dups
             t = topic_relevance
             g = grounding
             c = 1 if n_cites > 0 else 0
-            return (t, g, c)
+            return (nd, t, g, c)
         if best_score == 0.0 or _round_tuple() > _best_round_tuple:
             best_content = content
             best_score = grounding
@@ -746,10 +798,12 @@ def investigate_section(
         # real per-[N] cite_precision.)
         topic_ok = topic_relevance >= min_topic_relevance
         cite_precision = None  # None = not measured this round (keeps the 1.0 default out of logs)
+        _cite_verdicts = []    # #4: per-[N] verdicts to build the surgical revise fix-list
         if n_cites > 0 and topic_ok:
             try:
                 cite_res = _verify.verify_section(content, ranked, model=judge_model)
                 cite_precision = float(cite_res.get("grounding", 1.0))
+                _cite_verdicts = cite_res.get("verdicts", []) or []
                 print(f"  [R{round_n}] Citation integrity (G2): {cite_precision:.3f}")
             except Exception as e:
                 # fail-CLOSED: on error do NOT auto-pass -- 0.0 means this round won't
@@ -759,7 +813,7 @@ def investigate_section(
 
         # ACCEPT (clean, quality='ok') when topic + cites + cross-refs + a REAL measured
         # cite_precision all pass. Grounding is logged but is NOT a gate anymore (P0).
-        gate_ok = (n_cites > 0 and topic_ok and has_min_cross_refs)
+        gate_ok = (n_cites > 0 and topic_ok and has_min_cross_refs and not is_near_dup)
         if gate_ok and cite_precision is not None and cite_precision >= min_cite_precision:
             accepted = True
             # BUGFIX (accept-coupling): best-round selection is TOPIC-FIRST, so the best-topic
@@ -796,12 +850,33 @@ def investigate_section(
             cite_hint = (" Some citations do not support their claim -- attach the correct [N] to each fact."
                          if (cite_precision is not None and cite_precision < min_cite_precision) else "")
             cite_str = f", cite_prec={cite_precision:.3f}" if cite_precision is not None else ""
+            dup_hint = (f" DUPLICATE: this draft is ~{round_dup_cos:.2f} cosine to earlier section '{round_dup_who}'. "
+                        f"Rewrite to cover ONLY the complementary angle unique to THIS section; reference "
+                        f"'{round_dup_who}' instead of repeating its material." if is_near_dup else "")
             current_hint = (
                 f"Previous draft: grounding={grounding:.3f} (advisory), topic={topic_relevance:.3f}{cite_str}. "
                 f"Focus on: {missing_terms or 'none'}. Avoid: {drift_terms or 'none'}. "
-                f"{weak_summary[:140] if weak_summary else 'cite more specific facts'}.{cite_hint}{numeric_hint}"
+                f"{weak_summary[:140] if weak_summary else 'cite more specific facts'}.{cite_hint}{numeric_hint}{dup_hint}"
             )
             print(f"  [R{round_n}] RETRY with refined queries")
+
+            # #4 verify-revise: if the ONLY failing axis is citation integrity (topic ok,
+            # cross-refs ok, not a near-dup), arm a surgical revise for the next round --
+            # hand back THIS draft + the per-[N] verdicts so the writer repairs the flagged
+            # citations in place instead of regenerating. (If topic/cross-ref/dup also failed,
+            # leave revise empty so the next round re-researches normally.)
+            if (cite_precision is not None and cite_precision < min_cite_precision
+                    and topic_ok and not is_near_dup
+                    and (not prior_sections or cross_refs_found >= min_refs_needed)
+                    and _cite_verdicts):
+                _bad = [v for v in _cite_verdicts
+                        if v.get("verdict") in ("unrelated", "contradicts", "no_evidence", "partial")]
+                if _bad:
+                    revise_fixlist = "\n".join(
+                        f"  [{v.get('n')}] verdict={v.get('verdict')}: {(v.get('reason') or v.get('claim') or '')[:160]}"
+                        for v in _bad[:12])
+                    revise_draft = content
+                    print(f"  [R{round_n}] verify-revise armed: {len(_bad)} citation(s) to repair next round")
 
         # RULES Stage D: min word count >= 120 hard rule
         # Sections shorter than 120 words are "garbage" (rlhf_v3-style 143w sections)
@@ -834,23 +909,43 @@ def investigate_section(
             f"topic drift detected. DO NOT write."
         )
 
-    # G6 (warn-first): flag near-duplicate sections via bge-m3 cosine vs prior bodies.
-    # Soft signal ONLY -- logs, does NOT block (a blocking threshold needs calibration
-    # from a real run). Gives the bge-m3 content-dedup signal the product wants.
+    # G6 ENFORCED post-loop paragraph trim (fallback): in-loop dedup already blocked
+    # clean-accept for near-dup rounds; here, if the SHIPPED body still overlaps a prior
+    # section (e.g. every round was a near-dup -> ships degraded), drop the near-verbatim
+    # paragraphs (cosine >= 0.92 to any paragraph of the closest prior section) so repeated
+    # material never reaches the page. Bounded: 2 embed calls, only when section-level dup high.
     try:
         if best_content and prior_sections:
             from .embeddings import embed as _g6_embed, cosine as _g6_cos
             _g6_prior = prior_sections[-12:]
-            _g6_texts = [best_content[:1500]] + [(ps.get("content", "") or "")[:1500] for ps in _g6_prior]
-            _g6_vecs = _g6_embed(_g6_texts, model="bge-m3:latest")
-            if _g6_vecs and len(_g6_vecs) == len(_g6_texts):
-                _g6_sims = [(_g6_cos(_g6_vecs[0], _g6_vecs[k + 1]), _g6_prior[k].get("title", ""))
-                            for k in range(len(_g6_prior))]
-                if _g6_sims:
-                    _g6_mx, _g6_who = max(_g6_sims, key=lambda x: x[0])
-                    if _g6_mx >= 0.85:
-                        print(f"  [G6 DEDUP-WARN] section ~{_g6_mx:.2f} cosine to prior "
-                              f"'{_g6_who[:50]}' (>=0.85; warn-first, not blocked)")
+            _g6_vecs = _g6_embed([best_content[:1500]] + [(ps.get("content", "") or "")[:1500] for ps in _g6_prior],
+                                 model="bge-m3:latest")
+            if _g6_vecs and len(_g6_vecs) == len(_g6_prior) + 1:
+                _sims = [(_g6_cos(_g6_vecs[0], _g6_vecs[k + 1]), k) for k in range(len(_g6_prior))]
+                _mx, _ki = max(_sims, key=lambda x: x[0]) if _sims else (0.0, -1)
+                if _mx >= dedup_cosine_max and _ki >= 0:
+                    _closest_title = _g6_prior[_ki].get("title", "")
+                    my_paras = [p for p in re.split(r"\n\s*\n", best_content) if p.strip()]
+                    pr_paras = [p for p in re.split(r"\n\s*\n", (_g6_prior[_ki].get("content", "") or "")) if p.strip()][:40]
+                    if len(my_paras) > 1 and pr_paras:
+                        pv = _g6_embed([p[:600] for p in my_paras] + [p[:600] for p in pr_paras], model="bge-m3:latest")
+                        if pv and len(pv) == len(my_paras) + len(pr_paras):
+                            mvec, pvec = pv[:len(my_paras)], pv[len(my_paras):]
+                            kept, dropped = [], 0
+                            for pi, para in enumerate(my_paras):
+                                if max((_g6_cos(mvec[pi], q) for q in pvec), default=0.0) >= 0.92:
+                                    dropped += 1
+                                else:
+                                    kept.append(para)
+                            if dropped and kept:
+                                best_content = "\n\n".join(kept)
+                                print(f"  [G6 TRIM] section ~{_mx:.2f} dup to '{_closest_title[:40]}': dropped "
+                                      f"{dropped} near-verbatim paragraph(s), kept {len(kept)}")
+                            else:
+                                print(f"  [G6] section ~{_mx:.2f} dup to '{_closest_title[:40]}' "
+                                      f"(no isolable dup paras; ships degraded)")
+                    else:
+                        print(f"  [G6] section ~{_mx:.2f} cosine to prior '{_closest_title[:40]}' (degraded)")
     except Exception as e:
         print(f"  [G6 DEDUP] skipped: {e}")
 

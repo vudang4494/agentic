@@ -10,13 +10,14 @@ Providers:
   - wikipedia : en.wikipedia.org/w/api.php + REST page summary      -- on by default
   - ddg       : DuckDuckGo HTML scrape                             -- OFF by default
 """
+import hashlib
 import json as _json
 import os
 import re
 import time
 import urllib.parse
 import xml.etree.ElementTree as ET
-from typing import Iterable, List
+from typing import Iterable, List, Optional
 
 import httpx
 
@@ -32,12 +33,59 @@ TAVILY_TIMEOUT = 30.0
 BRAVE_API = "https://api.search.brave.com/res/v1/web/search"
 BRAVE_TIMEOUT = 20.0
 
+
+def _canonical_url(url: str) -> str:
+    """Topic-agnostic URL canonicalizer (no model, no network) so the SAME page
+    surfaced by different providers OR different rounds collapses to one identity.
+    Unifies arxiv abs/pdf/html + version suffix, wikipedia slug host, and strips
+    tracking params / fragment / trailing slash. Returns input unchanged on any
+    parse failure (never raises). Used for de-dup and P0c seen-counting."""
+    try:
+        u = (url or "").strip()
+        if not u:
+            return url
+        # arxiv: /abs/<id>, /pdf/<id>(vN)(.pdf), /html/<id> -> one canonical abs (version stripped)
+        m = re.search(r"arxiv\.org/(?:abs|pdf|html)/([0-9]{4}\.[0-9]{4,5}|[a-z\-]+/[0-9]{7})", u, re.I)
+        if m:
+            return f"https://arxiv.org/abs/{m.group(1)}"
+        p = urllib.parse.urlsplit(u)
+        host = (p.netloc or "").lower()
+        if host.startswith("www."):
+            host = host[4:]
+        if "wikipedia.org" in host and "/wiki/" in (p.path or ""):
+            host = "en.wikipedia.org"
+        keep = []
+        for k, v in urllib.parse.parse_qsl(p.query, keep_blank_values=False):
+            kl = k.lower()
+            if kl.startswith("utm_") or kl.startswith("mc_") or kl in {"ref", "fbclid", "gclid", "igshid", "source"}:
+                continue
+            keep.append((k, v))
+        path = (p.path or "/").rstrip("/") or "/"
+        return urllib.parse.urlunsplit(("https", host, path, urllib.parse.urlencode(keep), ""))
+    except Exception:
+        return url
+
+
+def _url_id(url: str) -> str:
+    """Deterministic id derived from the canonical URL so cross-provider /
+    cross-round duplicates share ONE id (notes.dedup keys on url-or-id; P0c
+    seen_counts key on id-or-url -- both now collapse to the same identity)."""
+    return "url:" + hashlib.sha1(_canonical_url(url).encode("utf-8", "ignore")).hexdigest()[:12]
+
 # Session-level kill switch: once tavily returns a recurring 4xx error we stop
 # calling it for the rest of the process so we don't burn ~30s/section retrying.
 # HTTP 432 = rate-limit; 402 = quota exceeded; 403 = forbidden/auth; 429 = too many.
 _TAVILY_DISABLED_THIS_SESSION = False
 _TAVILY_FAILURE_COUNT = 0
 _TAVILY_FAILURE_THRESHOLD = 3
+
+# arxiv: the export.arxiv.org Atom API connects but its READS often time out under
+# load. Fail FAST (short read timeout) and, after a few timeouts, auto-disable the
+# direct API for the session and route academic queries through Tavily instead --
+# Tavily(include_domains=arxiv.org) is far more reliable. (User-requested 2026-06.)
+ARXIV_READ_TIMEOUT = 7.0
+_ARXIV_TIMEOUT_COUNT = 0
+_ARXIV_TIMEOUT_THRESHOLD = 3
 # Codes that indicate a recurring/retryable error (not transient).
 _TAVILY_RETRY_CODES = {402, 403, 429, 432}
 
@@ -99,9 +147,9 @@ def _arxiv_title_query(q: str) -> str:
 
 def _arxiv_raw_query_params(extra: dict) -> List[Source]:
     """Single arxiv API call with arbitrary params (search_query OR id_list)."""
+    global _LAST_ARXIV_CALL, _ARXIV_TIMEOUT_COUNT, _ARXIV_AVAILABLE
     if not _ARXIV_AVAILABLE:
         return []
-    global _LAST_ARXIV_CALL
     elapsed = time.time() - _LAST_ARXIV_CALL
     if elapsed < ARXIV_MIN_INTERVAL:
         time.sleep(ARXIV_MIN_INTERVAL - elapsed)
@@ -115,9 +163,18 @@ def _arxiv_raw_query_params(extra: dict) -> List[Source]:
     base.update(extra)
     params = urllib.parse.urlencode(base)
     url = f"{ARXIV_API}?{params}"
-    rec = fetch(url, accept="application/atom+xml")
+    rec = fetch(url, accept="application/atom+xml", timeout=ARXIV_READ_TIMEOUT)
     if not rec or rec.get("status", 0) >= 400 or not rec.get("content"):
+        # Count read-timeouts/failures; after a few, auto-disable the flaky direct
+        # API for the session so arxiv_search falls back to Tavily (no more 7s stalls).
+        if not rec:
+            _ARXIV_TIMEOUT_COUNT += 1
+            if _ARXIV_TIMEOUT_COUNT >= _ARXIV_TIMEOUT_THRESHOLD and _ARXIV_AVAILABLE:
+                _ARXIV_AVAILABLE = False
+                print("[search] export.arxiv.org timing out repeatedly -- direct API "
+                      "auto-disabled; routing academic queries via Tavily(arxiv.org)", flush=True)
         return []
+    _ARXIV_TIMEOUT_COUNT = 0  # a success resets the streak
     try:
         root = ET.fromstring(rec["content"])
     except ET.ParseError:
@@ -180,10 +237,28 @@ def arxiv_by_id(arxiv_ids) -> List[Source]:
     return _arxiv_raw_query_params({"id_list": ",".join(ids), "max_results": len(ids)})
 
 
+def _arxiv_via_tavily(query: str, k: int = 3) -> List[Source]:
+    """Reliable arxiv fallback: when the export.arxiv.org Atom API times out, fetch
+    arxiv papers through Tavily(include_domains=arxiv.org) -- far more reliable than
+    the flaky direct endpoint. Re-tags arxiv.org hits as provider='arxiv' so they
+    still count as primary sources downstream. (User-requested 2026-06.)"""
+    out: List[Source] = []
+    for s in tavily_search(query, k=max(3, k), include_domains=["arxiv.org"]):
+        if "arxiv.org" in (getattr(s, "url", "") or ""):
+            try:
+                s.provider = "arxiv"
+            except Exception:
+                pass
+            out.append(s)
+    return out
+
+
 def arxiv_search(query: str, k: int = 3) -> List[Source]:
-    """Two-phase arxiv search: title-field (canonical bias) then all-field."""
+    """Two-phase arxiv search: title-field (canonical bias) then all-field.
+    Falls back to Tavily(arxiv.org) when the direct API is down/timing out."""
     if not _ARXIV_AVAILABLE:
-        return []
+        # direct API auto-disabled (repeated timeouts) -> Tavily takeover
+        return _arxiv_via_tavily(query, k)
     # Phase A: title-field match -- canonical-paper bias.
     title_q = _arxiv_title_query(query)
     title_hits = _arxiv_raw_query(f"ti:{title_q}", k=max(2, k)) if title_q else []
@@ -198,6 +273,9 @@ def arxiv_search(query: str, k: int = 3) -> List[Source]:
             continue
         seen.add(s.id)
         merged.append(s)
+    # Direct API returned nothing (timeout/empty) -> recover via Tavily(arxiv.org).
+    if not merged:
+        merged = _arxiv_via_tavily(query, k)
     return merged
 
 
@@ -266,7 +344,8 @@ def _tavily_api_key() -> str:
     return os.environ.get("TAVILY_API_KEY", "").strip()
 
 
-def tavily_search(query: str, k: int = 5, depth: str = "advanced") -> List[Source]:
+def tavily_search(query: str, k: int = 5, depth: str = "advanced",
+                  include_domains: Optional[List[str]] = None) -> List[Source]:
     """Tavily AI-friendly web search. Returns up to k Sources with content excerpts.
 
     Falls back to an empty list on any failure (missing key, network, parse).
@@ -289,6 +368,8 @@ def tavily_search(query: str, k: int = 5, depth: str = "advanced") -> List[Sourc
         "include_raw_content": False,
         "include_images": False,
     }
+    if include_domains:
+        payload["include_domains"] = include_domains
     try:
         with httpx.Client(timeout=TAVILY_TIMEOUT) as c:
             r = c.post(TAVILY_API, json=payload)
@@ -334,7 +415,7 @@ def tavily_search(query: str, k: int = 5, depth: str = "advanced") -> List[Sourc
                 except ValueError:
                     pass
         out.append(Source(
-            id=f"tavily:{abs(hash(url)) & 0xFFFFFF:06x}",
+            id=_url_id(url),
             title=title,
             url=url,
             excerpt=excerpt,
@@ -387,7 +468,7 @@ def brave_search(query: str, k: int = 5) -> List[Source]:
             except ValueError:
                 pass
         out.append(Source(
-            id=f"brave:{abs(hash(url)) & 0xFFFFFF:06x}",
+            id=_url_id(url),
             title=title, url=url, excerpt=excerpt,
             provider="brave", authors=[], year=year,
         ))
@@ -438,7 +519,7 @@ def ddg_search(query: str, k: int = 3) -> List[Source]:
             continue
         seen_urls.add(url)
         out.append(Source(
-            id=f"ddg:{abs(hash(url)) & 0xFFFFFF:06x}",
+            id=_url_id(url),
             title=title[:200] if title else url,
             url=url,
             excerpt=_excerpt(snippet, max_words=80),
@@ -456,7 +537,7 @@ def ddg_search(query: str, k: int = 3) -> List[Source]:
             continue
         seen_urls.add(url)
         out.append(Source(
-            id=f"ddg:{abs(hash(url)) & 0xFFFFFF:06x}",
+            id=_url_id(url),
             title=title[:200] if title else url,
             url=url,
             excerpt=_excerpt(title, max_words=80),
@@ -526,9 +607,12 @@ def available_providers(requested: Iterable[str]) -> List[str]:
 
 def gather(queries: Iterable[Query], providers: Iterable[str] = ("tavily", "arxiv", "wikipedia"),
            per_provider_k: int = 3) -> List[Source]:
-    """Run each query across each provider, return concatenated raw results.
+    """Run each query across each provider; collapse cross-provider/cross-round
+    duplicate pages by canonical URL, return the deduped pool.
 
-    Deduplication and ranking happen in notes.rank(), not here.
+    Ranking happens in notes.rank(); the canonical-URL collapse here ensures the
+    SAME page from two providers (or two queries/rounds) becomes ONE Source with
+    a deterministic id, so P0c seen-counting and notes.dedup key on one identity.
     Providers whose prerequisites aren't met (e.g. tavily without a key) are
     silently skipped -- the pipeline degrades to whatever IS available.
     """
@@ -546,4 +630,22 @@ def gather(queries: Iterable[Query], providers: Iterable[str] = ("tavily", "arxi
                 print(f"[research/search] {p}({qstr!r}) failed: {e}", flush=True)
                 results = []
             out.extend(results)
-    return out
+
+    # Collapse duplicates by canonical URL identity (keep first = provider/trust
+    # order). Canonicalize the survivor's url so downstream dedup/seen-counting
+    # key on the same identity. Non-URL sources fall back to their id.
+    seen_keys = set()
+    deduped: List[Source] = []
+    for s in out:
+        raw = getattr(s, "url", "") or ""
+        key = _canonical_url(raw) if raw else (getattr(s, "id", "") or "")
+        if key in seen_keys:
+            continue
+        seen_keys.add(key)
+        try:
+            if raw:
+                s.url = _canonical_url(raw)
+        except Exception:
+            pass
+        deduped.append(s)
+    return deduped
