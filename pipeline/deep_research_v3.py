@@ -57,6 +57,7 @@ from research.discovery import discover_topic, TopicProfile
 from research.outline_from_research import generate_outline, OutlineProfile, OutlineValidationError
 from research.deep_investigate import investigate_section
 from research.mathfix import normalize_math  # canonical math/special-char normalization (single source of truth)
+from research.decite import clean_intrabook_citations  # Stage-F intra-book citation cleaner (single source of truth)
 
 # Constants shared with research layer
 try:
@@ -74,11 +75,17 @@ except ImportError:
 # now lives in research/mathfix.py (single source of truth; imported as normalize_math above).
 
 
-def _sanitize_section_content(content: str) -> str:
+def _sanitize_section_content(content: str, title_set=None) -> str:
     if not content:
         return ""
     cleaned = content.strip()
     cleaned = cleaned.replace("\r\n", "\n")
+    # Stage F hygiene: strip intra-book citation pollution -- the writer name-drops sibling
+    # SECTION TITLES inline as if external papers ("As noted in *<section title>*, ..."). On
+    # book_900 this hit ~98% of sections (1.2k phrases). Deterministic + only removes phrases
+    # whose delimited text EXACTLY matches a section title, so real [N]/external cites survive.
+    if title_set:
+        cleaned, _n_decite = clean_intrabook_citations(cleaned, title_set)
     cleaned = cleaned.replace("\n# Chapter:", "\nChapter:")
     cleaned = cleaned.replace("\n## Section:", "\nSection:")
     cleaned = cleaned.replace("\n# Diffusion Models for Generative AI: Introduction and Core Concepts", "")
@@ -156,6 +163,14 @@ def _section_references(content: str, srcs: list) -> list:
 
 def assemble_book(outline, sections, output_path):
     _subtitle = outline.get("subtitle") or ""
+    # Build the cross-ref title pool ONCE: every section title is something the writer may
+    # have name-dropped inline as a fake external citation (Stage F decite hygiene). Union the
+    # outline titles (what the writer was FED as cross-ref context) with the stored section
+    # titles (post-disambiguation) so neither form is missed.
+    _title_set = list({
+        *(sec.get("t", "") for ch in outline.get("chapters", []) for sec in ch.get("sections", []) if sec.get("t")),
+        *(sd.get("title", "") for sd in sections.values() if isinstance(sd, dict) and sd.get("title")),
+    })
     lines = [
         "# " + outline.get("title", "Research Book"),
         "",
@@ -186,7 +201,7 @@ def assemble_book(outline, sections, output_path):
                 continue
             sec_lines.append("## " + _sn + ". " + _st)
             sec_lines.append("")
-            content = _sanitize_section_content(raw)
+            content = _sanitize_section_content(raw, _title_set)
             sec_lines.append(content)
             refs = _section_references(content, sec_data.get("sources", []) or [])
             if refs:
