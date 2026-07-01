@@ -5,7 +5,10 @@ cần model/knob defaults trong lúc `research.__init__` vẫn đang khởi tạ
 """
 
 # Provider order matters: cheap+reliable first (arxiv, wikipedia), then web sources.
-PROVIDERS_DEFAULT = ("arxiv", "wikipedia", "tavily", "ddg")
+# `brave` is a FREE (2000 q/mo) substitute for tavily -- auto-skipped by
+# available_providers() unless BRAVE_API_KEY is set, so listing it is a safe no-op
+# until a key exists (get one at brave.com/search/api/).
+PROVIDERS_DEFAULT = ("arxiv", "wikipedia", "tavily", "brave", "ddg")
 
 # ---- v1 Retrieval Knobs ----
 TOP_K_DEFAULT = 8
